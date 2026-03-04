@@ -16,6 +16,7 @@ import re
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
+#from uwu import MyClient
 
 
 try:
@@ -60,6 +61,10 @@ class Hunt(commands.Cog):
             "removed": False,
         }
         self.was_recently_disabled = False
+
+    @property
+    def settings(self):
+        return self.bot.settings_dict_temp.commands.hunt
 
     def get_emoji_tier(self, text, emoji_dict=emoji_dict):
         # https://emojiapi.dev/api/v1/lady_beetle/100.png
@@ -120,10 +125,8 @@ class Hunt(commands.Cog):
 
     async def cog_load(self):
         if (
-            not self.bot.settings_dict["commands"]["hunt"]["enabled"]
-            or self.bot.settings_dict["defaultCooldowns"]["reactionBot"][
-                "hunt_and_battle"
-            ]
+            not self.settings.enabled
+            or self.bot.settings_dict_temp.cooldowns.reactionBot.huntAndBattle
         ):
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.hunt"))
@@ -132,7 +135,7 @@ class Hunt(commands.Cog):
         else:
             self.cmd["cmd_name"] = (
                 self.bot.alias["hunt"]["shortform"]
-                if self.bot.settings_dict["commands"]["hunt"]["useShortForm"]
+                if self.settings.shortform
                 else self.bot.alias["hunt"]["normal"]
             )
             asyncio.create_task(self.bot.put_queue(self.cmd))
@@ -156,7 +159,7 @@ class Hunt(commands.Cog):
             self.was_recently_disabled = False
             self.cmd["cmd_name"] = (
                 self.bot.alias["hunt"]["shortform"]
-                if self.bot.settings_dict["commands"]["hunt"]["useShortForm"]
+                if self.settings.shortform
                 else self.bot.alias["hunt"]["normal"]
             )
             await self.bot.put_queue(self.cmd)
@@ -212,12 +215,10 @@ class Hunt(commands.Cog):
                                 img_url=result_list[0]["emoji_url"],
                             )
 
-                await self.bot.sleep_till(
-                    self.bot.settings_dict["commands"]["hunt"]["cooldown"]
-                )
+                await self.bot.sleep(self.settings.get_cd())
                 self.cmd["cmd_name"] = (
                     self.bot.alias["hunt"]["shortform"]
-                    if self.bot.settings_dict["commands"]["hunt"]["useShortForm"]
+                    if self.settings.shortform
                     else self.bot.alias["hunt"]["normal"]
                 )
                 await self.bot.put_queue(self.cmd)

@@ -22,6 +22,7 @@ from discord import DMChannel
 
 from utils.misc import is_termux, run_system_command
 from utils.notification import notify
+#from uwu import MyClient
 
 
 list_captcha = ["human", "captcha", "link", "letterword"]
@@ -96,6 +97,9 @@ class Captcha(commands.Cog):
         self.kill_task = None
         self.solve_in_progress = False
 
+    def fetch_setings(self, cmd):
+        return getattr(self.bot.settings_dict_temp.commands, cmd)
+
     async def kill_code(self):
         await asyncio.sleep(590)
         if self.bot.command_handler_status["captcha"]:
@@ -156,19 +160,6 @@ class Captcha(commands.Cog):
                     pass
             else:
                 try:
-                    """if on_mobile:
-                        run_system_command(
-                            f"termux-notification -t 'Captcha - {self.bot.username}!' -c '{notification_content}' --led-color '#a575ff' --priority 'high'",
-                            timeout=5, 
-                            retry=True
-                            )
-                    else:
-                        notification.notify(
-                            title=f'{self.bot.username} DETECTED CAPTCHA',
-                            message=notification_content,
-                            app_icon=None,
-                            timeout=15
-                            )"""
                     notify(notification_content, f"Captcha - {self.bot.username}!")
                 except Exception as e:
                     print(f"{e} - at notifs")
@@ -308,7 +299,7 @@ class Captcha(commands.Cog):
         ):
             if "I have verified that you are human! Thank you! :3" in message.content:
                 time_to_sleep = self.bot.random_float(
-                    self.bot.settings_dict["defaultCooldowns"]["captchaRestart"]
+                    self.bot.settings_dict_temp.cooldowns.captchaRestart
                 )
                 await self.bot.log(
                     f"Captcha solved! - sleeping {time_to_sleep}s before restart.",
@@ -321,42 +312,27 @@ class Captcha(commands.Cog):
                 return
 
         channels = [self.bot.dm.id, self.bot.cm.id, self.bot.boss_channel_id]
-        if self.bot.settings_dict["commands"]["pray"]["customChannel"]["enabled"]:
-            channels.append(
-                self.bot.settings_dict["commands"]["pray"]["customChannel"]["channelId"]
-            )
-        if self.bot.settings_dict["commands"]["curse"]["customChannel"]["enabled"]:
-            channels.append(
-                self.bot.settings_dict["commands"]["curse"]["customChannel"][
-                    "channelId"
-                ]
-            )
+
+        for cmd in ("pray", "curse"):
+            cnf = self.fetch_setings(cmd).custom_channel
+            if cnf.enabled:
+                channels.append(cnf.channel)
 
         if message.channel.id in channels and message.author.id == self.bot.owo_bot_id:
-            """Handle normally expected captcha"""
-            if (
-                (
-                    message.components
-                    and len(message.components) > 0
-                    and hasattr(message.components[0], "children")
-                    and len(message.components[0].children) > 0
-                    and (
-                        (
-                            hasattr(message.components[0].children[0], "label")
-                            and message.components[0].children[0].label == "Verify"
-                        )
-                        or (
-                            hasattr(message.components[0].children[0], "url")
-                            and message.components[0].children[0].url
-                            == "https://owobot.com?login="
-                        )
-                    )
-                )
-                or (
-                    "⚠️" in message.content and message.attachments
-                )  # message attachment check
-                or any(b in clean(message.content) for b in list_captcha)
-            ):
+            components = message.components
+            content = clean(message.content)
+            # Checks if `Verify` button exists
+            has_verify_button = (
+                components
+                and components[0].children
+                and getattr(components[0].children[0], "label", None) == "Verify"
+            )
+
+            has_warning_attachment = "⚠️" in message.content and message.attachments
+
+            contains_captcha_word = any(word in content for word in list_captcha)
+
+            if has_verify_button or has_warning_attachment or contains_captcha_word:
                 nick = self.bot.get_nick(message)
 
                 if not get_channel_name(message.channel) == "owo DMs":
@@ -418,7 +394,7 @@ class Captcha(commands.Cog):
                         await self.bot.log("Attempting to solve hcaptcha", "#656b66")
                         solved = await self.bot.captcha_handler.solve_owo_bot_captcha(
                             self.bot.local_headers,
-                            cap_dict["hcaptcha_solver"]["retries"]
+                            cap_dict["hcaptcha_solver"]["retries"],
                         )
                         if not solved:
                             await self.bot.log("FAILED to solve hcaptcha", "#d70000")
@@ -459,7 +435,10 @@ class Captcha(commands.Cog):
                         )
                         await message.author.send(ans)
 
-            elif "You have been banned for" in message.content:
+            elif (
+                "You have been banned for" in message.content
+                and self.bot.user.name in message.content
+            ):
                 self.bot.command_handler_status["captcha"] = True
                 await self.bot.log("Ban detected!", "#d70000")
                 self.captcha_handler(message.channel, "Ban")

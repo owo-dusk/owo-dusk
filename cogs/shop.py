@@ -15,6 +15,7 @@ import re
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
+#from uwu import MyClient
 
 """
 SHOP-
@@ -24,8 +25,6 @@ SHOP-
 """
 
 cash_regex = r"for \*\*(\d+)\*\* <:cowoncy:\d+>"
-
-cash_required = {1: 10, 2: 100, 3: 1000, 4: 10000, 5: 100000, 6: 1000000, 7: 10000000}
 
 
 class Shop(commands.Cog):
@@ -39,8 +38,12 @@ class Shop(commands.Cog):
             "id": "shop",
         }
 
+    @property
+    def settings(self):
+        return self.bot.settings_dict_temp.commands.shop
+
     async def cog_load(self):
-        if not self.bot.settings_dict["commands"]["shop"]["enabled"]:
+        if not self.settings.enabled:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.shop"))
             except ExtensionNotLoaded:
@@ -52,30 +55,22 @@ class Shop(commands.Cog):
         await self.bot.remove_queue(id="shop")
 
     async def send_buy(self, startup=False):
-        cnf = self.bot.settings_dict["commands"]["shop"]
-        valid_items = [item for item in cnf["itemsToBuy"] if item in range(1, 8)]
-
-        if not valid_items:
-            await self.bot.log(
-                "Warn: No valid gem ids provided to buy. Note: Only rings (1-7) are allowed!",
-                "#924444",
-            )
-            return
-
-        item = self.bot.random.choice(valid_items)
-
         if startup:
             await self.bot.sleep_till(
-                self.bot.settings_dict["defaultCooldowns"]["shortCooldown"]
+                self.bot.settings_dict_temp.cooldowns.shortCooldown
             )
         else:
             await self.bot.remove_queue(id="shop")
-            await self.bot.sleep_till(cnf["cooldown"])
+            await self.bot.sleep(self.settings.get_cd())
 
-        if (
-            cash_required[item] <= self.bot.user_status["balance"]
-            or not self.bot.settings_dict["cashCheck"]
-        ):
+        items_to_buy = self.settings.get_items_to_buy(
+            cur_cash=self.bot.user_status["balance"],
+            cash_check=self.bot.settings_dict_temp.cashCheck,
+        )
+
+        item = self.bot.random.choice(items_to_buy)
+
+        if item:
             self.cmd["cmd_arguments"] = item
             await self.bot.put_queue(self.cmd)
         else:

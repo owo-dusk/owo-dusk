@@ -16,6 +16,7 @@ import random
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
+#from uwu import MyClient
 
 
 quotes_url = "https://favqs.com/api/qotd"
@@ -44,13 +45,16 @@ class Level(commands.Cog):
         self.last_level_grind_message = None
         self.cmd = {"cmd_name": None, "prefix": False, "checks": True, "id": "level"}
 
+    @property
+    def settings(self):
+        return self.bot.settings_dict_temp.commands.lvlGrind
+
     async def start_level_grind(self):
         # await asyncio.sleep(1)
         await self.bot.remove_queue(id="level")
-        cnf = self.bot.settings_dict["commands"]["lvlGrind"]
         try:
-            await self.bot.sleep_till(cnf["cooldown"])
-            if cnf["useQuoteInstead"]:
+            await self.bot.sleep(self.settings.get_cd())
+            if self.settings.useQuote:
                 self.last_level_grind_message = await fetch_quotes(self.bot.session)
                 if not self.last_level_grind_message:
                     await self.bot.log(
@@ -58,11 +62,11 @@ class Level(commands.Cog):
                         "#c25560",
                     )
                     self.last_level_grind_message = generate_random_string(
-                        cnf["minLengthForRandomString"], cnf["maxLengthForRandomString"]
+                        self.settings.minLength, self.settings.maxLength
                     )
             else:
                 self.last_level_grind_message = generate_random_string(
-                    cnf["minLengthForRandomString"], cnf["maxLengthForRandomString"]
+                    self.settings.minLength, self.settings.maxLength
                 )
             self.cmd["cmd_name"] = self.last_level_grind_message
 
@@ -73,7 +77,7 @@ class Level(commands.Cog):
     """gets executed when the cog is first loaded"""
 
     async def cog_load(self):
-        if not self.bot.settings_dict["commands"]["lvlGrind"]["enabled"]:
+        if not self.settings.enabled:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.level"))
             except ExtensionNotLoaded:

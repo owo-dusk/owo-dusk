@@ -14,6 +14,7 @@ import asyncio
 
 from discord.ext import commands
 from utils.notification import notify
+#from uwu import MyClient
 
 
 class Battle(commands.Cog):
@@ -28,12 +29,14 @@ class Battle(commands.Cog):
             "removed": False,
         }
 
+    @property
+    def settings(self):
+        return self.bot.settings_dict_temp.commands.battle
+
     async def cog_load(self):
         if (
-            not self.bot.settings_dict["commands"]["battle"]["enabled"]
-            or self.bot.settings_dict["defaultCooldowns"]["reactionBot"][
-                "hunt_and_battle"
-            ]
+            not self.settings.enabled
+            or self.bot.settings_dict_temp.cooldowns.reactionBot.huntAndBattle
         ):
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.battle"))
@@ -42,7 +45,7 @@ class Battle(commands.Cog):
         else:
             self.cmd["cmd_name"] = (
                 self.bot.alias["battle"]["shortform"]
-                if self.bot.settings_dict["commands"]["battle"]["useShortForm"]
+                if self.settings.shortform
                 else self.bot.alias["battle"]["normal"]
             )
             asyncio.create_task(self.bot.put_queue(self.cmd))
@@ -65,16 +68,12 @@ class Battle(commands.Cog):
                             in embed.author.name
                         ):
                             if embed.footer:
-                                if self.bot.settings_dict["commands"]["battle"][
-                                    "showStreakInConsole"
-                                ]:
+                                if self.bot.settings_dict_temp.commands.battle.show_streak:
                                     await self.bot.log(
                                         f"{embed.footer.text}", "#292252"
                                     )
                                 if "You lost in " in embed.footer.text:
-                                    if self.bot.settings_dict["commands"]["battle"][
-                                        "notifyStreakLoss"
-                                    ]:
+                                    if self.bot.settings_dict_temp.commands.battle.notify_streak_loss:
                                         notify(
                                             embed.footer.text, "You lost your streak!"
                                         )
@@ -98,14 +97,12 @@ class Battle(commands.Cog):
                                     return
 
                             await self.bot.remove_queue(id="battle")
-                            await self.bot.sleep_till(
-                                self.bot.settings_dict["commands"]["battle"]["cooldown"]
+                            await self.bot.sleep(
+                                self.bot.settings_dict_temp.commands.battle.get_cd()
                             )
                             self.cmd["cmd_name"] = (
                                 self.bot.alias["battle"]["shortform"]
-                                if self.bot.settings_dict["commands"]["battle"][
-                                    "useShortForm"
-                                ]
+                                if self.settings.shortform
                                 else self.bot.alias["battle"]["normal"]
                             )
                             await self.bot.put_queue(self.cmd)

@@ -15,6 +15,7 @@ import json
 import re
 
 from discord.ext import commands
+#from uwu import MyClient
 
 
 try:
@@ -54,6 +55,10 @@ class Others(commands.Cog):
             "slash_cmd_name": "crate",
             "id": "crate",
         }
+
+    @property
+    def auto_use(self):
+        return self.bot.settings_dict_temp.autoUse
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -106,7 +111,7 @@ class Others(commands.Cog):
                 "** You received a **weapon crate**!" in message.content
                 or "You found a **weapon crate**!" in message.content
             ):
-                if self.bot.settings_dict["autoUse"]["autoCrate"]:
+                if self.auto_use.crate:
                     await self.bot.put_queue(self.crate_cmd)
 
                 if (
@@ -125,7 +130,7 @@ class Others(commands.Cog):
                 "** You received a **lootbox**!" in message.content
                 or "You found a **lootbox**!" in message.content
             ):
-                if self.bot.settings_dict["autoUse"]["autoLootbox"]:
+                if self.auto_use.lootbox:
                     await self.bot.put_queue(self.lootbox_cmd)
                     # give time for command to run
                     await asyncio.sleep(2.5)
@@ -146,10 +151,7 @@ class Others(commands.Cog):
                     )
 
             # Add animals to team
-            elif (
-                "Create one with `owo team add {animal}`"
-                in message.content
-            ):
+            elif "Create one with `owo team add {animal}`" in message.content:
                 await self.bot.set_stat(False)
                 self.zoo = True
                 team_cmd = {
@@ -160,7 +162,7 @@ class Others(commands.Cog):
                     "id": "zoo",
                 }
                 await self.bot.sleep_till(
-                    self.bot.settings_dict["defaultCooldowns"]["briefCooldown"]
+                    self.bot.settings_dict_temp.cooldowns.shortCooldown
                 )
                 await self.bot.put_queue(team_cmd, priority=True)
 

@@ -17,6 +17,7 @@ from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from utils.notification import notify
+#from uwu import MyClient
 
 
 def find_optimal_move(e_hand, u_hand, soft=False):
@@ -75,39 +76,43 @@ class Blackjack(commands.Cog):
             "no_balance": False,
         }
 
+    @property
+    def gamble_settings(self):
+        return self.bot.settings_dict_temp.gamble
+
+    @property
+    def settings(self):
+        return self.bot.settings_dict_temp.gamble.blackjack
+
+    @property
+    def cooldowns(self):
+        return self.bot.settings_dict_temp.cooldowns
+
     async def send_blackjack(self, startup=False):
-        cnf = self.bot.settings_dict["gamble"]["blackjack"]
-        goal_system_dict = self.bot.settings_dict["gamble"]["goalSystem"]
+        goal_system = self.gamble_settings.goals
 
         if startup:
-            await self.bot.sleep_till(
-                self.bot.settings_dict["defaultCooldowns"]["briefCooldown"]
-            )
+            await self.bot.sleep_till(self.cooldowns.briefCooldown)
         else:
-            await self.bot.sleep_till(cnf["cooldown"])
+            await self.bot.sleep(self.settings.get_cd())
 
         amount_to_gamble = int(
-            cnf["startValue"] * (cnf["multiplierOnLose"] ** self.turns_lost)
+            self.settings.startValue * (self.settings.multiplier**self.turns_lost)
         )
 
-        if (
-            goal_system_dict["enabled"]
-            and self.bot.gain_or_lose > goal_system_dict["amount"]
-        ):
+        if goal_system.enabled and self.bot.gain_or_lose > goal_system.amount:
             if not self.gamble_flags["goal_reached"]:
                 self.gamble_flags["goal_reached"] = True
                 await self.bot.log(
-                    f"goal reached - {self.bot.gain_or_lose}/{goal_system_dict['amount']}, stopping blackjack!",
+                    f"goal reached - {self.bot.gain_or_lose}/{goal_system.amount}, stopping blackjack!",
                     "#4a270c",
                 )
                 notify(
-                    f"goal reached - {self.bot.gain_or_lose}/{goal_system_dict['amount']}, stopping blackjack!",
+                    f"goal reached - {self.bot.gain_or_lose}/{goal_system.amount}, stopping blackjack!",
                     "blackjack - Goal reached",
                 )
 
-            await self.bot.sleep_till(
-                self.bot.settings_dict["defaultCooldowns"]["moderateCooldown"]
-            )
+            await self.bot.sleep_till(self.cooldowns.moderateCooldown)
             return await self.send_blackjack()
         elif self.gamble_flags["goal_reached"]:
             self.gamble_flags["goal_reached"] = False
@@ -128,9 +133,7 @@ class Blackjack(commands.Cog):
                     "blackjack - Insufficient balance",
                 )
 
-            await self.bot.sleep_till(
-                self.bot.settings_dict["defaultCooldowns"]["moderateCooldown"]
-            )
+            await self.bot.sleep_till(self.cooldowns.moderateCooldown)
             return await self.send_blackjack()
         elif self.gamble_flags["no_balance"]:
             await self.bot.log(
@@ -139,25 +142,20 @@ class Blackjack(commands.Cog):
             )
             self.gamble_flags["no_balance"] = False
 
-        if (
-            self.bot.gain_or_lose
-            + (self.bot.settings_dict["gamble"]["allottedAmount"] - amount_to_gamble)
-            <= 0
-        ):
+        allottedAmount = self.gamble_settings.allottedAmount
+        if self.bot.gain_or_lose + (allottedAmount - amount_to_gamble) <= 0:
             if not self.gamble_flags["amount_exceeded"]:
                 self.gamble_flags["amount_exceeded"] = True
                 await self.bot.log(
-                    f"Allotted value ({self.bot.settings_dict['gamble']['allottedAmount']}) exceeded, stopping blackjack!",
+                    f"Allotted value ({allottedAmount}) exceeded, stopping blackjack!",
                     "#4a270c",
                 )
                 notify(
-                    f"Alloted value ({self.bot.settings_dict['gamble']['allottedAmount']}) exceeded, stopping blackjack!",
+                    f"Alloted value ({allottedAmount}) exceeded, stopping blackjack!",
                     "blackjack - Alloted value exceeded",
                 )
 
-            await self.bot.sleep_till(
-                self.bot.settings_dict["defaultCooldowns"]["moderateCooldown"]
-            )
+            await self.bot.sleep_till(self.cooldowns.moderateCooldown)
             return await self.send_blackjack()
         elif self.gamble_flags["amount_exceeded"]:
             self.gamble_flags["amount_exceeded"] = False
@@ -208,7 +206,7 @@ class Blackjack(commands.Cog):
             await self.send_blackjack()
 
     async def cog_load(self):
-        if not self.bot.settings_dict["gamble"]["blackjack"]["enabled"]:
+        if not self.bot.settings_dict_temp.gamble.blackjack.enabled:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.blackjack"))
             except ExtensionNotLoaded as e:

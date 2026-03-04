@@ -14,12 +14,17 @@ import asyncio
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
+#from uwu import MyClient
 
 
 class Owo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.owo_ongoing = False
+
+    @property
+    def settings(self):
+        return self.bot.settings_dict_temp.commands.owo
 
     async def send_owo(self, startup=False):
         cmd = {
@@ -32,9 +37,7 @@ class Owo(commands.Cog):
         if not startup:
             await self.bot.remove_queue(id="owo")
             self.owo_ongoing = True
-            await self.bot.sleep_till(
-                self.bot.settings_dict["commands"]["owo"]["cooldown"]
-            )
+            await self.bot.sleep(self.settings.get_cd())
             self.owo_ongoing = False
         await self.bot.put_queue(cmd, quick=True)
 
@@ -42,8 +45,8 @@ class Owo(commands.Cog):
 
     async def cog_load(self):
         if (
-            not self.bot.settings_dict["commands"]["owo"]["enabled"]
-            or self.bot.settings_dict["defaultCooldowns"]["reactionBot"]["owo"]
+            not self.settings.enabled
+            or self.bot.settings_dict_temp.cooldowns.reactionBot.owo
         ):
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.owo"))

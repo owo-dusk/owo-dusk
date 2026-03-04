@@ -17,6 +17,7 @@ from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from utils.notification import notify
+#from uwu import MyClient
 
 
 won_pattern = r"and won <:cowoncy:\d+> ([\d,]+)"
@@ -47,8 +48,20 @@ class Slots(commands.Cog):
             "no_balance": False,
         }
 
+    @property
+    def gamble_settings(self):
+        return self.bot.settings_dict_temp.gamble
+
+    @property
+    def settings(self):
+        return self.bot.settings_dict_temp.gamble.slots
+
+    @property
+    def cooldowns(self):
+        return self.bot.settings_dict_temp.cooldowns
+
     async def cog_load(self):
-        if not self.bot.settings_dict["gamble"]["slots"]["enabled"]:
+        if not self.settings.enabled:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.slots"))
             except ExtensionNotLoaded:
@@ -60,40 +73,32 @@ class Slots(commands.Cog):
         await self.bot.remove_queue(id="slots")
 
     async def start_slots(self, startup=False):
-        cnf = self.bot.settings_dict["gamble"]["slots"]
-        goal_system_dict = self.bot.settings_dict["gamble"]["goalSystem"]
+        goal_settings = self.gamble_settings.goals
         try:
             if startup:
-                await self.bot.sleep_till(
-                    self.bot.settings_dict["defaultCooldowns"]["briefCooldown"]
-                )
+                await self.bot.sleep_till(self.cooldowns.briefCooldown)
             else:
                 await self.bot.remove_queue(id="slots")
-                await self.bot.sleep_till(cnf["cooldown"])
+                await self.bot.sleep(self.settings.get_cd())
 
             amount_to_gamble = int(
-                cnf["startValue"] * (cnf["multiplierOnLose"] ** self.turns_lost)
+                self.settings.startValue * (self.settings.multiplier**self.turns_lost)
             )
 
             # Goal system check
-            if (
-                self.bot.settings_dict["gamble"]["goalSystem"]["enabled"]
-                and self.bot.gain_or_lose > goal_system_dict["amount"]
-            ):
+            if goal_settings.enabled and self.bot.gain_or_lose > goal_settings.amount:
                 if not self.gamble_flags["goal_reached"]:
                     self.gamble_flags["goal_reached"] = True
                     await self.bot.log(
-                        f"goal reached - {self.bot.gain_or_lose}/{goal_system_dict['amount']}, stopping slots!",
+                        f"goal reached - {self.bot.gain_or_lose}/{goal_settings.amount}, stopping slots!",
                         "#4a270c",
                     )
                     notify(
-                        f"goal reached - {self.bot.gain_or_lose}/{goal_system_dict['amount']}, stopping slots!",
+                        f"goal reached - {self.bot.gain_or_lose}/{goal_settings.amount}, stopping slots!",
                         "Slots - Goal reached",
                     )
 
-                await self.bot.sleep_till(
-                    self.bot.settings_dict["defaultCooldowns"]["moderateCooldown"]
-                )
+                await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 return await self.start_slots()
             elif self.gamble_flags["goal_reached"]:
                 self.gamble_flags["goal_reached"] = False
@@ -114,9 +119,7 @@ class Slots(commands.Cog):
                         "Slots - Insufficient balance",
                     )
 
-                await self.bot.sleep_till(
-                    self.bot.settings_dict["defaultCooldowns"]["moderateCooldown"]
-                )
+                await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 return await self.start_slots()
             elif self.gamble_flags["no_balance"]:
                 await self.bot.log(
@@ -125,29 +128,21 @@ class Slots(commands.Cog):
                 )
                 self.gamble_flags["no_balance"] = False
 
+            allottedAmount = self.gamble_settings.allottedAmount
             # Allotted value check
-            if (
-                self.bot.gain_or_lose
-                + (
-                    self.bot.settings_dict["gamble"]["allottedAmount"]
-                    - amount_to_gamble
-                )
-                <= 0
-            ):
+            if self.bot.gain_or_lose + (allottedAmount - amount_to_gamble) <= 0:
                 if not self.gamble_flags["amount_exceeded"]:
                     self.gamble_flags["amount_exceeded"] = True
                     await self.bot.log(
-                        f"Alloted value ({self.bot.settings_dict['gamble']['allottedAmount']}) exceeded, stopping slots!",
+                        f"Alloted value ({allottedAmount}) exceeded, stopping slots!",
                         "#4a270c",
                     )
                     notify(
-                        f"Alloted value ({self.bot.settings_dict['gamble']['allottedAmount']}) exceeded, stopping slots!",
+                        f"Alloted value ({allottedAmount}) exceeded, stopping slots!",
                         "Slots - Alloted value exceeded",
                     )
 
-                await self.bot.sleep_till(
-                    self.bot.settings_dict["defaultCooldowns"]["moderateCooldown"]
-                )
+                await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 return await self.start_slots()
             elif self.gamble_flags["amount_exceeded"]:
                 self.gamble_flags["amount_exceeded"] = False

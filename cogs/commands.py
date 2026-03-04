@@ -16,6 +16,7 @@ import time
 from collections import deque
 from discord.ext import commands, tasks
 from datetime import datetime, timezone, timedelta
+#from uwu import MyClient
 
 
 class Commands(commands.Cog):
@@ -28,53 +29,9 @@ class Commands(commands.Cog):
 
         self.last_msg = 0
 
-    @tasks.loop()
-    async def watchdog(self):
-        # Watch dog for unresponsive code
-        # added mostly due to library issues cause code to be unresponsive
-        # incase code becomes unresponsive we will attempt a retry
-
-        cd = await self.min_seconds_for_watchdog()
-
-        if cd is None:
-            self.watchdog.cancel()
-            return
-
-        await asyncio.sleep(cd)
-
-        if time.time() - self.last_msg >= cd:
-            await self.bot.log("UNABLE TO DETECT MESSAGES!", "#8b1657")
-            self.bot.command_handler_status["captcha"] = (
-                True  # Prevent any further messages
-            )
-            await self.bot.log(
-                "Code was stopped for obvious reasons, please report logs of when this happened along with any errors to @echoquill\nYou may report through either dms or support server!",
-                "#8b1657",
-            )
-
-            print("attempting to trigger retry!")
-            await self.bot.close()
-
-    async def min_seconds_for_watchdog(self):
-        req = 1000
-        cnf = self.bot.settings_dict["commands"]
-        for cmd in cnf.values():
-            if cmd["enabled"]:
-                if cmd.get("cooldown"):
-                    cd = cmd["cooldown"][0]
-                    req = cd if cd < req else req
-
-        if req != 1000:
-            threshold = req + 10
-        else:
-            await self.bot.log(
-                "Disabling watchdog since no valid cooldown found", "#13353a"
-            )
-            # Rest would daily, cookie etc which doesnt really cause much issues even in case of failure.
-            # It would be safe to assume nothing wrong will happen (hopefully)
-            return None
-        # await self.bot.log(f"Watchdog threshold: {threshold}s", "#13353a")
-        return threshold
+    @property
+    def command_hander_settings(self):
+        return self.bot.settings_dict_temp.cooldowns.commandHandler
 
     def sleep_required(self):
         """makes sure three commands are within 5 second limit"""
@@ -110,7 +67,6 @@ class Commands(commands.Cog):
         await self.bot.wait_until_ready()
         self.send_commands.start()
         self.monitor_checks.start()
-        # self.watchdog.start()
 
     async def cog_load(self):
         """Run join_previous_giveaways when bot is ready"""
@@ -121,15 +77,13 @@ class Commands(commands.Cog):
     @tasks.loop()
     async def send_commands(self):
         try:
-            cnf = self.bot.settings_dict["defaultCooldowns"]["commandHandler"]
+            cnf = self.command_hander_settings
             priority, _, cmd = await self.bot.queue.get()
             cmd_id = cmd.get("id")
 
             if priority != 0:
-                while (time.time() - self.bot.cmds_state["global"]["last_ran"]) < cnf[
-                    "betweenCommands"
-                ][0]:
-                    await self.sleep_between_commands(cnf["betweenCommands"])
+                while (time.time() - self.bot.cmds_state["global"]["last_ran"]) < cnf.betweenCommands[0]:
+                    await self.sleep_between_commands(cnf.betweenCommands)
 
             sleep_req, sleep_time = self.sleep_required()
             if sleep_req:
@@ -150,7 +104,7 @@ class Commands(commands.Cog):
                     async with self.bot.lock:
                         self.bot.checks.append(cmd)
 
-            if self.bot.settings_dict["useSlashCommands"] and cmd.get(
+            if self.bot.settings_dict_temp.useSlashCommands and cmd.get(
                 "slash_cmd_name", False
             ):
                 await self.bot.slashCommandSender(
@@ -171,19 +125,18 @@ class Commands(commands.Cog):
                 f"Error - send_commands() loop: {e}. {cmd.get('cmd_name', None)}",
                 "#c25560",
             )
-            await self.sleep_between_commands(cnf["betweenCommands"])
+            await self.sleep_between_commands(cnf.betweenCommands)
 
     @tasks.loop(seconds=1)
     async def monitor_checks(self):
         try:
-            delay = self.bot.settings_dict["defaultCooldowns"]["commandHandler"][
-                "beforeReaddingToQueue"
-            ]
+            delay = self.command_hander_settings.readdingToQueue
             current_time = datetime.now(timezone.utc)
             if (
                 not self.bot.command_handler_status["state"]
                 or self.bot.command_handler_status["sleep"]
                 or self.bot.command_handler_status["captcha"]
+                or self.bot.command_handler_status["hold_handler"]
             ):
                 self.calc_time += current_time - getattr(
                     self, "last_check_time", current_time

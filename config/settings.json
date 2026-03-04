@@ -26,15 +26,16 @@
                 410,
                 500
             ],
-            "rarity": [
-                "c",
-                "u",
-                "r",
-                "e",
-                "m",
-                "l",
-                "g"
-            ]
+            "rarity": {
+                "common": true,
+                "uncommon": true,
+                "rare": true,
+                "epic": true,
+                "mythical": true,
+                "legendary": false,
+                "fabled": false,
+                "distorted": false
+            }
         },
         "sac": {
             "enabled": false,
@@ -42,15 +43,16 @@
                 410,
                 500
             ],
-            "rarity": [
-                "c",
-                "u",
-                "r",
-                "e",
-                "m",
-                "l",
-                "g"
-            ]
+            "rarity": {
+                "common": true,
+                "uncommon": true,
+                "rare": true,
+                "epic": true,
+                "mythical": true,
+                "legendary": false,
+                "fabled": false,
+                "distorted": false
+            }
         },
         "pray": {
             "enabled": false,
@@ -94,14 +96,20 @@
         },
         "cookie": {
             "enabled": false,
-            "userid": 408785106942164992,
+            "userid": "408785106942164992",
             "pingUser": false
         },
         "shop": {
             "enabled": false,
-            "itemsToBuy": [
-                1
-            ],
+            "itemsToBuy": {
+                "commonRing": true,
+                "uncommonRing": false,
+                "rareRing": false,
+                "epicRing": false,
+                "mythicalRing": false,
+                "legendaryRing": false,
+                "fabledRing": false
+            },
             "cooldown": [
                 10,
                 16
@@ -156,9 +164,10 @@
                 16,
                 18
             ],
-            "options": [
-                "t"
-            ]
+            "options": {
+                "heads": true,
+                "tails": false
+            }
         },
         "slots": {
             "enabled": false,
@@ -182,17 +191,17 @@
     "bossBattle": {
         "enabled": false,
         "joinChancePercent": 80,
-        "joinAllGuilds": {
-            "enabled": true,
-            "guildIdsToIgnore": []
+        "guildJoinRules": {
+            "ignoreGuildIds": [],
+            "onlyJoinGuildIds": []
         }
     },
     "giveawayJoiner": {
         "enabled": false,
         "channelsToJoin": [
-            1099453684691243098,
-            1168797748343099444,
-            1168797827464429618
+            "1099453684691243098",
+            "1168797748343099444",
+            "1168797827464429618"
         ],
         "cooldown": [
             40,
@@ -207,7 +216,7 @@
             10,
             20
         ],
-        "sleeptime": [
+        "sleepTime": [
             1,
             10
         ]
@@ -255,9 +264,9 @@
             "beforeReaddingToQueue": 7
         },
         "reactionBot": {
-            "hunt_and_battle": false,
+            "huntAndBattle": false,
             "owo": false,
-            "pray_and_curse": false,
+            "prayAndCurse": false,
             "cooldown": [
                 0.5,
                 1
@@ -286,7 +295,7 @@
                 "luckyGem": true,
                 "specialGem": false
             },
-            "disable_hunts_if_no_gems": false
+            "disableHuntIfNoGems": false
         },
         "autoLootbox": true,
         "autoCrate": true

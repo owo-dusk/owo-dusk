@@ -45,6 +45,7 @@ from queue import Queue
 
 # Local
 import components_v2
+import utils.configs as config_models
 from utils.misspell import misspell_word
 from utils.notification import notify
 from utils.webhook import webhookSender
@@ -98,6 +99,7 @@ def load_accounts_dict(file_path="utils/stats.json"):
 
 with open("config/global_settings.json", "r") as config_file:
     global_settings_dict = json.load(config_file)
+
 
 with open("config/misc.json", "r") as config_file:
     misc_dict = json.load(config_file)
@@ -553,6 +555,8 @@ class MyClient(commands.Bot):
         self.state_event = asyncio.Event()
         self.queue = asyncio.PriorityQueue()
         self.settings_dict = None
+        # ;-; help.
+        self.settings_dict_temp: config_models.Settings | None = None
         self.global_settings_dict = global_settings_dict
         self.captcha_settings_dict = captcha_settings_dict
         self.commands_dict = {}
@@ -642,11 +646,11 @@ class MyClient(commands.Bot):
 
     @tasks.loop(seconds=1)
     async def random_sleep(self):
-        sleep_dict = self.settings_dict["sleep"]
-        await self.sleep_till(sleep_dict["checkTime"])
-        if self.random.randint(1, 100) > (100 - sleep_dict["frequencyPercentage"]):
+        sleep_obj = self.settings_dict_temp.sleep
+        await asyncio.sleep(sleep_obj.get_sleep_time())
+        if sleep_obj.should_sleep():
             await self.set_stat(False)
-            sleep_time = self.random_float(sleep_dict["sleeptime"])
+            sleep_time = sleep_obj.get_sleep_time()
             await self.log(f"sleeping for {sleep_time}", "#87af87")
             await asyncio.sleep(sleep_time)
             await self.set_stat(True)
@@ -665,7 +669,8 @@ class MyClient(commands.Bot):
             )
             if compare_versions(latest_version["version"], safety_check["version"]):
                 await self.log(
-                    f"please update to: v{latest_version['version']} to continue using owo-dusk!", "#33245e"
+                    f"please update to: v{latest_version['version']} to continue using owo-dusk!",
+                    "#33245e",
                 )
 
     async def start_cogs(self):
@@ -692,6 +697,7 @@ class MyClient(commands.Bot):
                     await self.log(
                         f"Error - Failed to load extension {extension}: {e}", "#c25560"
                     )
+                    traceback.print_exc()
 
         if "cogs.captcha" not in self.extensions:
             await self.log(
@@ -710,6 +716,9 @@ class MyClient(commands.Bot):
 
             with open(config_path, "r") as config_file:
                 self.settings_dict = json.load(config_file)
+                self.settings_dict_temp = config_models.configs.FetchSettings(
+                    self.settings_dict
+                )
 
             await self.start_cogs()
 
@@ -962,56 +971,51 @@ class MyClient(commands.Bot):
             await self.log(f"Error - Failed to unload cog {cog_name}: {e}", "#c25560")
 
     def refresh_commands_dict(self):
-        commands_dict = self.settings_dict["commands"]
-        reaction_bot_dict = self.settings_dict["defaultCooldowns"]["reactionBot"]
+        commands_obj = self.settings_dict_temp.commands
+        reaction_bot_obj = self.settings_dict_temp.cooldowns.reactionBot
+        gamble_obj = self.settings_dict_temp.gamble
 
         # Reaction Bot:
         if (
             (
-                reaction_bot_dict["hunt_and_battle"]
-                and (
-                    commands_dict["hunt"]["enabled"]
-                    or commands_dict["battle"]["enabled"]
-                )
+                reaction_bot_obj.huntAndBattle
+                and (commands_obj.hunt.enabled or commands_obj.battle.enabled)
             )
-            or (reaction_bot_dict["owo"] and commands_dict["owo"]["enabled"])
-            or reaction_bot_dict["pray_and_curse"]
-            and (commands_dict["pray"]["enabled"] or commands_dict["curse"]["enabled"])
+            or (reaction_bot_obj.owo and commands_obj.owo.enabled)
+            or reaction_bot_obj.prayAndCurse
+            and (commands_obj.pray.enabled or commands_obj.curse.enabled)
         ):
             reactionbot = True
         else:
             reactionbot = False
 
         self.commands_dict = {
-            "battle": commands_dict["battle"]["enabled"]
-            and not reaction_bot_dict["hunt_and_battle"],
-            "blackjack": self.settings_dict["gamble"]["blackjack"]["enabled"],
-            "boss": self.settings_dict["bossBattle"]["enabled"],
+            "battle": commands_obj.battle.enabled
+            and not reaction_bot_obj.huntAndBattle,
+            "blackjack": gamble_obj.blackjack.enabled,
+            "boss": self.settings_dict_temp.boss.enabled,
             "captcha": True,
             "channelswitcher": self.global_settings_dict["channelSwitcher"]["enabled"],
             "chat": True,
-            "coinflip": self.settings_dict["gamble"]["coinflip"]["enabled"],
+            "coinflip": gamble_obj.coinflip.enabled,
             "commands": True,
-            "cookie": commands_dict["cookie"]["enabled"],
-            "daily": self.settings_dict["autoDaily"],
-            "gems": self.settings_dict["autoUse"]["gems"]["enabled"],
-            "giveaway": self.settings_dict["giveawayJoiner"]["enabled"],
-            "hunt": commands_dict["hunt"]["enabled"]
-            and not reaction_bot_dict["hunt_and_battle"],
-            "huntbot": commands_dict["autoHuntBot"]["enabled"],
-            "level": commands_dict["lvlGrind"]["enabled"],
-            "lottery": commands_dict["lottery"]["enabled"],
+            "cookie": commands_obj.cookie.enabled,
+            "daily": self.settings_dict_temp.daily,
+            "gems": self.settings_dict_temp.autoUse.gems.enabled,
+            "giveaway": self.settings_dict_temp.giveaway.enabled,
+            "hunt": commands_obj.hunt.enabled and not reaction_bot_obj.huntAndBattle,
+            "huntbot": commands_obj.huntbot.enabled,
+            "level": commands_obj.lvlGrind.enabled,
+            "lottery": commands_obj.lottery.enabled,
             "others": True,
-            "owo": commands_dict["owo"]["enabled"] and not reaction_bot_dict["owo"],
-            "pray": (
-                commands_dict["pray"]["enabled"] or commands_dict["curse"]["enabled"]
-            )
-            and not reaction_bot_dict["pray_and_curse"],
+            "owo": commands_obj.owo.enabled and not reaction_bot_obj.owo,
+            "pray": (commands_obj.pray.enabled or commands_obj.curse.enabled)
+            and not reaction_bot_obj.prayAndCurse,
             "reactionbot": reactionbot,
-            "sell": commands_dict["sell"]["enabled"] or commands_dict["sac"]["enabled"],
-            "shop": commands_dict["shop"]["enabled"],
-            "slots": self.settings_dict["gamble"]["slots"]["enabled"],
-            "customcommands": self.settings_dict["customCommands"]["enabled"],
+            "sell": commands_obj.sell.enabled or commands_obj.sac.enabled,
+            "shop": commands_obj.shop.enabled,
+            "slots": gamble_obj.slots.enabled,
+            "customcommands": self.settings_dict_temp.customCommands.enabled,
         }
 
     """To make the code cleaner when accessing cooldowns from config."""
@@ -1025,6 +1029,10 @@ class MyClient(commands.Bot):
         else:
             await asyncio.sleep(self.random.uniform(cooldown, cooldown + noise))
 
+    async def sleep(self, time):
+        # to save imports
+        await asyncio.sleep(time)
+
     async def upd_cmd_state(self, id, reactionBot=False):
         async with self.lock:
             self.cmds_state["global"]["last_ran"] = time.time()
@@ -1034,7 +1042,7 @@ class MyClient(commands.Bot):
             self.update_cmd_db(id)
 
     def construct_command(self, data):
-        prefix = self.settings_dict["setprefix"] if data.get("prefix") else ""
+        prefix = self.settings_dict_temp.prefix if data.get("prefix") else ""
         return f"{prefix}{data['cmd_name']} {data.get('cmd_arguments', '')}".strip()
 
     async def put_queue(self, cmd_data, priority=False, quick=False):
@@ -1150,13 +1158,16 @@ class MyClient(commands.Bot):
         bold=False,
         web_log=global_settings_dict["website"]["enabled"],
         webhook_useless_log=global_settings_dict["webhook"]["webhookUselessLog"],
+        lineno=None,
+        filename=None
     ):
         global website_logs
         current_time = datetime.now().strftime("%H:%M:%S")
         if self.misc["debug"]["enabled"]:
-            frame_info = traceback.extract_stack()[-2]
-            filename = os.path.basename(frame_info.filename)
-            lineno = frame_info.lineno
+            if not lineno and not filename:
+                frame_info = traceback.extract_stack()[-2]
+                filename = os.path.basename(frame_info.filename)
+                lineno = frame_info.lineno
 
             content_to_print = f"[#676585]❲{current_time}❳[/#676585] {self.username} - {text} | [#676585]❲{filename}:{lineno}❳[/#676585]"
             console.print(content_to_print, style=color, markup=True)
@@ -1228,11 +1239,9 @@ class MyClient(commands.Bot):
 
     def calculate_correction_time(self, command):
         command = command.replace(" ", "")  # Remove spaces for accurate timing
-        base_delay = self.random_float(self.settings_dict["misspell"]["baseDelay"])
+        base_delay = self.random_float(self.settings_dict_temp.misspell.baseDelay)
         rectification_time = sum(
-            self.random_float(
-                self.settings_dict["misspell"]["errorRectificationTimePerLetter"]
-            )
+            self.random_float(self.settings_dict_temp.misspell.rectificationTime)
             for _ in command
         )
         total_time = base_delay + rectification_time
@@ -1257,14 +1266,10 @@ class MyClient(commands.Bot):
         disable_log = self.misc["console"]["disableCommandSendLog"]
         msg = message
         misspelled = False
-        if self.settings_dict["misspell"]["enabled"]:
-            if (
-                self.random.uniform(1, 100)
-                < self.settings_dict["misspell"]["frequencyPercentage"]
-            ):
-                msg = misspell_word(message)
-                misspelled = True
-                # left off here!
+        if self.settings_dict_temp.misspell.enabled:
+            misspelled = self.settings_dict_temp.misspell.should_misspell()
+            msg = misspell_word(message)
+            # left off here!
 
         """
         TASK: remove repition here
@@ -1276,12 +1281,16 @@ class MyClient(commands.Bot):
                     await channel.send(msg, silent=silent)
             else:
                 await channel.send(msg, silent=silent)
+                
+            frame_info = traceback.extract_stack()[-2]
+            filename = os.path.basename(frame_info.filename)
+            lineno = frame_info.lineno
             if not disable_log:
-                await self.log(f"Ran: {msg}", color if color else "#5432a8")
+                await self.log(f"Ran: {msg}", color if color else "#5432a8", lineno=lineno, filename=filename)
             if misspelled:
                 await self.set_stat(False)
                 time = self.calculate_correction_time(message)
-                await self.log(f"correcting: {msg} -> {message} in {time}s", "#422052")
+                await self.log(f"correcting: {msg} -> {message} in {time}s", "#422052", lineno=lineno, filename=filename)
                 await asyncio.sleep(time)
                 if typingIndicator:
                     async with channel.typing():
@@ -1356,10 +1365,10 @@ class MyClient(commands.Bot):
         )
 
     def update_cash(self, amount, override=False, reduce=False, assumed=False):
-        if override and self.settings_dict["cashCheck"]:
+        if override and self.settings_dict_temp.cashCheck:
             self.user_status["balance"] = amount
         else:
-            if self.settings_dict["cashCheck"] and not assumed:
+            if self.settings_dict_temp.cashCheck and not assumed:
                 if reduce:
                     self.user_status["balance"] -= amount
                 else:
@@ -1502,10 +1511,10 @@ class MyClient(commands.Bot):
         if self.global_settings_dict["offlineStatus"]:
             self.presence.start()
 
-        if self.settings_dict["sleep"]["enabled"]:
+        if self.settings_dict_temp.sleep.enabled:
             self.random_sleep.start()
 
-        if self.settings_dict["cashCheck"]:
+        if self.settings_dict_temp.cashCheck:
             asyncio.create_task(self.check_for_cash())
 
 
@@ -1828,14 +1837,19 @@ if __name__ == "__main__":
 
     webhook_handler = webhookSender(global_settings_dict["webhook"]["webhookUrl"])
     hcaptcha_solver = None
-    if captcha_settings_dict["image_solver"]["enabled"] or captcha_settings_dict["hcaptcha_solver"]["enabled"]:
+    if (
+        captcha_settings_dict["image_solver"]["enabled"]
+        or captcha_settings_dict["hcaptcha_solver"]["enabled"]
+    ):
         console.print(
             "Be Warned, Captcha solving is not well tested.. You are using on your own risk..",
             style="red1",
         )
         if captcha_settings_dict["hcaptcha_solver"]["enabled"]:
             # Setup hcaptcha solver..
-            hcaptcha_solver = captchaClient(captcha_settings_dict["hcaptcha_solver"]["api_key"])
+            hcaptcha_solver = captchaClient(
+                captcha_settings_dict["hcaptcha_solver"]["api_key"]
+            )
             if hcaptcha_solver.balance == 0:
                 console.print(
                     "Yescaptcha API has no balance...",
@@ -1845,12 +1859,9 @@ if __name__ == "__main__":
             else:
                 bal = hcaptcha_solver.balance
                 console.print(
-                    f"Yescaptcha API has a balance of {bal}, which is approximately {round(bal/30)} hcaptcha solves.",
+                    f"Yescaptcha API has a balance of {bal}, which is approximately {round(bal / 30)} hcaptcha solves.",
                     style="red1",
                 )
-
-
-
 
     database_handler = databaseWorker()
 

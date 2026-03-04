@@ -15,6 +15,7 @@ import random
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
+#from uwu import MyClient
 
 
 def cmd_argument(userid, ping):
@@ -54,6 +55,13 @@ class Pray(commands.Cog):
         self.pray_channel = None
         self.curse_channel = None
 
+    def fetch_setings(self, cmd):
+        return getattr(self.bot.settings_dict_temp.commands, cmd)
+
+    @property
+    def cooldowns(self):
+        return self.bot.settings_dict_temp.cooldowns
+
     async def safe_send_message(self, cmd, cmd_argument_data):
         while self.bot.command_handler_status["captcha"]:
             await asyncio.sleep(0.5)
@@ -67,21 +75,15 @@ class Pray(commands.Cog):
 
     async def start_pray_curse(self):
         self.pray_curse_ongoing = True
-        cmds = [
-            cmd
-            for cmd in ["pray", "curse"]
-            if self.bot.settings_dict["commands"][cmd]["enabled"]
-        ]
+        cmds = [cmd for cmd in ["pray", "curse"] if self.fetch_setings(cmd).enabled]
         cmd = self.bot.random.choice(cmds)  # pick a random enabled cmd
-        cnf = self.bot.settings_dict["commands"][cmd]
+        cnf = self.fetch_setings(cmd)
         if not self.startup:
             await self.bot.remove_queue(id="pray")
-            await self.bot.sleep_till(cnf["cooldown"])
+            await self.bot.sleep(cnf.get_cd())
             self.__dict__[f"{cmd}_cmd"]["checks"] = True
         else:
-            await self.bot.sleep_till(
-                self.bot.settings_dict["defaultCooldowns"]["shortCooldown"]
-            )
+            await self.bot.sleep_till(self.cooldowns.shortCooldown)
             self.__dict__[f"{cmd}_cmd"]["checks"] = False
 
         cmd_argument_data = cmd_argument(cnf["userid"], cnf["pingUser"])
@@ -121,20 +123,16 @@ class Pray(commands.Cog):
             Sometimes the pray/curse may have already ran twice within 5 mins after a successful run
             before owo-dusk is ran, this check is to fix it getting the code stuck.
             """
-            await self.bot.sleep_till(
-                self.bot.settings_dict["defaultCooldowns"]["shortCooldown"]
-            )
+            await self.bot.sleep_till(self.cooldowns.shortCooldown)
             if self.startup:
                 self.startup = False
                 await self.start_pray_curse()
 
     async def cog_load(self):
         if (
-            not self.bot.settings_dict["commands"]["pray"]["enabled"]
-            and not self.bot.settings_dict["commands"]["curse"]["enabled"]
-        ) or (
-            self.bot.settings_dict["defaultCooldowns"]["reactionBot"]["pray_and_curse"]
-        ):
+            not self.fetch_setings("pray").enabled
+            and not self.fetch_setings("curse").enabled
+        ) or (self.cooldowns.reactionBot.prayAndCurse):
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.pray"))
             except ExtensionNotLoaded:
@@ -155,10 +153,10 @@ class Pray(commands.Cog):
             and message.author.id == self.bot.owo_bot_id
         ):
             if (
-                f"<@{self.bot.user.id}>** prays for **<@{self.bot.settings_dict['commands']['pray']['userid']}>**!"
+                f"<@{self.bot.user.id}>** prays for **<@{self.fetch_setings('pray').user_id}>**!"
                 in message.content
                 or f"<@{self.bot.user.id}>** prays..." in message.content
-                or f"<@{self.bot.user.id}>** puts a curse on **<@{self.bot.settings_dict['commands']['curse']['userid']}>**!"
+                or f"<@{self.bot.user.id}>** puts a curse on **<@{self.fetch_setings('curse').user_id}>**!"
                 in message.content
                 or f"<@{self.bot.user.id}>** is now cursed." in message.content
                 or "Slow down and try the command again" in message.content

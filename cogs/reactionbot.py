@@ -15,6 +15,7 @@ import time
 
 from discord.ext import commands, tasks
 from discord.ext.commands import ExtensionNotLoaded
+#from uwu import MyClient
 
 
 class Reactionbot(commands.Cog):
@@ -22,10 +23,20 @@ class Reactionbot(commands.Cog):
         self.bot = bot
         self.cmd_states = {"hunt": 0, "battle": 0, "owo": 0, "pray": 0}
 
+    @property
+    def settings(self):
+        return self.bot.settings_dict_temp.commands
+
+    @property
+    def reaction_bot_settings(self):
+        return self.bot.settings_dict_temp.cooldowns.reactionBot
+
+    def fetch_setings(self, cmd):
+        return getattr(self.bot.settings_dict_temp.commands, cmd)
+
     def fetch_cmd(self, id):
-        commands_dict = self.bot.settings_dict["commands"]
-        hunt_shortform = commands_dict["hunt"]["useShortForm"]
-        battle_shortform = commands_dict["battle"]["useShortForm"]
+        hunt_shortform = self.settings.hunt.shortform
+        battle_shortform = self.settings.battle.shortform
 
         cmd_name = {
             "hunt": self.bot.alias["hunt"][
@@ -38,9 +49,9 @@ class Reactionbot(commands.Cog):
         }
 
         arg = ""
-        if id in {"pray", "curse"} and commands_dict[id]["userid"]:
-            user_id = self.bot.random.choice(commands_dict[id]["userid"])
-            if commands_dict[id]["pingUser"]:
+        if id in {"pray", "curse"} and self.fetch_setings(id).user_id:
+            user_id = self.bot.random.choice(self.fetch_setings(id).user_id)
+            if self.fetch_setings(id).ping_user:
                 arg = f"<@{user_id}>"
             else:
                 arg = str(user_id)
@@ -57,18 +68,16 @@ class Reactionbot(commands.Cog):
         return base
 
     def check_cmd_state(self, cmd, return_dict=False):
-        reaction_bot_dict = self.bot.settings_dict["defaultCooldowns"]["reactionBot"]
-        commands_dict = self.bot.settings_dict["commands"]
         enabled_dict = {
-            "hunt": commands_dict["hunt"]["enabled"]
-            and reaction_bot_dict["hunt_and_battle"],
-            "battle": commands_dict["battle"]["enabled"]
-            and reaction_bot_dict["hunt_and_battle"],
-            "owo": reaction_bot_dict["owo"] and commands_dict["owo"]["enabled"],
-            "pray": commands_dict["pray"]["enabled"]
-            and reaction_bot_dict["pray_and_curse"],
-            "curse": commands_dict["curse"]["enabled"]
-            and reaction_bot_dict["pray_and_curse"],
+            "hunt": self.settings.hunt.enabled
+            and self.reaction_bot_settings.huntAndBattle,
+            "battle": self.settings.battle.enabled
+            and self.reaction_bot_settings.huntAndBattle,
+            "owo": self.reaction_bot_settings.owo and self.settings.owo.enabled,
+            "pray": self.settings.pray.enabled
+            and self.reaction_bot_settings.prayAndCurse,
+            "curse": self.settings.curse.enabled
+            and self.reaction_bot_settings.prayAndCurse,
         }
 
         return enabled_dict.get(cmd) if not return_dict else enabled_dict
@@ -88,9 +97,7 @@ class Reactionbot(commands.Cog):
                 await self.send_cmd(cmd)
 
     async def send_cmd(self, cmd):
-        await self.bot.sleep_till(
-            self.bot.settings_dict["defaultCooldowns"]["reactionBot"]["cooldown"]
-        )
+        await self.bot.sleep(self.reaction_bot_settings.get_cd())
         await self.bot.put_queue(self.fetch_cmd(cmd), quick=True, priority=True)
         self.cmd_states[cmd if cmd != "curse" else "pray"] = time.time()
 

@@ -16,6 +16,7 @@ import json
 
 import components_v2 as comp
 from discord.ext.commands import ExtensionNotLoaded
+#from uwu import MyClient
 
 
 class Boss(commands.Cog):
@@ -25,13 +26,12 @@ class Boss(commands.Cog):
         self.sleeping = True
         self.joined_boss_ids = []
 
-    def should_join(self, percentage):
-        boss_dict = self.bot.settings_dict["bossBattle"]
-        random_num = self.bot.random.randint(1, 100)
-        return random_num > (100 - boss_dict["joinChancePercent"])
+    @property
+    def settings(self):
+        return self.bot.settings_dict_temp.boss
 
     async def cog_load(self):
-        if not self.bot.settings_dict["bossBattle"]["enabled"]:
+        if not self.settings.enabled:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.daily"))
             except ExtensionNotLoaded:
@@ -112,9 +112,10 @@ class Boss(commands.Cog):
         message = comp.message.get_message_obj(parsed_msg["d"])
 
         if (
-            not self.bot.settings_dict["bossBattle"]["joinAllGuilds"]["enabled"]
+            not (self.settings.ignoreGuilds or self.settings.joinGuilds)
             and message.channel_id != self.bot.cm.id
         ):
+            # No Join guilds or Ignore guilds, so scope is local server.
             return
 
         if message.author.id == self.bot.owo_bot_id:
@@ -135,11 +136,7 @@ class Boss(commands.Cog):
                                 # which will be done below
                                 self.joined_boss_ids.append(battle_id)
 
-                            if not self.should_join(
-                                self.bot.settings_dict["bossBattle"][
-                                    "joinChancePercent"
-                                ]
-                            ):
+                            if not self.settings.should_join():
                                 await self.bot.log(
                                     "Skipping boss battle..",
                                     "#6F7C8A",
@@ -158,15 +155,20 @@ class Boss(commands.Cog):
 
                                     if boss_channel:
                                         self.bot.boss_channel_id = boss_channel.id
-                                        cnf = self.bot.settings_dict["bossBattle"][
-                                            "joinAllGuilds"
-                                        ]
                                         if (
-                                            cnf["enabled"]
+                                            self.settings.ignoreGuilds
                                             and boss_channel.guild.id
-                                            in cnf["guildIdsToIgnore"]
+                                            in self.settings.ignoreGuilds
                                         ):
                                             # Skip incase in guild ignore list.
+                                            return
+
+                                        if (
+                                            self.settings.joinGuilds
+                                            and boss_channel.guild.id
+                                            not in self.settings.joinGuilds
+                                        ):
+                                            # Skip incase in guild not in joinGuilds
                                             return
 
                                         await asyncio.sleep(0.5)

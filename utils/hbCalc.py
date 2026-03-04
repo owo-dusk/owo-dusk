@@ -26,7 +26,7 @@ https://www.geeksforgeeks.org/introduction-to-greedy-algorithm-data-structures-a
 """
 
 
-def allocate_essence(input_data, prio_dict):
+def allocate_essence(input_data, prio_obj):
     """
     inc:  The base multiplier for the level cost calculation.
     pow:  The exponent applied to (level+1) to compute cost.
@@ -64,8 +64,11 @@ def allocate_essence(input_data, prio_dict):
             "prio": 1,
         },
     }
-    for trait, prio in prio_dict.items():
+
+    for trait in traits.keys():
+        prio = getattr(prio_obj, trait, 0)
         traits[trait]["prio"] = prio
+
     """Total essense"""
     available_essence = input_data.get("essence", 0)
 

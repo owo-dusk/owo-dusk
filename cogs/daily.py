@@ -17,6 +17,7 @@ import re
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
+#from uwu import MyClient
 
 
 def load_json_dict(file_path="utils/stats.json"):
@@ -41,6 +42,10 @@ class Daily(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @property
+    def cooldowns(self):
+        return self.bot.settings_dict_temp.cooldowns
+
     async def start_daily(self):
         if str(self.bot.user.id) in accounts_dict:
             last_daily_time = accounts_dict[str(self.bot.user.id)].get("daily", 0)
@@ -53,7 +58,7 @@ class Daily(commands.Cog):
                 )  # Wait until next 12:00 AM PST
 
             await self.bot.sleep_till(
-                self.bot.settings_dict["defaultCooldowns"]["briefCooldown"]
+                self.cooldowns.briefCooldown
             )
             await self.bot.put_queue(cmd, priority=True)
             await self.bot.set_stat(False)
@@ -67,7 +72,7 @@ class Daily(commands.Cog):
                     json.dump(accounts_dict, f, indent=4)
 
     async def cog_load(self):
-        if not self.bot.settings_dict["autoDaily"]:
+        if not self.bot.settings_dict_temp.daily:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.daily"))
             except ExtensionNotLoaded:
@@ -105,7 +110,7 @@ class Daily(commands.Cog):
                 )
 
                 await self.bot.sleep_till(
-                    self.bot.settings_dict["defaultCooldowns"]["moderateCooldown"]
+                    self.cooldowns.moderateCooldown
                 )
                 await self.bot.put_queue(cmd, priority=True)
                 await self.bot.set_stat(False)
@@ -134,7 +139,7 @@ class Daily(commands.Cog):
                 await self.bot.set_stat(True)
                 await asyncio.sleep(self.bot.calc_time())
                 await self.bot.sleep_till(
-                    self.bot.settings_dict["defaultCooldowns"]["moderateCooldown"]
+                    self.cooldowns.moderateCooldown
                 )
                 await self.bot.put_queue(cmd, priority=True)
                 await self.bot.set_stat(False)
