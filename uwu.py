@@ -1831,7 +1831,7 @@ if __name__ == "__main__":
                 url="https://cdn.discordapp.com/emojis/723856770249916447.gif"
             )
 
-            webhook.send(embed=emb)
+            webhook.send(embed=emb, username="OwO-Dusk")
 
     console.rule(style="navy_blue")
 
