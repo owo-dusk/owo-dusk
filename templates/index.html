@@ -22,6 +22,8 @@ the Free Software Foundation, either version 3 of the License, or
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@latest"></script>
         <script src="{{ url_for('static', filename='script.js') }}"></script>
         <script src="../static/test.js"></script>
         <link rel="stylesheet" href="../static/style.css">
@@ -83,7 +85,7 @@ the Free Software Foundation, either version 3 of the License, or
 
         </div>
 
-        <div class="multi-items">
+        <div class="section-grid">
             <div id="console-area" class="section-area">
                 <h2>Activity Console</h2>
                 <div id="messages" class="messages"></div>
@@ -91,20 +93,20 @@ the Free Software Foundation, either version 3 of the License, or
             
             <div class="section-area">
                 <h2>Total Commands Sent</h2>
-                <div class="section-area-scroll"><canvas id="total_commands" style="min-width: 440px;"></canvas></div>
+                <div class="contain-chart"><canvas id="total_commands"></canvas></div>
             </div>
         </div>
         <div class="section-area">
             <h2>Cowoncy Earnings</h2>
-            <div class="section-area-scroll"><canvas id="cowoncy_earnings"></canvas></div>
+            <div class="contain-chart"><canvas id="cowoncy_earnings"></canvas></div>
         </div>
         <div class="section-area">
             <h2>Weekly Runtime</h2>
-            <div class="section-area-scroll"><canvas id="weekly_runtimes"></canvas></div>
+            <div class="contain-chart"><canvas id="weekly_runtimes"></canvas></div>
         </div>
         <div class="section-area">
             <h2>Gamble Winrates</h2>
-            <div class="section-area-scroll"><canvas id="gamble_earnings"></canvas></div>
+            <div class="contain-chart"><canvas id="gamble_earnings"></canvas></div>
         </div>
         
     </div>

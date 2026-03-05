@@ -13,14 +13,21 @@ the Free Software Foundation, either version 3 of the License, or
 */
 
 body {
-    background-image:
-        /* Grid Layout */
+    background: 
         linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
-    background-color: #08060f;
-    color: #e0d7f4;
-    font-family: 'Segoe UI', sans-serif;
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        radial-gradient(circle at 20% 20%, rgba(200, 140, 255, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(150, 90, 220, 0.1) 0%, transparent 45%),
+        radial-gradient(circle at 50% 120%, rgba(120, 70, 200, 0.08) 0%, transparent 50%),
+        linear-gradient(135deg, #090513 0%, #120a22 100%);
+    background-attachment: fixed;
+    background-size: 40px 40px, 40px 40px, auto, auto, auto, auto;
+    color: #e6defa;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
 }
 
 nav {
@@ -28,7 +35,7 @@ nav {
 }
 
 
-.nav-area {
+/*.nav-area {
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -37,6 +44,17 @@ nav {
     background-color: rgba(12, 8, 27, 0.6);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+}*/
+
+.nav-area {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(10, 5, 21, 0.8);
+    border-bottom: 1px solid rgba(181, 126, 220, 0.2);
+    box-shadow:  0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .nav-wrapper {
@@ -113,6 +131,11 @@ nav {
     min-width: 330px;
 }
 
+.section-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
 .section-area {
     background-color: rgba(24, 18, 45, 0.8);
     height: 350px;
@@ -121,11 +144,11 @@ nav {
     padding: 15px;
     transition: all 0.15s ease;
     box-shadow: 0 0 10px rgba(100, 80, 200, 0.1);
-    /* Make sure content does not overflow horizontally */
-    overflow-x: auto;
+    min-width: 200px;
+    position: relative;
 }
 
-.section-area-scroll {
+/*.section-area-scroll {
     overflow-x: auto;
     scrollbar-width: thin;
     scrollbar-color: #a46ae0 transparent;
@@ -143,7 +166,7 @@ nav {
 .section-area:hover {
     border: 2px solid rgba(140, 120, 250, 0.4);
     transform: translateY(-4px);
-}
+}*/
 
 .section-area h2 {
     color: #d0c4ff;
@@ -153,17 +176,22 @@ nav {
     font-size: 18px;
 }
 
-.section-area canvas {
-    max-height: 300px;
-    min-width: 1000px;
+.contain-chart {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 50px); 
+}
+
+.contain-chart  canvas {
+    max-width: 100% !important;
+    height: 100% !important;
 }
 
 .cards-area {
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #a46ae0 transparent;
     display: flex;
     justify-content: center;
+    width: 100%;
+    height: 100%;
 }
 
 .cards-area::-webkit-scrollbar {
@@ -174,12 +202,12 @@ nav {
     background: #a46ae0;
     border-radius: 4px;
 }
-
 .cards-wrapper {
-    display: inline-flex;
-    gap: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
     padding: 20px;
-    min-width: max-content;
 }
 
 .card {
@@ -197,6 +225,7 @@ nav {
     justify-content: flex-start;
     align-items: center;
     transition: background-color 0.2s ease, transform 0.2s ease;
+    flex: 1 1 150px;
 }
 
 .card-label {
@@ -227,8 +256,6 @@ nav {
     /* zoom in effect */
 }
 
-
-
 .messages {
     flex-grow: 1;
     max-height: 250px;
@@ -256,14 +283,26 @@ nav {
     }
 }
 
-/* Mobile Tweaks */
 @media (max-width: 768px) {
     .nav-area {
         position: static;
     }
 
+    .section-grid {
+        grid-template-columns: 1fr; /* Mobile: 1 column */
+    }
 
-    .section-area canvas {
-        min-width: 900px;
+    .card {
+        height:auto;
+        width:auto;
+    }
+
+    .card-label {
+        font-size: 1rem;
+        margin-bottom: auto;
+    }
+
+    .card-number {
+        font-size: 1.5rem;
     }
 }
