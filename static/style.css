@@ -168,12 +168,50 @@ nav {
     transform: translateY(-4px);
 }*/
 
-.section-area h2 {
+/*.section-area h2 {
     color: #d0c4ff;
     border-bottom: 1px solid #9f85e0;
     text-align: center;
     padding-bottom: 10px;
     font-size: 18px;
+}*/
+
+.header-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid #9f85e0;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+}
+
+.header-container h2 {
+    color: #d0c4ff;
+    font-size: 18px;
+}
+
+.reset-btn {
+    background: none;
+    border: none;
+    color: #a46ae0;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 0;
+}
+
+.reset-btn:hover {
+    color: var(--primary-color);
+    background-color: rgba(121, 179, 255, 0.1);
+    transform: rotate(180deg);
+    transition: all 0.4s ease;
 }
 
 .contain-chart {

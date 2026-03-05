@@ -20,6 +20,7 @@ if (password) {
     alert("Password is required.");
     location.reload();
 }
+var chartInstances = {};
 
 document.addEventListener("DOMContentLoaded", async () => {
     await handle_charts();
@@ -42,7 +43,7 @@ async function handle_gamble_earnings_chart() {
     console.log(data);
 
     var ctx = document.getElementById("gamble_earnings").getContext("2d");
-    new Chart(ctx, {
+    chartInstances["gamble_earnings"] = new Chart(ctx, {
         type: "line",
         data: {
             labels: [
@@ -110,8 +111,8 @@ async function handle_gamble_earnings_chart() {
                         mode: 'xy'
                     },
                     zoom: {
-                        wheel: { enabled: true },    // desktop scroll
-                        pinch: { enabled: true },    // mobile pinch
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
                         drag: { enabled: true },
                         mode: 'xy'
                     }
@@ -149,7 +150,7 @@ async function handle_weekly_runtimes_chart() {
     console.log(data);
 
     var ctx = document.getElementById("weekly_runtimes");
-    new Chart(ctx, {
+    chartInstances["weekly_runtimes"] = new Chart(ctx, {
         type: "bar",
         data: {
             labels: [
@@ -199,8 +200,8 @@ async function handle_weekly_runtimes_chart() {
                         mode: 'xy'
                     },
                     zoom: {
-                        wheel: { enabled: true },    // desktop scroll
-                        pinch: { enabled: true },    // mobile pinch
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
                         drag: { enabled: true },
                         mode: 'xy'
                     }
@@ -233,7 +234,7 @@ async function handle_cowoncy_earnings_chart() {
     console.log(data);
 
     var ctx = document.getElementById("cowoncy_earnings");
-    new Chart(ctx, {
+    chartInstances["cowoncy_earnings"] = new Chart(ctx, {
         type: "line",
         data: data.data,
         options: {
@@ -304,7 +305,7 @@ async function handle_total_commands_chart() {
     const data = await fetch_data("/api/fetch_cmd_data");
     console.log(data);
 
-    new Chart(ctx, {
+    chartInstances["total_commands"] = new Chart(ctx, {
         type: "doughnut",
         data: {
             labels: data.command_names,
@@ -349,7 +350,7 @@ async function fetch_data(api_addr, is_json = true) {
         const response = await fetch(api_addr, {
             method: "GET",
             headers: {
-                password: password, // Replace with your actual password
+                password: password,
             },
         });
 
@@ -363,7 +364,7 @@ async function fetch_data(api_addr, is_json = true) {
         } else {
             data = await response.text();
             console.log("success in fetching data!");
-            return data; // Return early if not JSON
+            return data;
         }
 
         if (data.status !== "success") {
@@ -386,6 +387,13 @@ function generateRandomRGB(arr) {
     });
 }
 async function handle_charts() {
+    for (const item of ["total_commands", "cowoncy_earnings", "gamble_earnings", "weekly_runtimes"]) {
+        if (chartInstances[item]) {
+            // this returns `undefined` if none, safe!
+            chartInstances[item].destroy()
+        }
+    }
+
     await handle_total_commands_chart();
     await handle_cowoncy_earnings_chart();
     await handle_weekly_runtimes_chart();
@@ -399,7 +407,6 @@ function uptime_calc(arr) {
     const minutes = Math.floor((sec % 3600) / 60);
     let seconds = Math.round(sec % 60);
 
-    // Handle rounding overflow (e.g., 59.6 → 60)
     if (seconds === 60) {
         seconds = 0;
         if (minutes === 59) {
@@ -415,4 +422,12 @@ function uptime_calc(arr) {
     const s = String(seconds).padStart(2, "0");
 
     return `${h}:${m}:${s}`;
+}
+
+async function resetChart(chartId) {
+    /*const chart = chartInstances[chartId];
+    if (chart) {
+        chart.resetZoom();
+    }*/
+    await handle_charts()
 }

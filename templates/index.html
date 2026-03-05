@@ -14,50 +14,55 @@ the Free Software Foundation, either version 3 of the License, or
 
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>OwO-Dusk - Web Dashboard</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@latest"></script>
-        <script src="{{ url_for('static', filename='script.js') }}"></script>
-        <script src="../static/test.js"></script>
-        <link rel="stylesheet" href="../static/style.css">
-        
-    </head>
-    <body>
-        <!--https://www.w3schools.com/tags/tag_header.asp
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>OwO-Dusk - Web Dashboard</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@latest"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="../static/test.js"></script>
+    <link rel="stylesheet" href="../static/style.css">
+
+</head>
+
+<body>
+    <!--https://www.w3schools.com/tags/tag_header.asp
         Same as div tag, but for better readability it seems.-->
-        <header class="nav-area">
-            <!--Nav Bar area.-->
-            <nav>
-                <div class="nav-wrapper">
-                    <div>
-                        <img class="icon" src="{{ url_for('static', filename='imgs/logo.png') }}" alt="OwO-Dusk Logo">
-                    </div>
-                    <div>
-                        <p><b>OwO-Dusk v{{ version }}</b></p>
-                    </div>
-                    <div class="support">
-                        <a href="https://github.com/EchoQuill" target="_blank" rel="noopener noreferrer">
-                            <img src="{{ url_for('static', filename='imgs/github.png') }}" alt="GitHub Repo" class="icon">
-                        </a>
-                        <a href="https://discord.gg/pyvKUh5mMU" target="_blank" rel="noopener noreferrer">
-                            <img src="{{ url_for('static', filename='imgs/discord.png') }}" alt="Discord" class="discord-icon">
-                        </a>
-                    </div>
+    <header class="nav-area">
+        <!--Nav Bar area.-->
+        <nav>
+            <div class="nav-wrapper">
+                <div>
+                    <img class="icon" src="{{ url_for('static', filename='imgs/logo.png') }}" alt="OwO-Dusk Logo">
                 </div>
-            </nav>
-        </header>
-        
+                <div>
+                    <p><b>OwO-Dusk v{{ version }}</b></p>
+                </div>
+                <div class="support">
+                    <a href="https://github.com/EchoQuill" target="_blank" rel="noopener noreferrer">
+                        <img src="{{ url_for('static', filename='imgs/github.png') }}" alt="GitHub Repo" class="icon">
+                    </a>
+                    <a href="https://discord.gg/pyvKUh5mMU" target="_blank" rel="noopener noreferrer">
+                        <img src="{{ url_for('static', filename='imgs/discord.png') }}" alt="Discord"
+                            class="discord-icon">
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
     <div class="main-content-container">
-    
+
         <div class="section-area" style="height: auto;">
-            <h2>Overview</h2>
+            <div class="header-container">
+                <h2>Overview</h2>
+            </div>
             <div class="cards-area">
                 <div class="cards-wrapper">
                     <div class="card">
@@ -72,7 +77,7 @@ the Free Software Foundation, either version 3 of the License, or
                     </div>
                     <div class="card">
                         <div class="card-label">commands 🚀</div>
-                        <div class="card-number"id="total_commands_card">null</div>
+                        <div class="card-number" id="total_commands_card">null</div>
                         <div class="card-note">(All total commands ran)</div>
                     </div>
                     <div class="card">
@@ -87,29 +92,44 @@ the Free Software Foundation, either version 3 of the License, or
 
         <div class="section-grid">
             <div id="console-area" class="section-area">
-                <h2>Activity Console</h2>
+                <div class="header-container">
+                    <h2>Activity Console</h2>
+                </div>
                 <div id="messages" class="messages"></div>
             </div>
-            
+
             <div class="section-area">
-                <h2>Total Commands Sent</h2>
+                <div class="header-container">
+                    <h2>Total Commands Sent</h2>
+                    <button class="reset-btn" onclick="resetChart('total_commands')">↻</button>
+                </div>
                 <div class="contain-chart"><canvas id="total_commands"></canvas></div>
             </div>
         </div>
         <div class="section-area">
-            <h2>Cowoncy Earnings</h2>
+            <div class="header-container">
+                <h2>Cowoncy Earnings</h2>
+                <button class="reset-btn" onclick="resetChart('cowoncy_earnings')">↻</button>
+            </div>
             <div class="contain-chart"><canvas id="cowoncy_earnings"></canvas></div>
         </div>
         <div class="section-area">
-            <h2>Weekly Runtime</h2>
+            <div class="header-container">
+                <h2>Weekly Runtime</h2>
+                <button class="reset-btn" onclick="resetChart('weekly_runtimes')">↻</button>
+            </div>
             <div class="contain-chart"><canvas id="weekly_runtimes"></canvas></div>
         </div>
         <div class="section-area">
-            <h2>Gamble Winrates</h2>
+            <div class="header-container">
+                <h2>Gamble Winrates</h2>
+                <button class="reset-btn" onclick="resetChart('gamble_earnings')">↻</button>
+            </div>
             <div class="contain-chart"><canvas id="gamble_earnings"></canvas></div>
         </div>
-        
+
     </div>
     </div>
-    </body>
+</body>
+
 </html>
