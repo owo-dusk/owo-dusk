@@ -45,9 +45,13 @@ class ChannelSwitcher(commands.Cog):
                 break
 
         available_channels = item["channels"] if item else []
+        available_channels+cnf["allUsers"]["channels"]
         valid_channels = [
             cid for cid in available_channels if cid != current_channel_id
         ]
+        # Converts to set (no repitations)
+        valid_channels = set(valid_channels)
+
         # Temporary
         if self.default_channel_id not in valid_channels:
             valid_channels.append(self.default_channel_id)
@@ -87,3 +91,4 @@ class ChannelSwitcher(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(ChannelSwitcher(bot))
+
