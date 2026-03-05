@@ -268,17 +268,6 @@ class Captcha(commands.Cog):
             if not self.kill_task.done():
                 self.kill_task.cancel()
 
-        if self.bot.global_settings_dict["webhook"]["enabled"]:
-            await self.bot.webhookSender(
-                title=f"-{self.bot.username} - Captcha Solved",
-                desc=f"**User** <@{self.bot.user.id}> solved captcha successfully!",
-                colors="#00FFAF",
-                img_url="https://cdn.discordapp.com/emojis/1090553827847045160.gif",
-                author_img_url="https://i.imgur.com/6zeCgXo.png",
-                webhook_url=self.bot.global_settings_dict["webhook"].get(
-                    "webhookCaptchaUrl", None
-                ),
-            )
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -309,6 +298,17 @@ class Captcha(commands.Cog):
                 self.bot.command_handler_status["captcha"] = False
                 self.bot.update_captcha_db()
                 await self.handle_solves()
+                if self.bot.global_settings_dict["webhook"]["enabled"]:
+                    await self.bot.webhookSender(
+                        title=f"-{self.bot.username} - Captcha Solved",
+                        desc=f"**User** <@{self.bot.user.id}> solved captcha successfully!",
+                        colors="#00FFAF",
+                        img_url="https://cdn.discordapp.com/emojis/1090553827847045160.gif",
+                        author_img_url="https://i.imgur.com/6zeCgXo.png",
+                        webhook_url=self.bot.global_settings_dict["webhook"].get(
+                            "webhookCaptchaUrl", None
+                        ),
+                    )
                 return
 
         channels = [self.bot.dm.id, self.bot.cm.id, self.bot.boss_channel_id]
