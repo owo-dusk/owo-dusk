@@ -7,7 +7,7 @@
         "port": 1200,
         "refreshInterval": 15,
         "password": "areallylongandsecretpassword",
-        "enableHost": false
+        "enableHost": true
     },
     "account": {
         "startupDelay": [
@@ -106,6 +106,9 @@
     },
     "channelSwitcher": {
         "enabled": false,
+        "allUsers": {
+            "channels": [1,2,3]
+        },
         "users": [
             {
                 "userid": 23454123321,
@@ -116,7 +119,7 @@
                 "channels": [42342344, 552342345]
             }
         ],
-        "interval": [300, 600],
+        "interval": [20, 40],
         "delayBeforeSwitch": [2,4]
     }
 }

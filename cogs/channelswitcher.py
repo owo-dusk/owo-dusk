@@ -19,8 +19,12 @@ from discord.ext.commands import ExtensionNotLoaded
 class ChannelSwitcher(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # Temporary
+        # Temporary, sets at start. so won't change
         self.default_channel_id = self.bot.channel_id
+
+    @property
+    def cur_channel(self):
+        return self.bot.channel_id
 
     @tasks.loop()
     async def switch_channel_loop(self):
@@ -36,7 +40,6 @@ class ChannelSwitcher(commands.Cog):
 
     async def change_channel(self):
         cnf = self.bot.global_settings_dict["channelSwitcher"]
-        current_channel_id = self.bot.cm.id
 
         item = None
         for entry in cnf["users"]:
@@ -45,12 +48,12 @@ class ChannelSwitcher(commands.Cog):
                 break
 
         available_channels = item["channels"] if item else []
-        available_channels+cnf["allUsers"]["channels"]
+        available_channels = available_channels+cnf["allUsers"]["channels"]
         valid_channels = [
-            cid for cid in available_channels if cid != current_channel_id
+            cid for cid in available_channels if cid != self.cur_channel
         ]
         # Converts to set (no repitations)
-        valid_channels = set(valid_channels)
+        valid_channels = list(set(valid_channels))
 
         # Temporary
         if self.default_channel_id not in valid_channels:
@@ -58,19 +61,20 @@ class ChannelSwitcher(commands.Cog):
 
         while valid_channels:
             channel_id = self.bot.random.choice(valid_channels)
-            try:
-                new_channel = await self.bot.fetch_channel(channel_id)
-                if new_channel:
-                    await self.bot.empty_checks_and_switch(new_channel)
-                    return (
-                        True,
-                        f"Switched successfully to channel {new_channel.name}",
+            if channel_id!=self.cur_channel:
+                try:
+                    new_channel = await self.bot.fetch_channel(channel_id)
+                    if new_channel:
+                        await self.bot.empty_checks_and_switch(new_channel)
+                        return (
+                            True,
+                            f"Switched successfully to channel {new_channel.name}",
+                        )
+                except Exception as e:
+                    await self.bot.log(
+                        f"Error - Failed to fetch channel with id {channel_id}: {e}",
+                        "#c25560",
                     )
-            except Exception as e:
-                await self.bot.log(
-                    f"Error - Failed to fetch channel with id {channel_id}: {e}",
-                    "#c25560",
-                )
 
             valid_channels.remove(channel_id)
         return False, "Failed to switch channel - No active channels found."
@@ -91,4 +95,3 @@ class ChannelSwitcher(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(ChannelSwitcher(bot))
-
