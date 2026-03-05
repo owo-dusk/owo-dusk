@@ -13,7 +13,6 @@
 import asyncio
 
 from discord.ext import commands, tasks
-from datetime import datetime, timezone
 from discord.ext.commands import ExtensionNotLoaded
 
 
@@ -34,21 +33,6 @@ class ChannelSwitcher(commands.Cog):
             await self.bot.log(f"Error - {resp}", "#c25560")
         else:
             await self.bot.log(f"Channel switcher: {resp}", "#9dc3f5")
-
-    """def check_channel(self):
-        cnf = self.bot.global_settings_dict["channelSwitcher"]
-        
-        item = None
-        for entry in cnf["users"]:
-            if entry["userid"] == self.bot.user.id:
-                item = entry
-                break
-
-        available_channels = item["channels"] if item else []
-
-        if available_channels:
-            if self.bot.channel_id not in available_channels:
-                # add channel to json"""
 
     async def change_channel(self):
         cnf = self.bot.global_settings_dict["channelSwitcher"]
@@ -73,13 +57,11 @@ class ChannelSwitcher(commands.Cog):
             try:
                 new_channel = await self.bot.fetch_channel(channel_id)
                 if new_channel:
-                    no_activity = await self.ensure_no_activity(new_channel)
-                    if no_activity:
-                        await self.bot.empty_checks_and_switch(new_channel)
-                        return (
-                            True,
-                            f"Switched successfully to channel {new_channel.name}",
-                        )
+                    await self.bot.empty_checks_and_switch(new_channel)
+                    return (
+                        True,
+                        f"Switched successfully to channel {new_channel.name}",
+                    )
             except Exception as e:
                 await self.bot.log(
                     f"Error - Failed to fetch channel with id {channel_id}: {e}",
@@ -89,12 +71,6 @@ class ChannelSwitcher(commands.Cog):
             valid_channels.remove(channel_id)
         return False, "Failed to switch channel - No active channels found."
 
-    async def ensure_no_activity(self, channel):
-        async for message in channel.history(limit=1):
-            current_timestamp = datetime.now(timezone.utc)
-            time_diff = (current_timestamp - message.created_at).total_seconds()
-            return time_diff > 5
-        return True
 
     async def cog_load(self):
         if not self.bot.global_settings_dict["channelSwitcher"]["enabled"]:
@@ -111,3 +87,4 @@ class ChannelSwitcher(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(ChannelSwitcher(bot))
+
