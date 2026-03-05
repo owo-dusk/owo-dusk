@@ -126,7 +126,7 @@ owoArt = r"""
  \__/ (_/\_) \__/     (____/\____/(____/(__\_)
 """
 owoPanel = Panel(Align.center(owoArt), style="purple ", highlight=False)
-version = "2.4.5"
+version = "2.5.0"
 
 
 """FLASK APP"""
@@ -1824,7 +1824,7 @@ if __name__ == "__main__":
             color = discord.Color(0xC48DC3)
             emb = discord.Embed(
                 title="Star the github repo!",
-                description="Starring the GitHub repo motivates us to keep adding new and better features! It takes less than 5 minutes to do that, so do star the GitHub repo at https://github.com/echoquill/owo-dusk .",
+                description="Starring the GitHub repo motivates us to keep adding new and better features! It takes less than 5 minutes to do that, so do star the GitHub repo at https://github.com/owo-dusk/owo-dusk .",
                 color=color,
             )
             emb.set_thumbnail(

@@ -41,7 +41,7 @@ class webhookSender:
                 json=data,
                 headers={"Content-Type": "application/json"},
             ) as resp:
-                text = await resp.text()
+                _ = await resp.text()
                 # Task 3: handle webhook ratelimits
 
     async def worker(self):
@@ -54,7 +54,7 @@ class webhookSender:
                         self.webhook_url,
                         json=data,  # payload
                         headers={"Content-Type": "application/json"},
-                    ) as resp:
+                    ) as _:
                         # text = await resp.text()
                         # print(f"[Webhook] {resp.status}: {text}")
                         pass

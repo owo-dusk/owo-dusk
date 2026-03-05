@@ -24,8 +24,7 @@ CONF_THRES = 0.3
 
 # Loads the model
 onnx_session = onnxruntime.InferenceSession(
-    ONNX_MODEL_PATH,
-    providers=["CPUExecutionProvider"]
+    ONNX_MODEL_PATH, providers=["CPUExecutionProvider"]
 )
 
 inputs = onnx_session.get_inputs()
@@ -50,6 +49,7 @@ def letterbox(img_array, new_size=384, color=(114, 114, 114)):
     new_img.paste(img_resized, (paste_x, paste_y))
 
     return np.array(new_img)
+
 
 async def solveImageCaptcha(captcha_url, letter_count, session):
     try:
@@ -86,11 +86,13 @@ async def solveImageCaptcha(captcha_url, letter_count, session):
         if conf < CONF_THRES:
             continue
 
-        detections.append({
-            "char": CLASSES[int(cls_id)],
-            "conf": float(conf),
-            "cx": float((x1 + x2) / 2)
-        })
+        detections.append(
+            {
+                "char": CLASSES[int(cls_id)],
+                "conf": float(conf),
+                "cx": float((x1 + x2) / 2),
+            }
+        )
 
     # If too many characters detected
     if len(detections) > letter_count:

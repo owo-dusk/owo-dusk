@@ -87,4 +87,3 @@ class ChannelSwitcher(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(ChannelSwitcher(bot))
-

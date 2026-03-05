@@ -68,12 +68,12 @@ class Battle(commands.Cog):
                             in embed.author.name
                         ):
                             if embed.footer:
-                                if self.bot.settings_dict_temp.commands.battle.show_streak:
+                                if self.settings.show_streak:
                                     await self.bot.log(
                                         f"{embed.footer.text}", "#292252"
                                     )
                                 if "You lost in " in embed.footer.text:
-                                    if self.bot.settings_dict_temp.commands.battle.notify_streak_loss:
+                                    if self.settings.notify_streak_loss:
                                         notify(
                                             embed.footer.text, "You lost your streak!"
                                         )
@@ -98,7 +98,7 @@ class Battle(commands.Cog):
 
                             await self.bot.remove_queue(id="battle")
                             await self.bot.sleep(
-                                self.bot.settings_dict_temp.commands.battle.get_cd()
+                                self.settings.get_cd()
                             )
                             self.cmd["cmd_name"] = (
                                 self.bot.alias["battle"]["shortform"]

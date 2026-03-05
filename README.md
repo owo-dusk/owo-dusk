@@ -23,7 +23,7 @@ Best selfbot for owobot currently with alot of cool features like Boss battles, 
 ---
 * Computer
   ```
-  git clone https://github.com/echoquill/owo-dusk.git
+  git clone https://github.com/owo-dusk/owo-dusk.git
   cd owo-dusk
   python setup.py
   python uwu.py
@@ -33,7 +33,7 @@ Best selfbot for owobot currently with alot of cool features like Boss battles, 
   
 * Termux
   ```
-  pkg update && pkg upgrade -y && termux-setup-storage && pkg install python -y && pkg install git -y && pkg install termux-api -y && cd storage/downloads && git clone https://github.com/echoquill/owo-dusk.git && cd owo-dusk && python setup.py && python uwu.py
+  pkg update && pkg upgrade -y && termux-setup-storage && pkg install python -y && pkg install git -y && pkg install termux-api -y && cd storage/downloads && git clone https://github.com/owo-dusk/owo-dusk.git && cd owo-dusk && python setup.py && python uwu.py
   ```
   > Make sure to install termux and termux:api (give this `notifications` permission) app from fdroid or github.
   > after the above is done, do the steps setup.py asks you to.
