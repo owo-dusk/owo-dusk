@@ -23,6 +23,7 @@ class Settings:
         self.daily = d.get("autoDaily", False)
         self.cashCheck = d.get("cashCheck", False)
         self.prefix = d.get("setprefix", "owo ")
+        self.mail = d.get("claimMail", False)
 
         # Commands
         self.commands = Commands(d.get("commands", {}))
@@ -50,6 +51,7 @@ class Settings:
 
         # Custom command
         self.customCommands = CustomCommands(d.get("customCommands", {}))
+        
 
 
 GEMS_RARITY = [
@@ -244,6 +246,7 @@ class BossBattle:
     def __init__(self, d: dict):
         self.enabled = d.get("enabled", False)
         self.joinChance = d.get("joinChancePercent", 0)
+        self.joinAll = d.get("joinAllGuilds", False)
 
         if not 0 <= self.joinChance <= 100:
             raise ValueError("Invalid join percent: must be between 0 and 100")

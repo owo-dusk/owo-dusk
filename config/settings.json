@@ -1,6 +1,9 @@
 {
-    "setprefix": "owo ",
-    "useSlashCommands": false,
+    "setprefix": "w",
+    "useSlashCommands": true,
+    "claimMail": true,
+    "autoDaily": true,
+    "cashCheck": true,
     "commands": {
         "hunt": {
             "enabled": true,
@@ -68,7 +71,7 @@
             }
         },
         "curse": {
-            "enabled": false,
+            "enabled": true,
             "cooldown": [
                 310,
                 400
@@ -151,13 +154,13 @@
         }
     },
     "gamble": {
-        "allottedAmount": 30000,
+        "allottedAmount": 10000,
         "goalSystem": {
-            "enabled": false,
-            "amount": 300
+            "enabled": true,
+            "amount": 30000
         },
         "coinflip": {
-            "enabled": false,
+            "enabled": true,
             "startValue": 200,
             "multiplierOnLose": 2,
             "cooldown": [
@@ -170,7 +173,7 @@
             }
         },
         "slots": {
-            "enabled": false,
+            "enabled": true,
             "startValue": 200,
             "multiplierOnLose": 2,
             "cooldown": [
@@ -179,7 +182,7 @@
             ]
         },
         "blackjack": {
-            "enabled": false,
+            "enabled": true,
             "startValue": 200,
             "multiplierOnLose": 2,
             "cooldown": [
@@ -189,8 +192,9 @@
         }
     },
     "bossBattle": {
-        "enabled": false,
+        "enabled": true,
         "joinChancePercent": 80,
+        "joinAllGuilds": true,
         "guildJoinRules": {
             "ignoreGuildIds": [],
             "onlyJoinGuildIds": []
@@ -233,8 +237,6 @@
             0.09
         ]
     },
-    "autoDaily": true,
-    "cashCheck": true,
     "defaultCooldowns": {
         "longCooldown": [
             400,

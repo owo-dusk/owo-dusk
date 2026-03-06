@@ -12,11 +12,8 @@
 
 from discord.ext import commands
 import asyncio
-import json
-
-import components_v2 as comp
 from discord.ext.commands import ExtensionNotLoaded
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 class Boss(commands.Cog):
@@ -25,6 +22,7 @@ class Boss(commands.Cog):
         self.boss_tickets = 3
         self.sleeping = True
         self.joined_boss_ids = []
+        self.bot.message_dispatcher.register(self.on_component_message)
 
     @property
     def settings(self):
@@ -81,22 +79,39 @@ class Boss(commands.Cog):
                 if "reward" in media_item.url:
                     return media_item.placeholder
 
+        return None
+
     def check_if_joined(self, battle_id):
         if battle_id and battle_id not in self.joined_boss_ids:
             return False
 
         return True
 
-    @commands.Cog.listener()
-    async def on_socket_raw_receive(self, msg):
-        """
-        https://discordpy-self.readthedocs.io/en/latest/api.html?highlight=on_socket_raw_receive#discord.on_socket_raw_receive
-        For this to work enable_debug_events argument was passed as True in client.
+    def should_join_guild(self, channel):
+        if self.settings.joinAll:
+            if (
+                self.settings.ignoreGuilds
+                and channel.guild.id in self.settings.ignoreGuilds
+            ):
+                # Skip incase in guild ignore list.
+                return False
 
-        Right now we are getting the message object directly through on_socket_raw_receive
-        we may want to consider getting message once and sharing them instead to reduce unneccesory parsing of raw input.
-        """
+            if (
+                self.settings.joinGuilds
+                and channel.guild.id not in self.settings.joinGuilds
+            ):
+                # Skip incase in guild not in joinGuilds
+                return False
+            return True
+        elif channel.guild.id == self.bot.cm.guild.id:
+            # If not joinAll, then we only join boss battles in local server.
+            # Ignores Ignore list, because if local guild is ignored, there is no point 
+            # in enabling boss battle.
+            return True
+        
+        return False
 
+    async def on_component_message(self, message):
         if self.boss_tickets <= 0 or self.sleeping:
             if not self.sleeping:
                 await self.bot.log(
@@ -105,19 +120,7 @@ class Boss(commands.Cog):
                 await self.wait_till_reset_day()
             return
 
-        parsed_msg = json.loads(msg)
-        if parsed_msg["t"] != "MESSAGE_CREATE":
-            return
-
-        message = comp.message.get_message_obj(parsed_msg["d"])
-
-        if (
-            not (self.settings.ignoreGuilds or self.settings.joinGuilds)
-            and message.channel_id != self.bot.cm.id
-        ):
-            # No Join guilds or Ignore guilds, so scope is local server.
-            return
-
+        # Check potential boss battle spam join.
         if message.author.id == self.bot.owo_bot_id:
             if message.components:
                 for component in message.components:
@@ -136,12 +139,6 @@ class Boss(commands.Cog):
                                 # which will be done below
                                 self.joined_boss_ids.append(battle_id)
 
-                            if not self.settings.should_join():
-                                await self.bot.log(
-                                    "Skipping boss battle..",
-                                    "#6F7C8A",
-                                )
-                                return
 
                             # Boss Fight button
                             if (
@@ -153,23 +150,14 @@ class Boss(commands.Cog):
                                         message.channel_id
                                     )
 
-                                    if boss_channel:
-                                        self.bot.boss_channel_id = boss_channel.id
-                                        if (
-                                            self.settings.ignoreGuilds
-                                            and boss_channel.guild.id
-                                            in self.settings.ignoreGuilds
-                                        ):
-                                            # Skip incase in guild ignore list.
+                                    if boss_channel and self.should_join_guild(boss_channel):
+                                        if not self.settings.should_join():
+                                            await self.bot.log(
+                                                "Skipping boss battle..",
+                                                "#6F7C8A",
+                                            )
                                             return
-
-                                        if (
-                                            self.settings.joinGuilds
-                                            and boss_channel.guild.id
-                                            not in self.settings.joinGuilds
-                                        ):
-                                            # Skip incase in guild not in joinGuilds
-                                            return
+                                        self.bot.boss_channel_id = boss_channel.id # Re-Check Logic
 
                                         await asyncio.sleep(0.5)
                                         if not self.bot.command_handler_status[
@@ -184,9 +172,10 @@ class Boss(commands.Cog):
                                             )
                                             if click_status:
                                                 await self.bot.log(
-                                                    "Joined Boss battle!", "#B5C1CE"
+                                                    f"Joined Boss battle! -> {boss_channel.guild.name} - {boss_channel.name}", "#B5C1CE"
                                                 )
                                                 self.consume_boss_ticket()
+
 
                     if component.component_name == "text_display":
                         if (
@@ -208,3 +197,4 @@ class Boss(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Boss(bot))
+
