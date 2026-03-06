@@ -11,6 +11,14 @@
 # (at your option) any later version.
 
 import aiohttp
+import time
+
+
+def generate_nonce() -> str:
+    now_ms = int(time.time() * 1000)
+    a = now_ms - 1420070400000
+    r = a << 22
+    return str(r)
 
 
 class component_names:
@@ -79,9 +87,9 @@ def walker(components: list, message_details=None):
 
         if component_type == component_names.BUTTON_COMPONENT:
             # Accessing -> BUTTON_LIST.{element_name}
-            BUTTONS_LIST.append(button(component))
+            BUTTONS_LIST.append(accessory(component, message_details))
         elif component_type == component_names.SELECT_MENU_COMPONENT:
-            COMPONENTS_LIST.append(select_menu(component))
+            COMPONENTS_LIST.append(select_menu(component, message_details))
         elif component_type == component_names.SECTION_COMPONENT:
             # Both accessory and components are bundled together.
             # Currently only a thumbnail or button component..
@@ -127,20 +135,6 @@ class emoji:
         self.name = data.get("name")
 
 
-class button:
-    def __init__(self, component: dict):
-        self.component_name = COMPONENT_NAMES[component["type"]]
-        self.style = (
-            BUTTON_STYLES[component["style"]] if component.get("style") else None
-        )
-        self.label = component.get("label")
-        self.custom_id = component.get("custom_id")
-        if component.get("emoji"):
-            self.emoji = emoji(component.get("emoji"))
-        self.url = component.get("url")
-        self.disabled = component.get("disabled", False)
-
-
 class select_menu_options:
     # Menu inside select menu
     def __init__(self, data: dict):
@@ -152,7 +146,7 @@ class select_menu_options:
 
 class select_menu:
     # Actual select menu
-    def __init__(self, component: dict):
+    def __init__(self, component: dict, message_details):
         self.component_name = COMPONENT_NAMES[component["type"]]
         self.options = []
         if component.get("options"):
@@ -160,6 +154,53 @@ class select_menu:
                 self.options.append(select_menu_options(item))
         self.custom_id = component.get("custom_id")
         self.placeholder = component.get("placeholder")
+
+        self._message_channel_id = message_details["message_channel"]
+        self._message_id = message_details["message_id"]
+        self._message_flag = message_details["message_flag"]
+        self._author_id = message_details["message_author_id"]
+
+        self._options = []
+        for item in self.options:
+            self._options.append(item.value)
+
+    async def select(self, values: list, session, headers, guild_id):
+        if (
+            self._message_channel_id
+            and self._message_id
+            and self._message_flag
+            and self._author_id
+        ):
+            req_json = {
+                "type": 3,
+                "application_id": str(self._author_id),
+                "guild_id": str(guild_id),
+                "channel_id": str(self._message_channel_id),
+                "message_id": str(self._message_id),
+                "session_id": session,
+                "message_flags": int(self._message_flag),
+                "data": {
+                    "component_type": 3,
+                    "custom_id": self.custom_id,
+                    "type": 3,
+                    "values": values,
+                },
+            }
+
+            async with aiohttp.ClientSession() as http:
+                resp = await http.post(
+                    "https://discord.com/api/v9/interactions",
+                    json=req_json,
+                    headers=headers,
+                )
+
+                if resp.status_code != 204:
+                    print(
+                        f"Component selection failed ({resp.status_code}): {resp.text}"
+                    )
+                    return False
+
+                return True
 
 
 class section:
@@ -195,7 +236,7 @@ class media_gallery:
 
 class label:
     def __init__(self, component: dict):
-        # We are not handling compoents here because those are modals which isn't necessory (for now)
+        # We are not handling components here because those are modals which isn't necessory (for now)
         self.component_name = COMPONENT_NAMES[component["type"]]
         self.id = component.get("id")
         self.label = component.get("label")
@@ -207,6 +248,22 @@ class media:
         self.url = data.get("url")
         self.proxy_url = data.get("proxy_url")
         self.placeholder = data.get("placeholder")
+
+
+"""class button:
+    def __init__(self, component: dict):
+        # before removing, recheck why you put this here,
+        # Not used anywhere it seems
+        self.component_name = COMPONENT_NAMES[component["type"]]
+        self.style = (
+            BUTTON_STYLES[component["style"]] if component.get("style") else None
+        )
+        self.label = component.get("label")
+        self.custom_id = component.get("custom_id")
+        if component.get("emoji"):
+            self.emoji = emoji(component.get("emoji"))
+        self.url = component.get("url")
+        self.disabled = component.get("disabled", False)"""
 
 
 class accessory:
@@ -223,6 +280,7 @@ class accessory:
         self.description = data.get("description")
         self.type = int(data.get("type", -1))
         self.flags = data.get("flags")
+        self.style = BUTTON_STYLES[data["style"]] if data.get("style") else None
         if self.type == -1:
             # I am lazy to properly handle this lol
             # TASK: recheck whatever you did here!
