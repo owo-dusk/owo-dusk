@@ -539,6 +539,31 @@ def popup_main_loop():
     root.mainloop()
 
 
+class MessageDispatcher:
+    """
+    This is used like a middle man between on_socket_raw_receive and
+    reciever functions
+    """
+
+    def __init__(self):
+        self._message_handlers = []
+        self._edit_handlers = []
+
+    def register(self, func, edit=False):
+        if not edit:
+            self._message_handlers.append(func)
+        else:
+            self._edit_handlers.append(func)
+
+    async def dispatch_on_message(self, message):
+        for func in self._message_handlers:
+            await func(message)
+
+    async def dispatch_on_edit(self, message):
+        for func in self._edit_handlers:
+            await func(message)
+
+
 class MyClient(commands.Bot):
     def __init__(
         self, token, channel_id, global_settings_dict, token_len, *args, **kwargs
@@ -555,8 +580,8 @@ class MyClient(commands.Bot):
         self.state_event = asyncio.Event()
         self.queue = asyncio.PriorityQueue()
         self.settings_dict = None
-        # ;-; help.
-        self.settings_dict_temp: config_models.Settings | None = None
+        self.message_dispatcher = MessageDispatcher()
+        self.settings_dict_temp = None
         self.global_settings_dict = global_settings_dict
         self.captcha_settings_dict = captcha_settings_dict
         self.commands_dict = {}
@@ -604,6 +629,22 @@ class MyClient(commands.Bot):
                 "in_monitor": False,
                 "last_ran": 0,
             }
+
+    async def on_socket_raw_receive(self, msg):
+        """
+        Raw socket messages from Discord.py-self comes over here.
+        """
+
+        parsed_msg = json.loads(msg)
+        if parsed_msg.get("t") not in ["MESSAGE_CREATE", "MESSAGE_UPDATE"]:
+            return
+
+        message = components_v2.message.get_message_obj(parsed_msg["d"])
+
+        if parsed_msg["t"] == "MESSAGE_CREATE":
+            await self.message_dispatcher.dispatch_on_message(message)
+        else:
+            await self.message_dispatcher.dispatch_on_edit(message)
 
     async def set_stat(self, value):
         if value:
@@ -1324,6 +1365,8 @@ class MyClient(commands.Bot):
                 await self.set_stat(True)
 
     async def slashCommandSender(self, msg, color, channel, **kwargs):
+        if not channel:
+            channel = self.cm
         try:
             if not self.slash_commands.get(str(channel.id)):
                 await self.fetch_slash_commands(channel)
