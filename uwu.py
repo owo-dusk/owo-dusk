@@ -1041,8 +1041,13 @@ class MyClient(commands.Bot):
                 self.cmds_state[id]["in_queue"] = False
             self.update_cmd_db(id)
 
-    def construct_command(self, data):
+    def construct_command(self, data, guild_id):
         prefix = self.settings_dict_temp.prefix if data.get("prefix") else ""
+
+        if guild_id and guild_id != self.cm.guild.id:
+            # Revert 
+            prefix = "owo "
+
         return f"{prefix}{data['cmd_name']} {data.get('cmd_arguments', '')}".strip()
 
     async def put_queue(self, cmd_data, priority=False, quick=False):
@@ -1159,7 +1164,7 @@ class MyClient(commands.Bot):
         web_log=global_settings_dict["website"]["enabled"],
         webhook_useless_log=global_settings_dict["webhook"]["webhookUselessLog"],
         lineno=None,
-        filename=None
+        filename=None,
     ):
         global website_logs
         current_time = datetime.now().strftime("%H:%M:%S")
@@ -1190,6 +1195,15 @@ class MyClient(commands.Bot):
             await self.webhookSender(
                 footer=f"[{current_time}] {self.username} - {text}", colors=color
             )
+
+    async def fetch_slash_commands(self, channel):
+        if self.slash_commands.get(str(channel.id)):
+            return
+
+        self.slash_commands[str(channel.id)] = []
+        for command in await channel.application_commands():
+            if command.application.id == self.owo_bot_id:
+                self.slash_commands[str(channel.id)].append(command)
 
     async def webhookSender(
         self,
@@ -1281,16 +1295,26 @@ class MyClient(commands.Bot):
                     await channel.send(msg, silent=silent)
             else:
                 await channel.send(msg, silent=silent)
-                
+
             frame_info = traceback.extract_stack()[-2]
             filename = os.path.basename(frame_info.filename)
             lineno = frame_info.lineno
             if not disable_log:
-                await self.log(f"Ran: {msg}", color if color else "#5432a8", lineno=lineno, filename=filename)
+                await self.log(
+                    f"Ran: {msg}",
+                    color if color else "#5432a8",
+                    lineno=lineno,
+                    filename=filename,
+                )
             if misspelled:
                 await self.set_stat(False)
                 time = self.calculate_correction_time(message)
-                await self.log(f"correcting: {msg} -> {message} in {time}s", "#422052", lineno=lineno, filename=filename)
+                await self.log(
+                    f"correcting: {msg} -> {message} in {time}s",
+                    "#422052",
+                    lineno=lineno,
+                    filename=filename,
+                )
                 await asyncio.sleep(time)
                 if typingIndicator:
                     async with channel.typing():
@@ -1299,9 +1323,12 @@ class MyClient(commands.Bot):
                     await channel.send(message, silent=silent)
                 await self.set_stat(True)
 
-    async def slashCommandSender(self, msg, color, **kwargs):
+    async def slashCommandSender(self, msg, color, channel, **kwargs):
         try:
-            for command in self.slash_commands:
+            if not self.slash_commands.get(str(channel.id)):
+                await self.fetch_slash_commands(channel)
+
+            for command in self.slash_commands[str(channel.id)]:
                 if command.name == msg:
                     await self.wait_until_ready()
                     await command(**kwargs)
@@ -1464,11 +1491,10 @@ class MyClient(commands.Bot):
         # self.dm = await (await self.fetch_user(self.owo_bot_id)).create_dm()
         # remove temp fix in `cogs/captcha.py` if uncommenting
 
-        # Fetch slash commands in self.cm
-        self.slash_commands = []
-        for command in await self.cm.application_commands():
-            if command.application.id == self.owo_bot_id:
-                self.slash_commands.append(command)
+        # Stores slash commands. This will be populated.
+        self.slash_commands = {}
+
+        await self.fetch_slash_commands(self.cm)
 
         # Add account to stats.json
         self.default_config = {

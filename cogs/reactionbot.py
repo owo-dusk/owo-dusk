@@ -15,13 +15,15 @@ import time
 
 from discord.ext import commands, tasks
 from discord.ext.commands import ExtensionNotLoaded
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 class Reactionbot(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.cmd_states = {"hunt": 0, "battle": 0, "owo": 0, "pray": 0}
+        self.pray_channel = None
+        self.curse_channel = None
 
     @property
     def settings(self):
@@ -30,6 +32,14 @@ class Reactionbot(commands.Cog):
     @property
     def reaction_bot_settings(self):
         return self.bot.settings_dict_temp.cooldowns.reactionBot
+
+    def pray_curse_channels(self):
+        channels = []
+        for cmd in ["pray", "curse"]:
+            cnf = self.fetch_setings(cmd)
+            if cnf:
+                channels.append(cnf.custom_channel if cnf.enabled else self.bot.cm.id)
+        return channels
 
     def fetch_setings(self, cmd):
         return getattr(self.bot.settings_dict_temp.commands, cmd)
@@ -56,6 +66,25 @@ class Reactionbot(commands.Cog):
             else:
                 arg = str(user_id)
 
+        channelId = None
+        if id in ("pray", "curse"):
+            settings = self.fetch_setings(id)
+            if settings.custom_channel.enabled:
+                channelId = settings.custom_channel.channel
+                """try:
+                    if (
+                        not self.__dict__[f"{id}_channel"]
+                        or self.__dict__[f"{id}_channel"].id != channelId
+                    ):
+                        self.__dict__[f"{id}_channel"] = await self.bot.fetch_channel(
+                            channelId
+                        )
+                except Exception as e:
+                    await self.bot.log(
+                        f"Error - Failed to fetch channel with id {channelId}: {e}",
+                        "#c25560",
+                    )"""
+
         base = {
             "cmd_name": cmd_name.get(id, id),
             "prefix": id != "owo",
@@ -63,6 +92,7 @@ class Reactionbot(commands.Cog):
             "cmd_arguments": arg,
             "slash_cmd_name": id if id in {"hunt", "battle"} else None,
             "id": id if id != "curse" else "pray",
+            "channel": channelId,
         }
 
         return base
@@ -98,6 +128,7 @@ class Reactionbot(commands.Cog):
 
     async def send_cmd(self, cmd):
         await self.bot.sleep(self.reaction_bot_settings.get_cd())
+
         await self.bot.put_queue(self.fetch_cmd(cmd), quick=True, priority=True)
         self.cmd_states[cmd if cmd != "curse" else "pray"] = time.time()
 
@@ -152,6 +183,9 @@ class Reactionbot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author.id != self.bot.reaction_bot_id:
+            return
+
         hunt = self.check_cmd_state("hunt")
         battle = self.check_cmd_state("battle")
         pray = self.check_cmd_state("pray")
@@ -159,13 +193,10 @@ class Reactionbot(commands.Cog):
         owo = self.check_cmd_state("owo")
 
         if (
-            message.channel.id == self.bot.cm.id
-            and message.author.id == self.bot.reaction_bot_id
+            f"<@{self.bot.user.id}>" in message.content
+            or self.bot.user.name in message.content
         ):
-            if (
-                f"<@{self.bot.user.id}>" in message.content
-                or self.bot.user.name in message.content
-            ):
+            if message.channel.id == self.bot.cm.id:
                 if "**OwO**" in message.content and owo:
                     await self.send_cmd("owo")
 
@@ -177,7 +208,9 @@ class Reactionbot(commands.Cog):
                         cmd = "hunt" if hunt else "battle"
                         await self.send_cmd(cmd)
 
-                elif "**pray/curse**" in message.content and (pray or curse):
+            if message.channel.id in self.pray_curse_channels():
+                # check, incomplete!
+                if "**pray/curse**" in message.content and (pray or curse):
                     cmds = []
                     if pray:
                         cmds.append("pray")

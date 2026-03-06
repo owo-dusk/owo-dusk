@@ -16,7 +16,7 @@ import time
 from collections import deque
 from discord.ext import commands, tasks
 from datetime import datetime, timezone, timedelta
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 class Commands(commands.Cog):
@@ -80,9 +80,22 @@ class Commands(commands.Cog):
             cnf = self.command_hander_settings
             priority, _, cmd = await self.bot.queue.get()
             cmd_id = cmd.get("id")
+            custom_channel_id = cmd.get("channel")
+            channel = None
+
+            if custom_channel_id:
+                try:
+                    channel = await self.bot.fetch_channel(custom_channel_id)
+                except Exception as e:
+                    await self.bot.log(
+                        f"Error - Failed to fetch channel with id {custom_channel_id}: {e}",
+                        "#c25560",
+                    )
 
             if priority != 0:
-                while (time.time() - self.bot.cmds_state["global"]["last_ran"]) < cnf.betweenCommands[0]:
+                while (
+                    time.time() - self.bot.cmds_state["global"]["last_ran"]
+                ) < cnf.betweenCommands[0]:
                     await self.sleep_between_commands(cnf.betweenCommands)
 
             sleep_req, sleep_time = self.sleep_required()
@@ -110,11 +123,15 @@ class Commands(commands.Cog):
                 await self.bot.slashCommandSender(
                     cmd["slash_cmd_name"],
                     self.bot.misc["command_info"][cmd_id]["log_color"],
+                    channel=channel,
                 )
             else:
                 await self.bot.send(
-                    self.bot.construct_command(cmd),
+                    self.bot.construct_command(
+                        cmd, guild_id=channel.guild.id if channel else None
+                    ),
                     self.bot.misc["command_info"][cmd_id]["log_color"],
+                    channel=channel,
                 )
 
             """add command to the deque"""

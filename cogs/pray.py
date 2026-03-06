@@ -40,6 +40,7 @@ class Pray(commands.Cog):
             "prefix": True,
             "checks": True,
             "id": "pray",
+            "channel": None,
         }
 
         self.curse_cmd = {
@@ -48,12 +49,9 @@ class Pray(commands.Cog):
             "prefix": True,
             "checks": True,
             "id": "pray",  # using pray as id for curse to make it easier to close
+            "channel": None,
         }
         self.cmd_names = []
-        self.pray_channelId = 0
-        self.curse_channelId = 0
-        self.pray_channel = None
-        self.curse_channel = None
 
     def fetch_setings(self, cmd):
         return getattr(self.bot.settings_dict_temp.commands, cmd)
@@ -61,17 +59,6 @@ class Pray(commands.Cog):
     @property
     def cooldowns(self):
         return self.bot.settings_dict_temp.cooldowns
-
-    async def safe_send_message(self, cmd, cmd_argument_data):
-        while self.bot.command_handler_status["captcha"]:
-            await asyncio.sleep(0.5)
-
-        channel = self.__dict__[f"{cmd}_channel"]
-
-        await channel.send(f"owo {cmd} {cmd_argument_data}")
-        await self.bot.log(
-            f"{cmd} send successfully in channel {channel.name}", "#4a3466"
-        )
 
     async def start_pray_curse(self):
         self.pray_curse_ongoing = True
@@ -86,35 +73,21 @@ class Pray(commands.Cog):
             await self.bot.sleep_till(self.cooldowns.shortCooldown)
             self.__dict__[f"{cmd}_cmd"]["checks"] = False
 
-        cmd_argument_data = cmd_argument(cnf["userid"], cnf["pingUser"])
+        cmd_argument_data = cmd_argument(cnf.user_id, cnf.ping_user)
 
         self.__dict__[f"{cmd}_cmd"]["cmd_arguments"] = cmd_argument_data
 
-        if cnf["customChannel"]["enabled"]:
-            channelId = cnf["customChannel"]["channelId"]
-            if (
-                not self.__dict__[f"{cmd}_channel"]
-                or self.__dict__[f"{cmd}_channelId"] != channelId
-            ):
-                try:
-                    self.__dict__[f"{cmd}_channel"] = await self.bot.fetch_channel(
-                        channelId
-                    )
-                    self.__dict__[f"{cmd}_channelId"] = channelId
-
-                except Exception as e:
-                    await self.bot.log(
-                        f"Error - Failed to fetch channel with id {cnf['customChannel']['channelId']}: {e}",
-                        "#c25560",
-                    )
-            await self.safe_send_message(cmd, cmd_argument_data)
-
+        if cnf.custom_channel.enabled:
+            channelId = cnf.custom_channel.channel
         else:
-            await self.bot.put_queue(self.__dict__[f"{cmd}_cmd"], priority=True)
+            channelId = None
 
+        self.__dict__[f"{cmd}_cmd"]["channel"] = channelId
+
+        await self.bot.put_queue(self.__dict__[f"{cmd}_cmd"], priority=True)
         self.pray_curse_ongoing = False
 
-        if cnf["customChannel"]["enabled"]:
+        if cnf.custom_channel.enabled:
             # It will be a pain to add retry logic for this as we handle this manually instead of relying on command handler.
             self.startup = False
             await self.start_pray_curse()
