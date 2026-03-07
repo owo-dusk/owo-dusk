@@ -12,6 +12,8 @@
 
 import aiohttp
 import time
+import random
+import asyncio
 
 
 def generate_nonce() -> str:
@@ -212,6 +214,8 @@ class section:
             component.get("components", []), message_details
         )
 
+        
+
 
 class text_display:
     def __init__(self, component: dict):
@@ -327,7 +331,7 @@ class accessory:
                     "message_flags": self._message_flag,
                     "data": {"component_type": 2, "custom_id": self.custom_id},
                 }
-
+                await asyncio.sleep(random.uniform(0.5, 1))
                 async with aiohttp.ClientSession() as http:
                     async with http.post(
                         "https://discord.com/api/v9/interactions",

@@ -1048,6 +1048,7 @@ class MyClient(commands.Bot):
             "huntbot": commands_obj.huntbot.enabled,
             "level": commands_obj.lvlGrind.enabled,
             "lottery": commands_obj.lottery.enabled,
+            "mail": self.settings_dict_temp.mail,
             "others": True,
             "owo": commands_obj.owo.enabled and not reaction_bot_obj.owo,
             "pray": (commands_obj.pray.enabled or commands_obj.curse.enabled)
