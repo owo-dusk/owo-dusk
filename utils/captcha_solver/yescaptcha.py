@@ -1,3 +1,15 @@
+# This file is part of owo-dusk.
+#
+# Copyright (c) 2024-present EchoQuill
+#
+# Portions of this file are based on code by EchoQuill, licensed under the
+# GNU General Public License v3.0 (GPL-3.0).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
 import aiohttp
 import requests
 import asyncio
@@ -33,14 +45,14 @@ class captchaClient:
     def update_balance(self):
         self.balance = self.get_yescaptcha_balance()
 
-    async def solve_hcaptcha_logic(self, retries = 3):
+    async def solve_hcaptcha_logic(self, retries=3):
         """
         Attempts to solve the captcha using Yescaptcha.
         Retries creating a new task 'retries' times upon failure.
         """
         create_url = "https://api.yescaptcha.com/createTask"
         result_url = "https://api.yescaptcha.com/getTaskResult"
-        
+
         payload = {
             "clientKey": self.api,
             "task": {
@@ -55,10 +67,12 @@ class captchaClient:
             for attempt in range(retries):
                 try:
                     print(f"Solving captcha... Attempt {attempt + 1}/{retries}")
-                    
+
                     async with session.post(create_url, json=payload) as resp:
                         if resp.status != 200:
-                            raise Exception(f"Create task failed with HTTP {resp.status}")
+                            raise Exception(
+                                f"Create task failed with HTTP {resp.status}"
+                            )
                         data = await resp.json()
 
                     if data.get("errorId") != 0:
@@ -68,21 +82,25 @@ class captchaClient:
                     if not task_id:
                         raise Exception("No taskId returned from API")
 
-                    for _ in range(20):
-                        await asyncio.sleep(3)
+                    for _ in range(60):
+                        await asyncio.sleep(2)
 
                         async with session.post(
                             result_url,
                             json={"clientKey": self.api, "taskId": task_id},
                         ) as result_resp:
                             if result_resp.status != 200:
-                                raise Exception(f"Result check failed with HTTP {result_resp.status}")
-                            
+                                raise Exception(
+                                    f"Result check failed with HTTP {result_resp.status}"
+                                )
+
                             res = await result_resp.json()
 
                         if res.get("errorId") != 0:
                             # Logic error from solver side
-                            raise Exception(f"Polling API Error: {res.get('errorDescription')}")
+                            raise Exception(
+                                f"Polling API Error: {res.get('errorDescription')}"
+                            )
 
                         if res.get("status") == "ready":
                             return res["solution"]["gRecaptchaResponse"]
@@ -106,8 +124,6 @@ class captchaClient:
             print("Not enough balance")
             return False
 
-
-
         async with aiohttp.ClientSession() as session:
             # Authorize via Discord
             async with session.post(
@@ -116,7 +132,6 @@ class captchaClient:
                 headers=discord_headers,
                 allow_redirects=True,
             ) as oauth_resp:
-
                 if oauth_resp.status != 200:
                     print(f"OAuth failed with HTTP {oauth_resp.status}")
                     return False
@@ -175,7 +190,6 @@ class captchaClient:
                     "Content-Type": "application/json",
                 },
             ) as verify_resp:
-
                 if verify_resp.status == 200:
                     self.update_balance()
                     return True
