@@ -17,15 +17,20 @@ class Chat(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @property
+    def settings(self):
+        return self.bot.global_settings_dict.textCommands
+
     @commands.Cog.listener()
     async def on_message(self, message):
-        cnf = self.bot.global_settings_dict["textCommands"]
-
         if (
             message.author.id
-            in [self.bot.user.id, 1209017744696279041] + cnf["allowedUsers"]
+            in [self.bot.user.id, 1209017744696279041] + self.settings.allowedUsers
         ):
-            if f"{cnf['prefix']}{cnf['commandToStopUser']}" in message.content.lower():
+            if (
+                f"{self.settings.prefix}{self.settings.stopCommand}"
+                in message.content.lower()
+            ):
                 await self.bot.log(
                     "stopping owo-dusk.. Please be warned that this sometimes doesn't work as expected. Please don't rely on it much.",
                     "#87875f",
@@ -33,13 +38,14 @@ class Chat(commands.Cog):
                 self.bot.command_handler_status["sleep"] = True
 
             elif (
-                f"{cnf['prefix']}{cnf['commandToStartUser']}" in message.content.lower()
+                f"{self.settings.prefix}{self.settings.startCommand}"
+                in message.content.lower()
             ):
                 await self.bot.log("starting owo-dusk..", "#87875f")
                 self.bot.command_handler_status["sleep"] = False
 
         if (
-            f"{cnf['prefix']}{cnf['commandToRestartAfterCaptcha']}"
+            f"{self.settings.prefix}{self.settings.restartCommand}"
             in message.content.lower()
         ):
             await self.bot.log("restarting owo-dusk after captcha", "#87875f")

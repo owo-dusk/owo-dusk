@@ -66,6 +66,13 @@ class Hunt(commands.Cog):
     def settings(self):
         return self.bot.settings_dict_temp.commands.hunt
 
+    @property
+    def webhook_settings(self):
+        return self.bot.global_settings_dict.webhook
+
+    def should_log_emoji(self, emoji_rank):
+        return getattr(self.webhook_settings.animalLog.rank, emoji_rank, False)
+
     def get_emoji_tier(self, text, emoji_dict=emoji_dict):
         # https://emojiapi.dev/api/v1/lady_beetle/100.png
         pattern = re.compile(
@@ -92,9 +99,7 @@ class Hunt(commands.Cog):
             emoji_data = emoji_dict.get(emoji)
 
             if emoji_data:
-                if self.bot.global_settings_dict["webhook"]["animal_log"]["rank"][
-                    emoji_data["rank"]
-                ]:
+                if self.should_log_emoji(emoji_data["rank"]):
                     if emoji.startswith("<a:"):
                         emoji_id = emoji[3:-1]
                         url = f"https://cdn.discordapp.com/emojis/{emoji_id}.gif"
@@ -187,10 +192,8 @@ class Hunt(commands.Cog):
                 self.bot.update_cash(5, reduce=True)
 
                 if (
-                    self.bot.global_settings_dict["webhook"]["enabled"]
-                    and self.bot.global_settings_dict["webhook"]["animal_log"][
-                        "enabled"
-                    ]
+                    self.webhook_settings.enabled
+                    and self.webhook_settings.animalLog.enabled
                 ):
                     result_list, highest_rank = self.get_emoji_tier(msg_line)
                     if result_list:

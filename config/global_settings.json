@@ -1,6 +1,6 @@
 {
     "typingIndicator": true,
-    "silentTextMessages": false,
+    "silentMessages": false,
     "offlineStatus": false,
     "website": {
         "enabled": true,
@@ -33,10 +33,10 @@
     "webhook": {
         "enabled": false,
         "webhookUselessLog": false,
-        "webhookUrl": "Your webhook URL here!",
+        "webhookUrl": "Webhook Url here!",
         "webhookCaptchaUrl": null,
-        "webhookUserIdToPingOnCaptcha": 1,
-        "animal_log": {
+        "webhookUserIdToPingOnCaptcha": "user id to ping here",
+        "animalLog": {
             "enabled": true,
             "rank": {
                 "common": false,
@@ -51,8 +51,8 @@
             }
         },
         "others": {
-            "log_lootbox": true,
-            "log_crate": true
+            "logLootbox": true,
+            "logCrate": true
         }
     },
     "console": {
@@ -69,7 +69,7 @@
             "bannedContent": "{username} Banned from OwO!",
             "reccur": {
                 "enabled": true,
-                "times_to_reccur": 3
+                "timesToReccur": 3
             }
         },
         "playAudio": {
@@ -111,12 +111,12 @@
         },
         "users": [
             {
-                "userid": 23454123321,
-                "channels": [444234234, 23423423, 234324234]
+                "userid": "23454123321",
+                "channels": ["444234234", "23423423", "234324234"]
             },
             {
-                "userid": 23432454321,
-                "channels": [42342344, 552342345]
+                "userid": "23432454321",
+                "channels": ["42342344", "552342345"]
             }
         ],
         "interval": [20, 40],

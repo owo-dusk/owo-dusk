@@ -26,10 +26,14 @@ class ChannelSwitcher(commands.Cog):
     def cur_channel(self):
         return self.bot.channel_id
 
+    @property
+    def settings(self):
+        return self.bot.global_settings_dict.channelSwitcher
+
     @tasks.loop()
     async def switch_channel_loop(self):
         await self.bot.sleep_till(
-            self.bot.global_settings_dict["channelSwitcher"]["interval"]
+            self.settings.interval
         )
         status, resp = await self.change_channel()
 
@@ -39,16 +43,14 @@ class ChannelSwitcher(commands.Cog):
             await self.bot.log(f"Channel switcher: {resp}", "#9dc3f5")
 
     async def change_channel(self):
-        cnf = self.bot.global_settings_dict["channelSwitcher"]
-
         item = None
-        for entry in cnf["users"]:
-            if entry["userid"] == self.bot.user.id:
+        for entry in self.settings.users:
+            if entry.userid == self.bot.user.id:
                 item = entry
                 break
 
-        available_channels = item["channels"] if item else []
-        available_channels = available_channels+cnf["allUsers"]["channels"]
+        available_channels = item.channels if item else []
+        available_channels = available_channels+self.settings.allUsers
         valid_channels = [
             cid for cid in available_channels if cid != self.cur_channel
         ]
@@ -81,7 +83,7 @@ class ChannelSwitcher(commands.Cog):
 
 
     async def cog_load(self):
-        if not self.bot.global_settings_dict["channelSwitcher"]["enabled"]:
+        if not self.settings.enabled:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.channelSwitcher"))
             except ExtensionNotLoaded:

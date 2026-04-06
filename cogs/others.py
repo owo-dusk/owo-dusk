@@ -60,6 +60,10 @@ class Others(commands.Cog):
     def auto_use(self):
         return self.bot.settings_dict_temp.autoUse
 
+    @property
+    def webhook_settings(self):
+        return self.bot.global_settings_dict.webhook
+
     @commands.Cog.listener()
     async def on_message(self, message):
         nick = self.bot.get_nick(message)
@@ -115,8 +119,8 @@ class Others(commands.Cog):
                     await self.bot.put_queue(self.crate_cmd)
 
                 if (
-                    self.bot.global_settings_dict["webhook"]["enabled"]
-                    and self.bot.global_settings_dict["webhook"]["others"]["log_crate"]
+                    self.webhook_settings.enabled
+                    and self.webhook_settings.others.crate
                 ):
                     await self.bot.webhookSender(
                         title="Found crate! ✨",
@@ -130,17 +134,9 @@ class Others(commands.Cog):
                 "** You received a **lootbox**!" in message.content
                 or "You found a **lootbox**!" in message.content
             ):
-                if self.auto_use.lootbox:
-                    await self.bot.put_queue(self.lootbox_cmd)
-                    # give time for command to run
-                    await asyncio.sleep(2.5)
-                    self.bot.user_status["no_gems"] = False
-
                 if (
-                    self.bot.global_settings_dict["webhook"]["enabled"]
-                    and self.bot.global_settings_dict["webhook"]["others"][
-                        "log_lootbox"
-                    ]
+                    self.webhook_settings.enabled
+                    and self.webhook_settings.others.lootbox
                 ):
                     await self.bot.webhookSender(
                         title="Found lootbox! ✨",
@@ -149,6 +145,14 @@ class Others(commands.Cog):
                         img_url="https://cdn.discordapp.com/emojis/621847969146339378.gif",
                         author_img_url="https://i.imgur.com/6zeCgXo.png",
                     )
+                
+                if self.auto_use.lootbox:
+                    await self.bot.put_queue(self.lootbox_cmd)
+                    # give time for command to run
+                    await asyncio.sleep(2.5)
+                    self.bot.user_status["no_gems"] = False
+
+                
 
             # Add animals to team
             elif "Create one with `owo team add {animal}`" in message.content:

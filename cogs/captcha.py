@@ -75,10 +75,11 @@ def get_channel_name(channel):
 
 
 def console_handler(cnf, captcha=True):
-    if cnf["runConsoleCommandOnCaptcha"] and captcha:
-        run_system_command(cnf["commandToRunOnCaptcha"], timeout=5)
-    elif cnf["runConsoleCommandOnBan"] and not captcha:
-        run_system_command(cnf["commandToRunOnBan"], timeout=5)
+    # If captcha flag set to False, Ban command will be ran
+    if cnf.onCaptcha and captcha:
+        run_system_command(cnf.captchaCommand, timeout=5)
+    elif cnf.onBan and not captcha:
+        run_system_command(cnf.banCommand, timeout=5)
 
 
 def get_reccur_sleep_time(times_to_reccur):
@@ -100,6 +101,22 @@ class Captcha(commands.Cog):
     def fetch_setings(self, cmd):
         return getattr(self.bot.settings_dict_temp.commands, cmd)
 
+    @property
+    def captcha_settings(self):
+        return self.bot.global_settings_dict.captcha
+
+    @property
+    def notification_settings(self):
+        return self.captcha_settings.notifications
+
+    @property
+    def toast_settings(self):
+        return self.captcha_settings.toastOrPopup
+
+    @property
+    def termux_settings(self):
+        return self.captcha_settings.termux
+
     async def kill_code(self):
         await asyncio.sleep(590)
         if self.bot.command_handler_status["captcha"]:
@@ -109,25 +126,10 @@ class Captcha(commands.Cog):
     @tasks.loop()
     async def reccur_notifications(self):
         if self.content_to_notify:
-            """if on_mobile:
-                run_system_command(
-                    f"termux-notification -t '{self.bot.username} captcha!' -c '{self.content_to_notify}' --led-color '#a575ff' --priority 'high'",
-                    timeout=5, 
-                    retry=True
-                    )
-            else:
-                notification.notify(
-                    title=f,
-                    message=,
-                    app_icon=None,
-                    timeout=15
-                )"""
             notify(self.content_to_notify, f"Captcha - {self.bot.username}!")
             self.reccured += 1
 
-        times_to_reccur = self.bot.global_settings_dict["captcha"]["notifications"][
-            "reccur"
-        ]["times_to_reccur"]
+        times_to_reccur = self.notification_settings.reccur.timesToReccur
 
         if self.reccured == times_to_reccur:
             self.reccur_notifications.cancel()
@@ -137,20 +139,19 @@ class Captcha(commands.Cog):
     def captcha_handler(self, channel, captcha_type):
         if self.bot.misc["hostMode"]:
             return
-        cnf = self.bot.global_settings_dict["captcha"]
         channel_name = get_channel_name(channel)
-        content = "captchaContent" if not captcha_type == "Ban" else "bannedContent"
+        content_type = "captchaContent" if not captcha_type == "Ban" else "bannedContent"
         url = "https://owobot.com/captcha"
 
         """Notifications"""
-        if cnf["notifications"]["enabled"]:
-            notification_content = cnf["notifications"][content].format(
+        if self.notification_settings.enabled:
+            notification_content = getattr(self.notification_settings, content_type).format(
                 username=self.bot.username,
                 channelname=channel_name,
                 captchatype=captcha_type,
             )
 
-            if cnf["notifications"]["reccur"]["enabled"]:
+            if self.notification_settings.reccur.enabled:
                 self.reccured = 0
                 self.content_to_notify = notification_content
                 try:
@@ -171,8 +172,8 @@ class Captcha(commands.Cog):
         +
         better error handling for missing PATH
         """
-        if cnf["playAudio"]["enabled"]:
-            path = get_path(cnf["playAudio"]["path"])
+        if self.captcha_settings.playAudio.enabled:
+            path = get_path(self.captcha_settings.playAudio.path)
             try:
                 if on_mobile:
                     run_system_command(
@@ -183,11 +184,12 @@ class Captcha(commands.Cog):
             except Exception as e:
                 print(f"{e} - at audio")
         """Toast/Popup"""
-        if cnf["toastOrPopup"]["enabled"]:
+        if self.toast_settings.enabled:
             try:
                 if on_mobile:
+                    settings = self.toast_settings.termuxToast
                     run_system_command(
-                        f"termux-toast -c {cnf['toastOrPopup']['termuxToast']['textColour']} -b {cnf['toastOrPopup']['termuxToast']['backgroundColour']} -g {cnf['toastOrPopup']['termuxToast']['position']} '{cnf['toastOrPopup'][content].format(username=self.bot.username, channelname=channel_name, captchatype=captcha_type)}'",
+                        f"termux-toast -c {settings.textColour} -b {settings.backgroundColour} -g {settings.position} '{getattr(self.toast_settings, content_type).format(username=self.bot.username, channelname=channel_name, captchatype=captcha_type)}'",
                         timeout=5,
                         retry=True,
                     )
@@ -196,11 +198,11 @@ class Captcha(commands.Cog):
             except Exception as e:
                 print(f"{e} - at Toast/Popup")
         """Termux - Vibrate"""
-        if cnf["termux"]["vibrate"]["enabled"]:
+        if self.termux_settings.vibrate.enabled:
             try:
                 if on_mobile:
                     run_system_command(
-                        f"termux-vibrate -f -d {cnf['termux']['vibrate']['time'] * 1000}",
+                        f"termux-vibrate -f -d {self.termux_settings.vibrate.time * 1000}",
                         timeout=5,
                         retry=True,
                     )
@@ -209,11 +211,11 @@ class Captcha(commands.Cog):
             except Exception as e:
                 print(f"{e} - at Toast/Popup")
         """Termux - TTS"""
-        if cnf["termux"]["textToSpeech"]["enabled"]:
+        if self.termux_settings.textToSpeech.enabled:
             try:
                 if on_mobile:
                     run_system_command(
-                        f"termux-tts-speak {cnf['termux']['textToSpeech'][content]}",
+                        f"termux-tts-speak {getattr(self.termux_settings.textToSpeech, content_type)}",
                         timeout=7,
                         retry=False,
                     )
@@ -221,8 +223,8 @@ class Captcha(commands.Cog):
                     pass
             except Exception as e:
                 print(f"{e} - at Toast/Popup")
-        """Termux - open captcha website"""
-        if cnf["openCaptchaWebsite"]:
+        """Open captcha website"""
+        if self.captcha_settings.openCaptchaWebsite:
             if on_mobile:
                 run_system_command(f"termux-open {url}", timeout=5, retry=True)
             else:
@@ -238,10 +240,9 @@ class Captcha(commands.Cog):
     async def handle_solves(self):
         if self.bot.misc["hostMode"]:
             return
-        cnf = self.bot.global_settings_dict["captcha"]
 
         """Play Audio"""
-        if cnf["playAudio"]["enabled"]:
+        if self.captcha_settings.playAudio.enabled:
             try:
                 if on_mobile:
                     run_system_command(
@@ -256,15 +257,15 @@ class Captcha(commands.Cog):
 
         """Reccurrring notification"""
         if (
-            cnf["notifications"]["enabled"]
-            and cnf["notifications"]["reccur"]["enabled"]
+            self.notification_settings.enabled
+            and self.notification_settings.reccur.enabled
         ):
             try:
                 self.reccur_notifications.cancel()
             except Exception:
                 pass
 
-        if cnf["stopCodeIfFailedToSolve"]:
+        if self.captcha_settings.stopIfFailure:
             if not self.kill_task.done():
                 self.kill_task.cancel()
 
@@ -298,16 +299,23 @@ class Captcha(commands.Cog):
                 self.bot.command_handler_status["captcha"] = False
                 self.bot.update_captcha_db()
                 await self.handle_solves()
-                if self.bot.global_settings_dict["webhook"]["enabled"]:
+                if self.bot.global_settings_dict.webhook.enabled:
+                    webhook_url=self.bot.global_settings_dict.webhook.webhookCaptchaUrl
+                    if not isinstance(webhook_url, str):
+                        # Ensure webhook url is valid
+                        webhook_url = None
+                    elif "discord.com" not in webhook_url:
+                        # Only accept discord webhook.
+                        print(f"webhook Url {webhook_url} seems invalid")
+                        webhook_url = None
+
                     await self.bot.webhookSender(
                         title=f"-{self.bot.username} - Captcha Solved",
                         desc=f"**User** <@{self.bot.user.id}> solved captcha successfully!",
                         colors="#00FFAF",
                         img_url="https://cdn.discordapp.com/emojis/1090553827847045160.gif",
                         author_img_url="https://i.imgur.com/6zeCgXo.png",
-                        webhook_url=self.bot.global_settings_dict["webhook"].get(
-                            "webhookCaptchaUrl", None
-                        ),
+                        webhook_url=webhook_url,
                     )
                 return
 
@@ -352,9 +360,8 @@ class Captcha(commands.Cog):
                 if message.attachments:
                     image_captcha = True
                 cap_dict = self.bot.captcha_settings_dict
-                cnf = self.bot.global_settings_dict["captcha"]
 
-                if cnf["stopCodeIfFailedToSolve"]:
+                if self.captcha_settings.stopIfFailure:
                     """Kill code if failure in solving captcha within time"""
                     self.kill_task = asyncio.create_task(self.kill_code())
 
@@ -368,7 +375,16 @@ class Captcha(commands.Cog):
                 ):
                     self.captcha_handler(message.channel, "Link")
 
-                if self.bot.global_settings_dict["webhook"]["enabled"]:
+                if self.bot.global_settings_dict.webhook.enabled:
+                    webhook_url=self.bot.global_settings_dict.webhook.webhookCaptchaUrl
+                    if not isinstance(webhook_url, str):
+                        # Ensure webhook url is valid
+                        webhook_url = None
+                    elif "discord.com" not in webhook_url:
+                        # Only accept discord webhook.
+                        print(f"webhook Url {webhook_url} seems invalid")
+                        webhook_url = None
+
                     await self.bot.webhookSender(
                         title=f"-{self.bot.username} - CAPTCHA Detected",
                         desc=f"**User** : <@{self.bot.user.id}>\n**Link** : [OwO Captcha]({message.jump_url})",
@@ -376,17 +392,13 @@ class Captcha(commands.Cog):
                         img_url="https://cdn.discordapp.com/emojis/755106539122982922.gif",
                         author_img_url="https://i.imgur.com/6zeCgXo.png",
                         msg=(
-                            f"<@{self.bot.global_settings_dict['webhook']['webhookUserIdToPingOnCaptcha']}>"
-                            if self.bot.global_settings_dict["webhook"][
-                                "webhookUserIdToPingOnCaptcha"
-                            ]
+                            f"<@{self.bot.global_settings_dict.webhook.enabled.pingUserId}>"
+                            if self.bot.global_settings_dict.webhook.enabled.pingUserId
                             else None
                         ),
-                        webhook_url=self.bot.global_settings_dict["webhook"].get(
-                            "webhookCaptchaUrl", None
-                        ),
+                        webhook_url=webhook_url,
                     )
-                console_handler(self.bot.global_settings_dict["console"])
+                console_handler(self.bot.global_settings_dict.console)
 
                 if cap_dict["hcaptcha_solver"]["enabled"] and not image_captcha:
                     if not self.solve_in_progress:
@@ -442,8 +454,16 @@ class Captcha(commands.Cog):
                 self.bot.command_handler_status["captcha"] = True
                 await self.bot.log("Ban detected!", "#d70000")
                 self.captcha_handler(message.channel, "Ban")
-                console_handler(self.bot.global_settings_dict["console"], captcha=False)
-                if self.bot.global_settings_dict["webhook"]["enabled"]:
+                console_handler(self.bot.global_settings_dict.console, captcha=False)
+                if self.bot.global_settings_dict.webhook.enabled:
+                    webhook_url=self.bot.global_settings_dict.webhook.webhookCaptchaUrl
+                    if not isinstance(webhook_url, str):
+                        # Ensure webhook url is valid
+                        webhook_url = None
+                    elif "discord.com" not in webhook_url:
+                        # Only accept discord webhook.
+                        print(f"webhook Url {webhook_url} seems invalid")
+                        webhook_url = None
                     await self.bot.webhookSender(
                         title=f"-{self.bot.username} - BAN Detected",
                         desc=f"**User** : <@{self.bot.user.id}>\n**Link** : [Ban Message]({message.jump_url})",
@@ -451,15 +471,11 @@ class Captcha(commands.Cog):
                         img_url="https://cdn.discordapp.com/emojis/1068981158081216662.gif",
                         author_img_url="https://i.imgur.com/6zeCgXo.png",
                         msg=(
-                            f"<@{self.bot.global_settings_dict['webhook']['webhookUserIdToPingOnCaptcha']}>"
-                            if self.bot.global_settings_dict["webhook"][
-                                "webhookUserIdToPingOnCaptcha"
-                            ]
+                            f"<@{self.bot.global_settings_dict.webhook.enabled.pingUserId}>"
+                            if self.bot.global_settings_dict.webhook.enabled.pingUserId
                             else None
                         ),
-                        webhook_url=self.bot.global_settings_dict["webhook"].get(
-                            "webhookCaptchaUrl", None
-                        ),
+                        webhook_url=webhook_url,
                     )
 
 

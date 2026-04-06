@@ -98,7 +98,9 @@ def load_accounts_dict(file_path="utils/stats.json"):
 
 
 with open("config/global_settings.json", "r") as config_file:
-    global_settings_dict = json.load(config_file)
+    global_settings_dict = config_models.configs.FetchGlobalSettings(
+        json.load(config_file)
+    )
 
 
 with open("config/misc.json", "r") as config_file:
@@ -168,7 +170,7 @@ def home():
 @app.route("/api/console", methods=["GET"])
 def get_console_logs():
     password = request.headers.get("password")
-    if not password or password != global_settings_dict["website"]["password"]:
+    if not password or password != global_settings_dict.website.password:
         return "Invalid Password", 401
     try:
         log_string = "\n".join(website_logs)
@@ -183,7 +185,7 @@ def get_console_logs():
 @app.route("/api/fetch_gamble_data", methods=["GET"])
 def fetch_gamble_data():
     password = request.headers.get("password")
-    if not password or password != global_settings_dict["website"]["password"]:
+    if not password or password != global_settings_dict.website.password:
         return "Invalid Password", 401
     try:
         # Fetch table data
@@ -213,7 +215,7 @@ def fetch_gamble_data():
 @app.route("/api/fetch_cowoncy_data", methods=["GET"])
 def fetch_cowoncy_data():
     password = request.headers.get("password")
-    if not password or password != global_settings_dict["website"]["password"]:
+    if not password or password != global_settings_dict.website.password:
         return "Invalid Password", 401
 
     try:
@@ -275,7 +277,7 @@ def fetch_cowoncy_data():
 @app.route("/api/fetch_cmd_data", methods=["GET"])
 def fetch_cmd_data():
     password = request.headers.get("password")
-    if not password or password != global_settings_dict["website"]["password"]:
+    if not password or password != global_settings_dict.website.password:
         return "Invalid Password", 401
     try:
         rows = get_from_db("SELECT * FROM commands")
@@ -308,7 +310,7 @@ def fetch_cmd_data():
 @app.route("/api/fetch_weekly_runtime", methods=["GET"])
 def fetch_weekly_runtime():
     password = request.headers.get("password")
-    if not password or password != global_settings_dict["website"]["password"]:
+    if not password or password != global_settings_dict.website.password:
         return "Invalid Password", 401
     try:
         # Fetch json data
@@ -350,9 +352,9 @@ def web_start():
     app.run(
         debug=False,
         use_reloader=False,
-        port=global_settings_dict["website"]["port"],
+        port=global_settings_dict.website.port,
         host="0.0.0.0"
-        if global_settings_dict["website"]["enableHost"]
+        if global_settings_dict.website.enableHost
         else "127.0.0.1",
     )
 
@@ -394,7 +396,7 @@ on_mobile = is_termux()
 
 if not on_mobile and not misc_dict["hostMode"]:
     try:
-        if global_settings_dict["batteryCheck"]["enabled"]:
+        if global_settings_dict.batteryCheck.enabled:
             import psutil
     except Exception as e:
         print(f"ImportError: {e}")
@@ -417,11 +419,11 @@ def get_date():
 
 # For battery check
 def batteryCheckFunc():
-    cnf = global_settings_dict["batteryCheck"]
+    cnf = global_settings_dict.batteryCheck
     try:
         if on_mobile:
             while True:
-                time.sleep(cnf["refreshInterval"])
+                time.sleep(cnf.refreshInterval)
                 try:
                     battery_status = os.popen("termux-battery-status").read()
                 except Exception as e:
@@ -439,11 +441,11 @@ def batteryCheckFunc():
                     ),
                     style="blue ",
                 )
-                if percentage < int(cnf["minPercentage"]):
+                if percentage < int(cnf.minPercentage):
                     break
         else:
             while True:
-                time.sleep(cnf["refreshInterval"])
+                time.sleep(cnf.refreshInterval)
                 try:
                     battery = psutil.sensors_battery()
                     if battery is not None:
@@ -454,7 +456,7 @@ def batteryCheckFunc():
                             ),
                             style="blue ",
                         )
-                        if percentage < int(cnf["minPercentage"]):
+                        if percentage < int(cnf.minPercentage):
                             break
                 except Exception as e:
                     console.print(
@@ -468,7 +470,7 @@ def batteryCheckFunc():
     os._exit(0)
 
 
-if global_settings_dict["batteryCheck"]["enabled"]:
+if global_settings_dict.batteryCheck.enabled:
     loop_thread = threading.Thread(target=batteryCheckFunc, daemon=True)
     loop_thread.start()
 
@@ -659,7 +661,7 @@ class MyClient(commands.Bot):
     async def empty_checks_and_switch(self, channel):
         self.command_handler_status["hold_handler"] = True
         await self.sleep_till(
-            self.global_settings_dict["channelSwitcher"]["delayBeforeSwitch"]
+            self.global_settings_dict.channelSwitcher.delayBeforeSwitch
         )
         self.cm = channel
         self.channel_id = self.cm.id
@@ -729,7 +731,7 @@ class MyClient(commands.Bot):
                     continue
                 try:
                     await self.sleep_till(
-                        self.global_settings_dict["account"]["commandsStartDelay"]
+                        self.global_settings_dict.account.commandsStart
                     )
                     if self.commands_dict.get(str(filename[:-3]), False):
                         await self.load_extension(extension)
@@ -1036,7 +1038,7 @@ class MyClient(commands.Bot):
             "blackjack": gamble_obj.blackjack.enabled,
             "boss": self.settings_dict_temp.boss.enabled,
             "captcha": True,
-            "channelswitcher": self.global_settings_dict["channelSwitcher"]["enabled"],
+            "channelswitcher": self.global_settings_dict.channelSwitcher.enabled,
             "chat": True,
             "coinflip": gamble_obj.coinflip.enabled,
             "commands": True,
@@ -1087,7 +1089,7 @@ class MyClient(commands.Bot):
         prefix = self.settings_dict_temp.prefix if data.get("prefix") else ""
 
         if guild_id and guild_id != self.cm.guild.id:
-            # Revert 
+            # Revert
             prefix = "owo "
 
         return f"{prefix}{data['cmd_name']} {data.get('cmd_arguments', '')}".strip()
@@ -1184,13 +1186,9 @@ class MyClient(commands.Bot):
             popup_queue.put(
                 (
                     (
-                        global_settings_dict["captcha"]["toastOrPopup"][
-                            "captchaContent"
-                        ]
+                        global_settings_dict.captcha.toastOrPopup.captchaContent
                         if captcha_type != "Ban"
-                        else global_settings_dict["captcha"]["toastOrPopup"][
-                            "bannedContent"
-                        ]
+                        else global_settings_dict.captcha.toastOrPopup.bannedContent
                     ),
                     self.user.name,
                     channel_name,
@@ -1203,8 +1201,8 @@ class MyClient(commands.Bot):
         text,
         color="#ffffff",
         bold=False,
-        web_log=global_settings_dict["website"]["enabled"],
-        webhook_useless_log=global_settings_dict["webhook"]["webhookUselessLog"],
+        web_log=global_settings_dict.website.enabled,
+        webhook_useless_log=global_settings_dict.webhook.webhookUselessLog,
         lineno=None,
         filename=None,
     ):
@@ -1310,8 +1308,8 @@ class MyClient(commands.Bot):
         color=None,
         bypass=False,
         channel=None,
-        silent=global_settings_dict["silentTextMessages"],
-        typingIndicator=global_settings_dict["typingIndicator"],
+        silent=global_settings_dict.silentMessage,
+        typingIndicator=global_settings_dict.typingIndicator,
     ):
         """
         TASK: Refactor
@@ -1571,14 +1569,14 @@ class MyClient(commands.Bot):
         # disabled since unnecessory
         if self.token_len > 1:
             time_to_sleep = self.random_float(
-                global_settings_dict["account"]["startupDelay"]
+                global_settings_dict.account.startupDelay
             )
             await self.log(f"{self.username} sleeping {time_to_sleep}s before starting")
             await asyncio.sleep(time_to_sleep)
 
         await self.update_config()
 
-        if self.global_settings_dict["offlineStatus"]:
+        if self.global_settings_dict.offlineStatus:
             self.presence.start()
 
         if self.settings_dict_temp.sleep.enabled:
@@ -1589,7 +1587,7 @@ class MyClient(commands.Bot):
 
 
 def get_local_ip():
-    if not global_settings_dict["website"]["enableHost"]:
+    if not global_settings_dict.website.enableHost:
         return "localhost"
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -1854,14 +1852,14 @@ if __name__ == "__main__":
     # Weekly runtime thread
     start_runtime_loop()
 
-    if global_settings_dict["website"]["enabled"]:
+    if global_settings_dict.website.enabled:
         # Start website
         web_thread = threading.Thread(target=web_start)
         web_thread.start()
         # get ip
         ip = get_local_ip()
         printBox(
-            f"Website Dashboard: http://{ip}:{global_settings_dict['website']['port']}".center(
+            f"Website Dashboard: http://{ip}:{global_settings_dict.website.port}".center(
                 console_width - 2
             ),
             "dark_magenta",
@@ -1886,9 +1884,9 @@ if __name__ == "__main__":
             style="thistle1",
         )
 
-        if global_settings_dict["webhook"]["enabled"]:
+        if global_settings_dict.webhook.enabled:
             webhook = SyncWebhook.from_url(
-                global_settings_dict["webhook"]["webhookUrl"]
+                global_settings_dict.webhook.webhookUrl
             )
 
             color = discord.Color(0xC48DC3)
@@ -1905,7 +1903,7 @@ if __name__ == "__main__":
 
     console.rule(style="navy_blue")
 
-    webhook_handler = webhookSender(global_settings_dict["webhook"]["webhookUrl"])
+    webhook_handler = webhookSender(global_settings_dict.webhook.webhookUrl)
     hcaptcha_solver = None
     if (
         captcha_settings_dict["image_solver"]["enabled"]
@@ -1936,7 +1934,7 @@ if __name__ == "__main__":
     database_handler = databaseWorker()
 
     if (
-        global_settings_dict["captcha"]["toastOrPopup"]
+        global_settings_dict.captcha.toastOrPopup
         and not on_mobile
         and not misc_dict["hostMode"]
     ):

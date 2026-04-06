@@ -122,7 +122,7 @@ class Daily(commands.Cog):
                     with open("utils/stats.json", "w") as f:
                         json.dump(accounts_dict, f, indent=4)
 
-                if self.bot.global_settings_dict["webhook"]["enabled"]:
+                if self.bot.global_settings_dict.webhook.enabled:
                     await self.bot.webhookSender(
                         title="Claimed daily",
                         desc=f"**User** <@{self.bot.user.id}> claimed today's daily.",
