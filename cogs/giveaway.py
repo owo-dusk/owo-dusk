@@ -42,7 +42,7 @@ class Giveaway(commands.Cog):
     """Join previous giveaways"""
 
     async def join_previous_giveaways(self):
-        prev_time = await self.bot.fetch_giveaway_db()
+        prev_time = await self.bot.db.fetch_giveaway_db()
 
         await self.bot.sleep_till(self.cooldowns.shortCooldown)
         await self.bot.wait_until_ready()
@@ -90,7 +90,7 @@ class Giveaway(commands.Cog):
 
             await self.bot.set_stat(True)
         # Set prev_time for future use
-        self.bot.update_giveaway_db(time.time())
+        self.bot.db.update_giveaway_db(time.time())
 
     """gets executed when the cog is first loaded"""
 
@@ -115,7 +115,7 @@ class Giveaway(commands.Cog):
                         and " A New Giveaway Appeared!" in embed.author.name
                         and message.channel.id in self.settings.channels
                     ):
-                        prev_time = await self.bot.fetch_giveaway_db()
+                        prev_time = await self.bot.db.fetch_giveaway_db()
                         if not prev_time or (
                             prev_time
                             and compare_with_timestamp(

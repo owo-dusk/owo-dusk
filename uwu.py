@@ -37,8 +37,6 @@ import pytz
 import requests
 from discord.ext import commands, tasks
 from discord import SyncWebhook
-
-# from flask import Flask, jsonify, render_template, request
 from rich.align import Align
 from rich.console import Console
 from rich.panel import Panel
@@ -46,12 +44,12 @@ from queue import Queue
 
 # Local
 import components_v2
+import database
 import utils.configs as config_models
 import utils.others as utils
 from utils.misspell import misspell_word
 from utils.notification import notify
 from utils.webhook import webhookSender
-from utils.database import databaseWorker
 from utils.captcha_solver.yescaptcha import captchaClient
 from website import web_start, website_append
 
@@ -362,6 +360,7 @@ class MyClient(commands.Bot):
         self.cmd_counter = itertools.count()
         self.cmd_priorities = {}
         self.captcha_handler = hcaptcha_solver
+        self.db = database.Database(self)
 
         # discord.py-self's module sets global random to fixed seed. reset that, locally.
         self.random = random.Random()
@@ -527,246 +526,7 @@ class MyClient(commands.Bot):
 
             await self.start_cogs()
 
-    """async def update_database(self, sql, params=None):
-        async with aiosqlite.connect("utils/data/db.sqlite", timeout=5) as db:
-            await db.execute("PRAGMA journal_mode=WAL;")
-            await db.execute("PRAGMA synchronous=NORMAL;")
-            await db.execute("BEGIN;")
-            await db.execute(sql, params)
-            await db.commit()
-
-    async def get_from_db(self, sql, params=None):
-        async with aiosqlite.connect("utils/data/db.sqlite", timeout=5) as db:
-            # allows dictionary-like access
-            db.row_factory = aiosqlite.Row
-            async with db.execute(sql, params or ()) as cursor:
-                result = await cursor.fetchall()
-                return result"""
-
-    async def update_priorities(self):
-        # Check if already in db
-        res = await database_handler.get_from_db(
-            "SELECT * FROM command_priority WHERE user_id = ?", (str(self.user.id),)
-        )
-        if res:
-            for row in res:
-                # 0 -> user_id
-                # 1 -> command_name
-                # 2 -> priority
-                self.cmd_priorities[row[1]] = int(row[2])
-        else:
-            # Group items using tiers
-            tiers_map = {}
-            for key, value in self.misc["command_info"].items():
-                tiers_map[value["priority"]] = tiers_map.get(value["priority"], []) + [
-                    key
-                ]
-
-            # randomising based on these tiers
-            base_priority = 0
-            for tier in sorted(tiers_map):
-                temp_list = tiers_map[tier]
-                self.random.shuffle(temp_list)
-                for item in temp_list:
-                    # This way base_priority will remain above 0, ensuring it doesn't hit quick send.
-                    base_priority += 1
-                    self.cmd_priorities[item] = base_priority
-                    database_handler.update_database(
-                        """INSERT OR REPLACE INTO command_priority (user_id, command_name, priority)
-                        VALUES (?, ?, ?)""",
-                        (str(self.user.id), item, base_priority),
-                    )
-
-        # print(self.user.name, "->", self.cmd_priorities)
-
-    def update_cash_db(self):
-        hr = utils.get_hour()
-
-        database_handler.update_database(
-            """UPDATE cowoncy_earnings
-            SET earnings = ?
-            WHERE user_id = ? AND hour = ?""",
-            (self.user_status["net_earnings"], self.user.id, hr),
-        )
-
-        database_handler.update_database(
-            "UPDATE user_stats SET cowoncy = ? WHERE user_id = ?",
-            (self.user_status["balance"], self.user.id),
-        )
-
-    def update_captcha_db(self):
-        database_handler.update_database(
-            "UPDATE user_stats SET captchas = captchas + 1 WHERE user_id = ?",
-            (self.user.id,),
-        )
-
-    def update_giveaway_db(self, last_ran):
-        database_handler.update_database(
-            "UPDATE user_stats SET giveaways = ? WHERE user_id = ?",
-            (last_ran, self.user.id),
-        )
-
-    async def fetch_giveaway_db(self):
-        results = await database_handler.get_from_db(
-            "SELECT giveaways FROM user_stats WHERE user_id = ?", (self.user.id,)
-        )
-        if results:
-            return results[0]["giveaways"]
-        return None
-
-    def populate_stats_db(self):
-        database_handler.update_database(
-            "INSERT OR IGNORE INTO user_stats (user_id, daily, lottery, cookie, giveaways, captchas, cowoncy, boss, boss_ticket) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (self.user.id, 0, 0, 0, 0, 0, 0, 0, 3),
-        )
-
-    def update_stats_db(self, column_name, value):
-        if column_name not in {"daily", "lottery", "cookie", "giveaways", "boss"}:
-            # Captcha and cowoncy handled seperately
-            raise ValueError("Invalid column name.")
-
-        database_handler.update_database(
-            f"UPDATE user_stats SET {column_name} = ? WHERE user_id = ?",
-            (value, self.user.id),
-        )
-
-    def consume_boss_ticket(self, revert=False):
-        if not revert:
-            database_handler.update_database(
-                "UPDATE user_stats SET boss_ticket = boss_ticket - 1 WHERE user_id = ? and boss_ticket > 0",
-                (self.user.id,),
-            )
-        else:
-            database_handler.update_database(
-                "UPDATE user_stats SET boss_ticket = boss_ticket + 1 WHERE user_id = ? and boss_ticket < 3",
-                (self.user.id,),
-            )
-
-    async def fetch_boss_stats(self):
-        results = await database_handler.get_from_db(
-            "SELECT boss, boss_ticket FROM user_stats WHERE user_id = ?",
-            (self.user.id,),
-        )
-        if results:
-            return results[0]["boss"], results[0]["boss_ticket"]
-        print(
-            f"seems like user_stats have not been properly initialised -> {self.user.name}"
-        )
-        return 0, 3
-
-    def reset_boss_ticket(self, empty=False):
-        if not empty:
-            # We have a total of 3 tickets per day.
-            database_handler.update_database(
-                "UPDATE user_stats SET boss_ticket = ? WHERE user_id = ?",
-                (3, self.user.id),
-            )
-        else:
-            database_handler.update_database(
-                "UPDATE user_stats SET boss_ticket = ? WHERE user_id = ?",
-                (0, self.user.id),
-            )
-
-    async def populate_cowoncy_earnings(self, update=False):
-        today_str = utils.get_date()
-
-        for i in range(24):
-            if not update:
-                database_handler.update_database(
-                    "INSERT OR IGNORE INTO cowoncy_earnings (user_id, hour, earnings) VALUES (?, ?, ?)",
-                    (self.user.id, i, 0),
-                )
-
-        rows = await database_handler.get_from_db(
-            "SELECT value FROM meta_data WHERE key = ?",
-            ("cowoncy_earnings_last_checked",),
-        )
-
-        last_reset_str = rows[0]["value"] if rows else "0"
-
-        if last_reset_str == today_str:
-            # Handle gap between cowoncy chart
-            cur_hr = utils.get_hour()
-            last_cash = 0
-            for hr in range(cur_hr + 1):
-                hr_row = await database_handler.get_from_db(
-                    "SELECT earnings FROM cowoncy_earnings WHERE user_id = ? AND hour = ?",
-                    (self.user.id, hr),
-                )
-                # Note: negative values are allowed.
-                if hr_row and hr_row[0]["earnings"] != 0:
-                    last_cash = hr_row[0]["earnings"]
-                elif last_cash != 0:
-                    database_handler.update_database(
-                        "UPDATE cowoncy_earnings SET earnings = ? WHERE hour = ? AND user_id = ?",
-                        (last_cash, hr, self.user.id),
-                    )
-            # Return once done as we don't want reset.
-            return
-
-        for i in range(24):
-            database_handler.update_database(
-                "UPDATE cowoncy_earnings SET earnings = 0 WHERE user_id = ? AND hour = ?",
-                (self.user.id, i),
-            )
-
-        database_handler.update_database(
-            "UPDATE meta_data SET value = ? WHERE key = ?",
-            (today_str, "cowoncy_earnings_last_checked"),
-        )
-
-    async def fetch_net_earnings(self):
-        self.user_status["net_earnings"] = 0
-        rows = await database_handler.get_from_db(
-            "SELECT earnings FROM cowoncy_earnings WHERE user_id = ? ORDER BY hour",
-            (self.user.id,),
-        )
-
-        cowoncy_list = [row["earnings"] for row in rows]
-
-        for item in reversed(cowoncy_list):
-            if item != 0:
-                self.user_status["net_earnings"] = item
-                break
-
-    async def reset_gamble_wins_or_losses(self):
-        today_str = utils.get_date()
-
-        rows = await database_handler.get_from_db(
-            "SELECT value FROM meta_data WHERE key = ?",
-            ("gamble_winrate_last_checked",),
-        )
-
-        last_reset_str = rows[0]["value"] if rows else "0"
-
-        if last_reset_str == today_str:
-            return
-
-        for hour in range(24):
-            database_handler.update_database(
-                "UPDATE gamble_winrate SET wins = 0, losses = 0, net = 0 WHERE hour = ?",
-                (hour,),
-            )
-
-        database_handler.update_database(
-            "UPDATE meta_data SET value = ? WHERE key = ?",
-            (today_str, "gamble_winrate_last_checked"),
-        )
-
-    def update_cmd_db(self, cmd):
-        database_handler.update_database(
-            "UPDATE commands SET count = count + 1 WHERE name = ?", (cmd,)
-        )
-
-    def update_gamble_db(self, item="wins"):
-        hr = utils.get_hour()
-
-        if item not in {"wins", "losses"}:
-            raise ValueError("Invalid column name.")
-
-        database_handler.update_database(
-            f"UPDATE gamble_winrate SET {item} = {item} + 1 WHERE hour = ?", (hr,)
-        )
+    
 
     async def unload_cog(self, cog_name):
         try:
@@ -845,7 +605,7 @@ class MyClient(commands.Bot):
             self.cmds_state[id]["last_ran"] = time.time()
             if not reactionBot:
                 self.cmds_state[id]["in_queue"] = False
-            self.update_cmd_db(id)
+            self.db.update_cmd_db(id)
 
     def construct_command(self, data, guild_id):
         prefix = self.settings_dict_temp.prefix if data.get("prefix") else ""
@@ -1207,7 +967,7 @@ class MyClient(commands.Bot):
                 self.user_status["net_earnings"] -= amount
             else:
                 self.user_status["net_earnings"] += amount
-        self.update_cash_db()
+        self.db.update_cash_db()
 
     def get_nick(self, msg):
         if not msg.guild:
@@ -1260,7 +1020,7 @@ class MyClient(commands.Bot):
         )
         listUserIds.append(self.user.id)
 
-        await self.update_priorities()
+        await self.db.update_priorities()
 
         # Fetch the channel
         self.cm = self.get_channel(self.channel_id)
@@ -1317,12 +1077,12 @@ class MyClient(commands.Bot):
                     json.dump(accounts_dict, f, indent=4)
 
         # Charts
-        self.populate_stats_db()
+        self.db.populate_stats_db()
 
-        await self.populate_cowoncy_earnings()
-        await self.reset_gamble_wins_or_losses()
+        await self.db.populate_cowoncy_earnings()
+        await self.db.reset_gamble_wins_or_losses()
 
-        await self.fetch_net_earnings()
+        await self.db.fetch_net_earnings()
 
         # Start various tasks and updates
         # self.config_update_checker.start()
@@ -1695,7 +1455,6 @@ if __name__ == "__main__":
                     style="red1",
                 )
 
-    database_handler = databaseWorker()
 
     if (
         global_settings_dict.captcha.toastOrPopup

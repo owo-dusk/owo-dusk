@@ -291,7 +291,7 @@ class Blackjack(commands.Cog):
                                 "#993f3f",
                             )
                             await self.send_blackjack()
-                            self.bot.update_gamble_db("losses")
+                            self.bot.db.update_gamble_db("losses")
 
                         elif "🎲 ~ You won" in embed.footer.text:
                             self.game_event.set()
@@ -310,7 +310,7 @@ class Blackjack(commands.Cog):
                                 "#536448",
                             )
                             await self.send_blackjack()
-                            self.bot.update_gamble_db("wins")
+                            self.bot.db.update_gamble_db("wins")
                         elif any(
                             item in embed.footer.text
                             for item in ["🎲 ~ You tied!", "🎲 ~ You both bust!"]

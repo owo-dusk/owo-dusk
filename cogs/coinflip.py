@@ -197,7 +197,7 @@ class Coinflip(commands.Cog):
                         "#993f3f",
                     )
                     await self.start_cf()
-                    self.bot.update_gamble_db("losses")
+                    self.bot.db.update_gamble_db("losses")
                 else:
                     won_match = int(
                         re.search(won_pattern, after.content).group(1).replace(",", "")
@@ -216,7 +216,7 @@ class Coinflip(commands.Cog):
                         "#536448",
                     )
                     await self.start_cf()
-                    self.bot.update_gamble_db("wins")
+                    self.bot.db.update_gamble_db("wins")
             except Exception as e:
                 await self.bot.log(
                     f"Error - {e}, During coinflip on_message_edit()", "#c25560"

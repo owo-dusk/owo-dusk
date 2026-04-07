@@ -300,7 +300,7 @@ class Captcha(commands.Cog):
                 )
                 await asyncio.sleep(time_to_sleep)
                 self.bot.command_handler_status["captcha"] = False
-                self.bot.update_captcha_db()
+                self.bot.db.update_captcha_db()
                 await self.handle_solves()
                 if self.bot.global_settings_dict.webhook.enabled:
                     webhook_url = (

@@ -193,7 +193,7 @@ class Slots(commands.Cog):
                     "#993f3f",
                 )
                 await self.start_slots()
-                self.bot.update_gamble_db("losses")
+                self.bot.db.update_gamble_db("losses")
             else:
                 if (
                     "<:eggplant:417475705719226369>" in after.content.lower()
@@ -222,7 +222,7 @@ class Slots(commands.Cog):
                         "#536448",
                     )
                     await self.start_slots()
-                    self.bot.update_gamble_db("wins")
+                    self.bot.db.update_gamble_db("wins")
 
 
 async def setup(bot):

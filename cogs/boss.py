@@ -46,22 +46,22 @@ class Boss(commands.Cog):
         self.sleeping = False
 
     async def time_check(self):
-        last_reset_ts, self.boss_tickets = await self.bot.fetch_boss_stats()
+        last_reset_ts, self.boss_tickets = await self.bot.db.fetch_boss_stats()
 
         if self.boss_tickets > 3 or self.boss_tickets < 0:
             # Termporary fix reverting issues with bad logic in prev version.
-            self.bot.reset_boss_ticket()
+            self.bot.db.reset_boss_ticket()
             self.boss_tickets = 3
 
         today_midnight_ts = self.bot.pst_midnight_timestamp()
 
         if not last_reset_ts or last_reset_ts < today_midnight_ts:
             # Resetting incase new run or reset timing
-            self.bot.reset_boss_ticket()
+            self.bot.db.reset_boss_ticket()
             self.boss_tickets = 3
 
             # update database
-            self.bot.update_stats_db("boss", today_midnight_ts)
+            self.bot.db.update_stats_db("boss", today_midnight_ts)
 
         self.sleeping = False
 
@@ -70,7 +70,7 @@ class Boss(commands.Cog):
             self.boss_tickets -= 1
         else:
             self.boss_tickets += 1
-        self.bot.consume_boss_ticket(revert)
+        self.bot.db.consume_boss_ticket(revert)
 
     def return_battle_id(self, components):
         for component in components:
@@ -195,7 +195,7 @@ class Boss(commands.Cog):
                             # Reset previous entry
                             self.boss_tickets = 0
                             self.joined_boss_ids = []
-                            self.bot.reset_boss_ticket(empty=True)
+                            self.bot.db.reset_boss_ticket(empty=True)
 
 
 async def setup(bot):
