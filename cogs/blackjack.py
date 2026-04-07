@@ -17,7 +17,7 @@ from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from utils.notification import notify
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 def find_optimal_move(e_hand, u_hand, soft=False):

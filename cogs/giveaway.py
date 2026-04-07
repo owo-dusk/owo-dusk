@@ -15,7 +15,7 @@ import time
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 def compare_with_timestamp(timestamp, last_ran_time):
@@ -40,6 +40,7 @@ class Giveaway(commands.Cog):
         return self.bot.settings_dict_temp.giveaway
 
     """Join previous giveaways"""
+
     async def join_previous_giveaways(self):
         prev_time = await self.bot.fetch_giveaway_db()
 

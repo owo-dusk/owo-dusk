@@ -17,7 +17,7 @@ from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from utils.notification import notify
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 won_pattern = r"and won <:cowoncy:\d+> ([\d,]+)"

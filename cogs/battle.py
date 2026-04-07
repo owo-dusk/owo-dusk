@@ -14,7 +14,7 @@ import asyncio
 
 from discord.ext import commands
 from utils.notification import notify
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 class Battle(commands.Cog):
@@ -97,9 +97,7 @@ class Battle(commands.Cog):
                                     return
 
                             await self.bot.remove_queue(id="battle")
-                            await self.bot.sleep(
-                                self.settings.get_cd()
-                            )
+                            await self.bot.sleep(self.settings.get_cd())
                             self.cmd["cmd_name"] = (
                                 self.bot.alias["battle"]["shortform"]
                                 if self.settings.shortform

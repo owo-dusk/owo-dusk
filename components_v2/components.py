@@ -214,8 +214,6 @@ class section:
             component.get("components", []), message_details
         )
 
-        
-
 
 class text_display:
     def __init__(self, component: dict):

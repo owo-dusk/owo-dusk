@@ -14,7 +14,7 @@ import asyncio
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 class Owo(commands.Cog):

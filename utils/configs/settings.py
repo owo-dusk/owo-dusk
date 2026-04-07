@@ -18,6 +18,7 @@ import random
 
 from utils.configs import validators
 
+
 class Settings:
     def __init__(self, d: dict):
         self.useSlashCommands = d.get("useSlashCommands", False)
@@ -52,7 +53,6 @@ class Settings:
 
         # Custom command
         self.customCommands = CustomCommands(d.get("customCommands", {}))
-        
 
 
 GEMS_RARITY = [
@@ -174,8 +174,6 @@ class ReactionBot:
     def get_cd(self):
         validators.validateCooldown(self.cooldown)
         return random.uniform(self.cooldown[0], self.cooldown[1])
-
-        
 
 
 class Misspell:

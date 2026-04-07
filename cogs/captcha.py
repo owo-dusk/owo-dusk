@@ -22,7 +22,7 @@ from discord import DMChannel
 
 from utils.misc import is_termux, run_system_command
 from utils.notification import notify
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 list_captcha = ["human", "captcha", "link", "letterword"]
@@ -140,12 +140,16 @@ class Captcha(commands.Cog):
         if self.bot.misc["hostMode"]:
             return
         channel_name = get_channel_name(channel)
-        content_type = "captchaContent" if not captcha_type == "Ban" else "bannedContent"
+        content_type = (
+            "captchaContent" if not captcha_type == "Ban" else "bannedContent"
+        )
         url = "https://owobot.com/captcha"
 
         """Notifications"""
         if self.notification_settings.enabled:
-            notification_content = getattr(self.notification_settings, content_type).format(
+            notification_content = getattr(
+                self.notification_settings, content_type
+            ).format(
                 username=self.bot.username,
                 channelname=channel_name,
                 captchatype=captcha_type,
@@ -269,7 +273,6 @@ class Captcha(commands.Cog):
             if not self.kill_task.done():
                 self.kill_task.cancel()
 
-
     @commands.Cog.listener()
     async def on_message(self, message):
         self.last_msg = time.time()
@@ -300,7 +303,9 @@ class Captcha(commands.Cog):
                 self.bot.update_captcha_db()
                 await self.handle_solves()
                 if self.bot.global_settings_dict.webhook.enabled:
-                    webhook_url=self.bot.global_settings_dict.webhook.webhookCaptchaUrl
+                    webhook_url = (
+                        self.bot.global_settings_dict.webhook.webhookCaptchaUrl
+                    )
                     if not isinstance(webhook_url, str):
                         # Ensure webhook url is valid
                         webhook_url = None
@@ -376,7 +381,9 @@ class Captcha(commands.Cog):
                     self.captcha_handler(message.channel, "Link")
 
                 if self.bot.global_settings_dict.webhook.enabled:
-                    webhook_url=self.bot.global_settings_dict.webhook.webhookCaptchaUrl
+                    webhook_url = (
+                        self.bot.global_settings_dict.webhook.webhookCaptchaUrl
+                    )
                     if not isinstance(webhook_url, str):
                         # Ensure webhook url is valid
                         webhook_url = None
@@ -456,7 +463,9 @@ class Captcha(commands.Cog):
                 self.captcha_handler(message.channel, "Ban")
                 console_handler(self.bot.global_settings_dict.console, captcha=False)
                 if self.bot.global_settings_dict.webhook.enabled:
-                    webhook_url=self.bot.global_settings_dict.webhook.webhookCaptchaUrl
+                    webhook_url = (
+                        self.bot.global_settings_dict.webhook.webhookCaptchaUrl
+                    )
                     if not isinstance(webhook_url, str):
                         # Ensure webhook url is valid
                         webhook_url = None

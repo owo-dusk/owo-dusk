@@ -10,6 +10,7 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+
 def validateCooldown(cd: list):
     """
     Checks if the cooldown provided is a valid cooldown list or not
@@ -29,6 +30,7 @@ def validateCooldown(cd: list):
         # Should we consider leniency here?
         raise ValueError("Both min and max cooldown same..")
 
+
 def validateFrequency(freq):
     """
     Ensures frequency is within 0 to 100
@@ -36,4 +38,3 @@ def validateFrequency(freq):
     """
     if not 0 <= freq <= 100:
         raise ValueError("Invalid frequency: must be between 0 and 100")
-

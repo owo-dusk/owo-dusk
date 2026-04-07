@@ -19,6 +19,7 @@ TASK: recheck set_stat
 imporve logging in here.
 """
 
+
 class Mail(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -53,10 +54,12 @@ class Mail(commands.Cog):
             if component.component_name == "section":
                 print(component, component.buttons, component.components)
                 if component.accessory.style == "primary":
-                    data.append({
-                        "content": component.components[0].content,
-                        "button": component.accessory
-                    })
+                    data.append(
+                        {
+                            "content": component.components[0].content,
+                            "button": component.accessory,
+                        }
+                    )
 
         return data
 
@@ -68,7 +71,6 @@ class Mail(commands.Cog):
                     if not component.accessory.disabled:
                         return component.accessory
         return None
-
 
     def is_page_left(self, buttons):
         pages = []
@@ -87,7 +89,6 @@ class Mail(commands.Cog):
             except ExtensionNotLoaded:
                 pass
 
-
     async def on_component_message(self, message):
         if message.channel_id != self.bot.cm.id:
             return
@@ -103,7 +104,9 @@ class Mail(commands.Cog):
                     ):
                         # Unread mail detected!
                         await self.bot.set_stat(False)
-                        await self.bot.log("Mail(s) detected! Attempting to claim..", "#4c9d9e")
+                        await self.bot.log(
+                            "Mail(s) detected! Attempting to claim..", "#4c9d9e"
+                        )
                         if component.buttons[0].custom_id == "show_mail":
                             channel = await self.bot.fetch_channel(message.channel_id)
                             if channel:
@@ -126,7 +129,6 @@ class Mail(commands.Cog):
                         # And we reset message_id
                         await self.bot.set_stat(True)
                         self.message_id = 0
-
 
                     await self.data[0]["button"].click(
                         self.bot.ws.session_id,

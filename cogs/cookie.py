@@ -16,7 +16,7 @@ import threading
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 def load_json_dict(file_path="utils/stats.json"):
@@ -55,6 +55,7 @@ class Cookie(commands.Cog):
         return self.bot.settings_dict_temp.commands.cookie
 
     """change to conver times"""
+
     async def start_cookie(self):
         if str(self.bot.user.id) in accounts_dict:
             last_cookie_time = accounts_dict[str(self.bot.user.id)].get("cookie", 0)
@@ -64,11 +65,11 @@ class Cookie(commands.Cog):
                     self.bot.calc_time()
                 )  # Wait until next 12:00 AM PST
 
-            await self.bot.sleep_till(
-                self.cooldowns.moderateCooldown
-            )
+            await self.bot.sleep_till(self.cooldowns.moderateCooldown)
             self.cmd["cmd_arguments"] = (
-                f"<@{self.settings.user_id}>" if self.settings.ping_user else f"{self.settings.user_id}"
+                f"<@{self.settings.user_id}>"
+                if self.settings.ping_user
+                else f"{self.settings.user_id}"
             )
             await self.bot.put_queue(self.cmd, priority=True)
             with lock:
@@ -110,9 +111,7 @@ class Cookie(commands.Cog):
                     await self.bot.remove_queue(id="cookie")
 
                     await asyncio.sleep(self.bot.calc_time())
-                    await self.bot.sleep_till(
-                        self.cooldowns.moderateCooldown
-                    )
+                    await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                     await self.bot.put_queue(self.cmd, priority=True)
                     with lock:
                         load_dict()

@@ -13,6 +13,7 @@
 from utils.configs.settings import Settings
 from utils.configs.globalSettings import GlobalSettings
 
+
 def FetchSettings(cnf: dict) -> Settings:
     """
     Returns Settings object based on give config (cnf)
@@ -25,6 +26,7 @@ def FetchSettings(cnf: dict) -> Settings:
     )
     pprint(debug_data)"""
     return settings
+
 
 def FetchGlobalSettings(cnf: dict) -> GlobalSettings:
     """

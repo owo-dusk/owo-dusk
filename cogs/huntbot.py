@@ -106,9 +106,7 @@ class Huntbot(commands.Cog):
         self, startup=False, no_cash_arg=True, timeToSleep=None, ans=None
     ):
         if startup:
-            await self.bot.sleep_till(
-                self.cooldowns.briefCooldown
-            )
+            await self.bot.sleep_till(self.cooldowns.briefCooldown)
         else:
             await self.bot.remove_queue(id="huntbot")
             if isinstance(timeToSleep, list):

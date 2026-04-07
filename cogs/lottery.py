@@ -16,7 +16,7 @@ import threading
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 def load_json_dict(file_path="utils/stats.json"):

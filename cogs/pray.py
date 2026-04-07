@@ -15,7 +15,7 @@ import random
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 def cmd_argument(userid, ping):

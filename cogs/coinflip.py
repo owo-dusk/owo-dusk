@@ -17,7 +17,7 @@ from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from utils.notification import notify
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 won_pattern = r"you won \*\*<:cowoncy:\d+> ([\d,]+)"
@@ -225,4 +225,3 @@ class Coinflip(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Coinflip(bot))
-

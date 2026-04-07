@@ -32,9 +32,7 @@ class ChannelSwitcher(commands.Cog):
 
     @tasks.loop()
     async def switch_channel_loop(self):
-        await self.bot.sleep_till(
-            self.settings.interval
-        )
+        await self.bot.sleep_till(self.settings.interval)
         status, resp = await self.change_channel()
 
         if not status:
@@ -50,10 +48,8 @@ class ChannelSwitcher(commands.Cog):
                 break
 
         available_channels = item.channels if item else []
-        available_channels = available_channels+self.settings.allUsers
-        valid_channels = [
-            cid for cid in available_channels if cid != self.cur_channel
-        ]
+        available_channels = available_channels + self.settings.allUsers
+        valid_channels = [cid for cid in available_channels if cid != self.cur_channel]
         # Converts to set (no repitations)
         valid_channels = list(set(valid_channels))
 
@@ -63,7 +59,7 @@ class ChannelSwitcher(commands.Cog):
 
         while valid_channels:
             channel_id = self.bot.random.choice(valid_channels)
-            if channel_id!=self.cur_channel:
+            if channel_id != self.cur_channel:
                 try:
                     new_channel = await self.bot.fetch_channel(channel_id)
                     if new_channel:
@@ -80,7 +76,6 @@ class ChannelSwitcher(commands.Cog):
 
             valid_channels.remove(channel_id)
         return False, "Failed to switch channel - No active channels found."
-
 
     async def cog_load(self):
         if not self.settings.enabled:

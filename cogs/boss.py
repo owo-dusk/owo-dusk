@@ -105,10 +105,10 @@ class Boss(commands.Cog):
             return True
         elif channel.guild.id == self.bot.cm.guild.id:
             # If not joinAll, then we only join boss battles in local server.
-            # Ignores Ignore list, because if local guild is ignored, there is no point 
+            # Ignores Ignore list, because if local guild is ignored, there is no point
             # in enabling boss battle.
             return True
-        
+
         return False
 
     async def on_component_message(self, message):
@@ -139,7 +139,6 @@ class Boss(commands.Cog):
                                 # which will be done below
                                 self.joined_boss_ids.append(battle_id)
 
-
                             # Boss Fight button
                             if (
                                 component.accessory
@@ -150,14 +149,18 @@ class Boss(commands.Cog):
                                         message.channel_id
                                     )
 
-                                    if boss_channel and self.should_join_guild(boss_channel):
+                                    if boss_channel and self.should_join_guild(
+                                        boss_channel
+                                    ):
                                         if not self.settings.should_join():
                                             await self.bot.log(
                                                 "Skipping boss battle..",
                                                 "#6F7C8A",
                                             )
                                             return
-                                        self.bot.boss_channel_id = boss_channel.id # Re-Check Logic
+                                        self.bot.boss_channel_id = (
+                                            boss_channel.id
+                                        )  # Re-Check Logic
 
                                         await asyncio.sleep(0.5)
                                         if not self.bot.command_handler_status[
@@ -172,10 +175,10 @@ class Boss(commands.Cog):
                                             )
                                             if click_status:
                                                 await self.bot.log(
-                                                    f"Joined Boss battle! -> {boss_channel.guild.name} - {boss_channel.name}", "#B5C1CE"
+                                                    f"Joined Boss battle! -> {boss_channel.guild.name} - {boss_channel.name}",
+                                                    "#B5C1CE",
                                                 )
                                                 self.consume_boss_ticket()
-
 
                     if component.component_name == "text_display":
                         if (
@@ -197,4 +200,3 @@ class Boss(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Boss(bot))
-

@@ -37,7 +37,8 @@ import pytz
 import requests
 from discord.ext import commands, tasks
 from discord import SyncWebhook
-from flask import Flask, jsonify, render_template, request
+
+# from flask import Flask, jsonify, render_template, request
 from rich.align import Align
 from rich.console import Console
 from rich.panel import Panel
@@ -46,11 +47,13 @@ from queue import Queue
 # Local
 import components_v2
 import utils.configs as config_models
+import utils.others as utils
 from utils.misspell import misspell_word
 from utils.notification import notify
 from utils.webhook import webhookSender
 from utils.database import databaseWorker
 from utils.captcha_solver.yescaptcha import captchaClient
+from website import web_start, website_append
 
 
 """Cntrl+c detect"""
@@ -133,233 +136,7 @@ version = "2.5.0"
 
 """FLASK APP"""
 
-app = Flask(__name__)
-website_logs = []
-config_updated = None
-
-
-def merge_dicts(main, small):
-    for key, value in small.items():
-        if key in main and isinstance(main[key], dict) and isinstance(value, dict):
-            merge_dicts(main[key], value)
-        else:
-            main[key] = value
-
-
-def get_from_db(command):
-    with sqlite3.connect("utils/data/db.sqlite") as conn:
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
-
-        cur.execute("PRAGMA journal_mode;")
-        mode = cur.fetchone()[0]
-        if mode.lower() != "wal":
-            cur.execute("PRAGMA journal_mode=WAL;")
-
-        cur.execute(command)
-
-        item = cur.fetchall()
-        return item
-
-
-@app.route("/")
-def home():
-    return render_template("index.html", version=version)
-
-
-@app.route("/api/console", methods=["GET"])
-def get_console_logs():
-    password = request.headers.get("password")
-    if not password or password != global_settings_dict.website.password:
-        return "Invalid Password", 401
-    try:
-        log_string = "\n".join(website_logs)
-        return log_string
-    except Exception as e:
-        print(f"Error fetching logs: {e}")
-        return jsonify(
-            {"status": "error", "message": "An error occurred while fetching logs"}
-        ), 500
-
-
-@app.route("/api/fetch_gamble_data", methods=["GET"])
-def fetch_gamble_data():
-    password = request.headers.get("password")
-    if not password or password != global_settings_dict.website.password:
-        return "Invalid Password", 401
-    try:
-        # Fetch table data
-        rows = get_from_db(
-            "SELECT hour, wins, losses FROM gamble_winrate ORDER BY hour"
-        )
-
-        # Extract columns as lists
-        win_data = [row["wins"] for row in rows]
-        lose_data = [row["losses"] for row in rows]
-
-        # Return Data
-        return jsonify(
-            {"status": "success", "win_data": win_data, "lose_data": lose_data}
-        )
-
-    except Exception as e:
-        print(f"Error fetching gamble data: {e}")
-        return jsonify(
-            {
-                "status": "error",
-                "message": "An error occurred while fetching gamble data",
-            }
-        ), 500
-
-
-@app.route("/api/fetch_cowoncy_data", methods=["GET"])
-def fetch_cowoncy_data():
-    password = request.headers.get("password")
-    if not password or password != global_settings_dict.website.password:
-        return "Invalid Password", 401
-
-    try:
-        rows = get_from_db(
-            "SELECT user_id, hour, earnings FROM cowoncy_earnings ORDER BY hour"
-        )
-        user_data = {}
-        for row in rows:
-            user_id = row["user_id"]
-            hour = row["hour"]
-            earnings = row["earnings"]
-
-            if user_id not in user_data:
-                # Create dummy data
-                user_data[user_id] = {i: 0 for i in range(24)}
-            # populate
-            user_data[user_id][hour] = earnings
-
-        # Base data
-        base_data = {"labels": [f"Hour {i}" for i in range(24)], "datasets": []}
-
-        for user_id, hourly_data in user_data.items():
-            color_hue = random.randint(0, 360)
-            dataset = {
-                "label": user_id,
-                "data": [hourly_data[i] for i in range(24)],
-                "borderColor": f"hsl({color_hue}, 100%, 50%)",
-                "backgroundColor": f"hsl({color_hue}, 100%, 70%)",
-                "fill": True,
-                "tension": 0.4,
-                "pointRadius": 0,
-            }
-            base_data["datasets"].append(dataset)
-
-        rows = get_from_db("SELECT cowoncy, captchas FROM user_stats")
-        total_cowoncy = sum(row["cowoncy"] for row in rows)
-        # I understand this area is for cowoncy, but accessing thro here since lazy lol.
-        total_captchas = sum(row["captchas"] for row in rows)
-
-        return jsonify(
-            {
-                "status": "success",
-                "data": base_data,
-                "total_cash": total_cowoncy,
-                "total_captchas": total_captchas,
-            }
-        ), 200
-
-    except Exception as e:
-        print(f"Error fetching cowoncy data: {e}")
-        return jsonify(
-            {
-                "status": "error",
-                "message": "An error occurred while fetching cowoncy data",
-            }
-        ), 500
-
-
-@app.route("/api/fetch_cmd_data", methods=["GET"])
-def fetch_cmd_data():
-    password = request.headers.get("password")
-    if not password or password != global_settings_dict.website.password:
-        return "Invalid Password", 401
-    try:
-        rows = get_from_db("SELECT * FROM commands")
-
-        filtered_rows = [row for row in rows if row["count"] != 0]
-
-        command_names = [row["name"] for row in filtered_rows]
-        count = [row["count"] for row in filtered_rows]
-
-        for idx, item in enumerate(count):
-            if item == 0:
-                command_names.pop(idx)
-                count.pop(idx)
-
-        # Return Data
-        return jsonify(
-            {"status": "success", "command_names": command_names, "count": count}
-        )
-
-    except Exception as e:
-        print(f"Error fetching command data: {e}")
-        return jsonify(
-            {
-                "status": "error",
-                "message": "An error occurred while fetching command data",
-            }
-        ), 500
-
-
-@app.route("/api/fetch_weekly_runtime", methods=["GET"])
-def fetch_weekly_runtime():
-    password = request.headers.get("password")
-    if not password or password != global_settings_dict.website.password:
-        return "Invalid Password", 401
-    try:
-        # Fetch json data
-        with open("utils/data/weekly_runtime.json", "r") as config_file:
-            data_dict = json.load(config_file)
-
-        runtime_data = [
-            (val[1] - val[0]) / 60
-            for val in data_dict.values()
-            if isinstance(val, list)
-        ]
-
-        cur_hour = get_weekday()
-
-        # Return Data
-        return jsonify(
-            {
-                "status": "success",
-                "runtime_data": runtime_data,
-                "current_uptime": data_dict[cur_hour],
-            }
-        )
-
-    except Exception as e:
-        print(f"Error fetching weekly runtime: {e}")
-        return jsonify(
-            {
-                "status": "error",
-                "message": "An error occurred while fetching weekly runtime",
-            }
-        ), 500
-
-
-def web_start():
-    flaskLog = logging.getLogger("werkzeug")
-    flaskLog.disabled = True
-    cli = sys.modules["flask.cli"]
-    cli.show_server_banner = lambda *x: None
-    app.run(
-        debug=False,
-        use_reloader=False,
-        port=global_settings_dict.website.port,
-        host="0.0.0.0"
-        if global_settings_dict.website.enableHost
-        else "127.0.0.1",
-    )
-
-
-""""""
+# Remved
 
 
 def printBox(text, color, title=None):
@@ -400,21 +177,6 @@ if not on_mobile and not misc_dict["hostMode"]:
             import psutil
     except Exception as e:
         print(f"ImportError: {e}")
-
-
-# For time related stuff
-def get_weekday():
-    # 0 = monday, 6 = sunday
-    return str(datetime.today().weekday())
-
-
-def get_hour():
-    # only from 0 to 23 (24hr format)
-    return datetime.now().hour
-
-
-def get_date():
-    return datetime.now().date().isoformat()  # e.g. "2025-05-31"
 
 
 # For battery check
@@ -818,7 +580,7 @@ class MyClient(commands.Bot):
         # print(self.user.name, "->", self.cmd_priorities)
 
     def update_cash_db(self):
-        hr = get_hour()
+        hr = utils.get_hour()
 
         database_handler.update_database(
             """UPDATE cowoncy_earnings
@@ -906,7 +668,7 @@ class MyClient(commands.Bot):
             )
 
     async def populate_cowoncy_earnings(self, update=False):
-        today_str = get_date()
+        today_str = utils.get_date()
 
         for i in range(24):
             if not update:
@@ -924,7 +686,7 @@ class MyClient(commands.Bot):
 
         if last_reset_str == today_str:
             # Handle gap between cowoncy chart
-            cur_hr = get_hour()
+            cur_hr = utils.get_hour()
             last_cash = 0
             for hr in range(cur_hr + 1):
                 hr_row = await database_handler.get_from_db(
@@ -968,7 +730,7 @@ class MyClient(commands.Bot):
                 break
 
     async def reset_gamble_wins_or_losses(self):
-        today_str = get_date()
+        today_str = utils.get_date()
 
         rows = await database_handler.get_from_db(
             "SELECT value FROM meta_data WHERE key = ?",
@@ -997,7 +759,7 @@ class MyClient(commands.Bot):
         )
 
     def update_gamble_db(self, item="wins"):
-        hr = get_hour()
+        hr = utils.get_hour()
 
         if item not in {"wins", "losses"}:
             raise ValueError("Invalid column name.")
@@ -1206,7 +968,6 @@ class MyClient(commands.Bot):
         lineno=None,
         filename=None,
     ):
-        global website_logs
         current_time = datetime.now().strftime("%H:%M:%S")
         if self.misc["debug"]["enabled"]:
             if not lineno and not filename:
@@ -1226,11 +987,10 @@ class MyClient(commands.Bot):
             )
         if web_log:
             with lock:
-                website_logs.append(
+                website_append(
                     f"<div class='message'><span class='timestamp'>[{current_time}]</span><span class='text'>{self.username}| {text}</span></div>"
                 )
-                if len(website_logs) > 300:
-                    website_logs.pop(0)
+
         if webhook_useless_log:
             await self.webhookSender(
                 footer=f"[{current_time}] {self.username} - {text}", colors=color
@@ -1568,9 +1328,7 @@ class MyClient(commands.Bot):
         # self.config_update_checker.start()
         # disabled since unnecessory
         if self.token_len > 1:
-            time_to_sleep = self.random_float(
-                global_settings_dict.account.startupDelay
-            )
+            time_to_sleep = self.random_float(global_settings_dict.account.startupDelay)
             await self.log(f"{self.username} sleeping {time_to_sleep}s before starting")
             await asyncio.sleep(time_to_sleep)
 
@@ -1606,7 +1364,7 @@ def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
         try:
             with open(path, "r") as config_file:
                 weekly_runtime_dict = json.load(config_file)
-            weekday = get_weekday()
+            weekday = utils.get_weekday()
 
             if weekly_runtime_dict[weekday][0] == 0:
                 weekly_runtime_dict[weekday][0], weekly_runtime_dict[weekday][1] = (
@@ -1854,7 +1612,15 @@ if __name__ == "__main__":
 
     if global_settings_dict.website.enabled:
         # Start website
-        web_thread = threading.Thread(target=web_start)
+        web_thread = threading.Thread(
+            target=web_start,
+            args=(
+                global_settings_dict.website.port,
+                global_settings_dict.website.enableHost,
+                version,
+                global_settings_dict.website.password,
+            ),
+        )
         web_thread.start()
         # get ip
         ip = get_local_ip()
@@ -1885,9 +1651,7 @@ if __name__ == "__main__":
         )
 
         if global_settings_dict.webhook.enabled:
-            webhook = SyncWebhook.from_url(
-                global_settings_dict.webhook.webhookUrl
-            )
+            webhook = SyncWebhook.from_url(global_settings_dict.webhook.webhookUrl)
 
             color = discord.Color(0xC48DC3)
             emb = discord.Embed(

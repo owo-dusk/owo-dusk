@@ -17,7 +17,7 @@ import re
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 def load_json_dict(file_path="utils/stats.json"):
@@ -57,9 +57,7 @@ class Daily(commands.Cog):
                     self.bot.calc_time()
                 )  # Wait until next 12:00 AM PST
 
-            await self.bot.sleep_till(
-                self.cooldowns.briefCooldown
-            )
+            await self.bot.sleep_till(self.cooldowns.briefCooldown)
             await self.bot.put_queue(cmd, priority=True)
             await self.bot.set_stat(False)
 
@@ -109,9 +107,7 @@ class Daily(commands.Cog):
                     )
                 )
 
-                await self.bot.sleep_till(
-                    self.cooldowns.moderateCooldown
-                )
+                await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 await self.bot.put_queue(cmd, priority=True)
                 await self.bot.set_stat(False)
                 with lock:
@@ -138,9 +134,7 @@ class Daily(commands.Cog):
                 await self.bot.remove_queue(cmd)
                 await self.bot.set_stat(True)
                 await asyncio.sleep(self.bot.calc_time())
-                await self.bot.sleep_till(
-                    self.cooldowns.moderateCooldown
-                )
+                await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 await self.bot.put_queue(cmd, priority=True)
                 await self.bot.set_stat(False)
                 with lock:

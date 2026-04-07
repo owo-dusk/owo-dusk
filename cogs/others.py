@@ -15,7 +15,7 @@ import json
 import re
 
 from discord.ext import commands
-#from uwu import MyClient
+# from uwu import MyClient
 
 
 try:
@@ -118,10 +118,7 @@ class Others(commands.Cog):
                 if self.auto_use.crate:
                     await self.bot.put_queue(self.crate_cmd)
 
-                if (
-                    self.webhook_settings.enabled
-                    and self.webhook_settings.others.crate
-                ):
+                if self.webhook_settings.enabled and self.webhook_settings.others.crate:
                     await self.bot.webhookSender(
                         title="Found crate! ✨",
                         desc=f"**User** <@{self.bot.user.id}> found a crate.",
@@ -145,14 +142,12 @@ class Others(commands.Cog):
                         img_url="https://cdn.discordapp.com/emojis/621847969146339378.gif",
                         author_img_url="https://i.imgur.com/6zeCgXo.png",
                     )
-                
+
                 if self.auto_use.lootbox:
                     await self.bot.put_queue(self.lootbox_cmd)
                     # give time for command to run
                     await asyncio.sleep(2.5)
                     self.bot.user_status["no_gems"] = False
-
-                
 
             # Add animals to team
             elif "Create one with `owo team add {animal}`" in message.content:
