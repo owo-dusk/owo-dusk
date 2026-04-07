@@ -28,7 +28,7 @@ class Owo(commands.Cog):
 
     async def send_owo(self, startup=False):
         cmd = {
-            "cmd_name": "owo",
+            "cmd_name": self.bot.alias["owo"]["normal"],
             "prefix": False,
             "checks": True,
             "id": "owo",
