@@ -51,6 +51,8 @@ BUTTON_STYLES = {
     3: "success",
     4: "danger",
     5: "link",
+    # This seems to be appearing for some reason
+    6: "premium"
 }
 
 COMPONENT_NAMES = {
