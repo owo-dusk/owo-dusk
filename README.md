@@ -1,5 +1,5 @@
 <div align="center">
-  <center><img src="static/imgs/logo.png" width="150"></center>
+  <center><img src="website/static/imgs/logo.png" width="150"></center>
   <br>
   <a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.herokuapp.com?font=Pacifico&size=40&pause=1000&color=802DF7&center=true&vCenter=true&random=false&width=425&lines=Owo+Dusk" alt="Typing SVG" />
   <br/>
@@ -38,7 +38,7 @@ Best selfbot for owobot currently with alot of cool features like Boss battles, 
   > Make sure to install termux and termux:api (give this `notifications` permission) app from fdroid or github.
   > after the above is done, do the steps setup.py asks you to.
   > 
-  > simpily run `cd storage/downloads/owo-dusk && python uwu.py` next time to re-run code
+  > simpily run `cd && cd storage/downloads/owo-dusk && python uwu.py` next time to re-run code
   
   
 
@@ -51,11 +51,11 @@ Best selfbot for owobot currently with alot of cool features like Boss battles, 
 ---
 
 <div align="center">
-  <center><img src="static/imgs/desktop_cli.png" width="800" height="500"></center>
+  <center><img src="website/static/imgs/desktop_cli.png" width="800" height="500"></center>
   <br>
   <p>Desktop CLI screenshot</p>
   <br>
-  <center><img src="static/imgs/website.png" width="1200" height=600"></center>
+  <center><img src="website/static/imgs/website.png" width="1200" height=600"></center>
   <br>
   <p>Website dashboard</p>
 </div>
