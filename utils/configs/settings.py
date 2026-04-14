@@ -292,7 +292,7 @@ class CoinflipOptions:
 
 
 class Commands:
-    """Contains -> hunt, battle, sell, sac, pray, curse, lvlGrind, cookie, oow, shop, huntbot, lottery
+    """Contains -> hunt, battle, sell, sac, pray, curse, lvlGrind, cookie, oow, shop, huntbot, lottery, army, pup, piku
     each with `get_cd` function"""
 
     def __init__(self, d: dict):
@@ -306,6 +306,9 @@ class Commands:
             "lvlGrind",
             "cookie",
             "owo",
+            "army",
+            "pup",
+            "piku"
         ]
         for cmd in cmd_list:
             setattr(self, cmd, Command(d.get(cmd, {})))

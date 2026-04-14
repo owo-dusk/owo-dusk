@@ -151,6 +151,27 @@
                     "radar": 1
                 }
             }
+        },
+        "pup": {
+            "enabled": false,
+            "cooldown": [
+                60,
+                70
+            ]
+        },
+        "piku": {
+            "enabled": false,
+            "cooldown": [
+                60,
+                70
+            ]
+        },
+        "army": {
+            "enabled": true,
+            "cooldown": [
+                60,
+                70
+            ]
         }
     },
     "gamble": {

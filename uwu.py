@@ -130,6 +130,7 @@ owoArt = r"""
 """
 owoPanel = Panel(Align.center(owoArt), style="purple ", highlight=False)
 version = "2.5.0"
+database_version = "2.5.0"
 
 
 """FLASK APP"""
@@ -555,6 +556,7 @@ class MyClient(commands.Bot):
             reactionbot = False
 
         self.commands_dict = {
+            "army": commands_obj.army.enabled,
             "battle": commands_obj.battle.enabled
             and not reaction_bot_obj.huntAndBattle,
             "blackjack": gamble_obj.blackjack.enabled,
@@ -565,6 +567,7 @@ class MyClient(commands.Bot):
             "coinflip": gamble_obj.coinflip.enabled,
             "commands": True,
             "cookie": commands_obj.cookie.enabled,
+            "customcommands": self.settings_dict_temp.customCommands.enabled,
             "daily": self.settings_dict_temp.daily,
             "gems": self.settings_dict_temp.autoUse.gems.enabled,
             "giveaway": self.settings_dict_temp.giveaway.enabled,
@@ -581,7 +584,6 @@ class MyClient(commands.Bot):
             "sell": commands_obj.sell.enabled or commands_obj.sac.enabled,
             "shop": commands_obj.shop.enabled,
             "slots": gamble_obj.slots.enabled,
-            "customcommands": self.settings_dict_temp.customCommands.enabled,
         }
 
     """To make the code cleaner when accessing cooldowns from config."""
@@ -1173,6 +1175,27 @@ def start_runtime_loop(path="utils/data/weekly_runtime.json"):
 
 
 def create_database(db_path="utils/data/db.sqlite"):
+    if os.path.exists(db_path):
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        try:
+            c.execute("SELECT value FROM meta_data WHERE key = 'version'")
+            row = c.fetchone()
+            current_version = row[0] if row else None
+        except sqlite3.OperationalError:
+            # Table meta_data doesn't exist yet
+            current_version = None
+        finally:
+            conn.close()
+
+        # 2. If version is wrong or missing, delete the file
+        if current_version and compare_versions(current_version, database_version):
+            console.print(
+                f"Version mismatch (Found: {current_version}, Expected: {database_version}). Recreating DB...",
+                style="orange_red1",
+            )
+            os.remove(db_path)
+    
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
@@ -1186,7 +1209,7 @@ def create_database(db_path="utils/data/db.sqlite"):
         "CREATE TABLE IF NOT EXISTS gamble_winrate (hour INTEGER PRIMARY KEY, wins INTEGER, losses INTEGER, net INTEGER)"
     )
     c.execute(
-        "CREATE TABLE IF NOT EXISTS user_stats (user_id TEXT PRIMARY KEY, daily REAL, lottery REAL, cookie REAL, giveaways REAL, captchas INTEGER, cowoncy INTEGER, boss REAL, boss_ticket INTEGER)"
+        "CREATE TABLE IF NOT EXISTS user_stats (user_id TEXT PRIMARY KEY, daily REAL, lottery REAL, cookie REAL, giveaways REAL, captchas INTEGER, cowoncy INTEGER, boss REAL, boss_ticket INTEGER, pup INTEGER, piku INTEGER, army INTEGER)"
     )
     c.execute(
         "CREATE TABLE IF NOT EXISTS meta_data (key TEXT PRIMARY KEY, value INTEGER)"
@@ -1196,6 +1219,14 @@ def create_database(db_path="utils/data/db.sqlite"):
     )
     # Switch to WAL mode.
     c.execute("PRAGMA journal_mode=WAL;")
+
+    """# NOTE: Remove this once proper migration for database is in place:
+    try:
+        c.execute("ALTER TABLE user_stats ADD COLUMN pup INTEGER")
+        c.execute("ALTER TABLE user_stats ADD COLUMN piku INTEGER")
+        c.execute("ALTER TABLE user_stats ADD COLUMN army INTEGER")
+    except Exception:
+        pass"""
 
     # Populate
 
@@ -1231,21 +1262,6 @@ def create_database(db_path="utils/data/db.sqlite"):
         populate = True
 
     if not populate:
-        """for key, value in misc_dict["command_info"].items():
-            
-            for idx, row in enumerate(rows[:]):
-                # Order should be same unless user makes changes which does indeed require a refetch
-                if key != row[1] or value["priority"] != row[2]:
-                    c.execute("DELETE FROM command_priority")
-                    populate = True
-                    break
-                rows.pop(idx)
-        if rows:
-            c.execute("DELETE FROM command_priority")
-            populate = True"""
-
-        ###
-
         # 0 -> user_id
         # 1 -> command_name
         # 2 -> priority
@@ -1435,7 +1451,7 @@ if __name__ == "__main__":
     ):
         console.print(
             "Be Warned, Captcha solving is not well tested.. You are using on your own risk..",
-            style="red1",
+            style="orange_red1",
         )
         if captcha_settings_dict["hcaptcha_solver"]["enabled"]:
             # Setup hcaptcha solver..
@@ -1445,14 +1461,14 @@ if __name__ == "__main__":
             if hcaptcha_solver.balance == 0:
                 console.print(
                     "Yescaptcha API has no balance...",
-                    style="red1",
+                    style="orange_red1",
                 )
                 os._exit(0)
             else:
                 bal = hcaptcha_solver.balance
                 console.print(
                     f"Yescaptcha API has a balance of {bal}, which is approximately {round(bal / 30)} hcaptcha solves.",
-                    style="red1",
+                    style="tan",
                 )
 
 
