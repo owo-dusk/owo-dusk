@@ -96,7 +96,8 @@ class Captcha(commands.Cog):
         self.reccured = 0
         self.content_to_notify = ""
         self.kill_task = None
-        self.solve_in_progress = False
+        self.yescaptcha_in_progress = False
+        self.captcha_site_opened = False
 
     def fetch_setings(self, cmd):
         return getattr(self.bot.settings_dict_temp.commands, cmd)
@@ -228,7 +229,7 @@ class Captcha(commands.Cog):
             except Exception as e:
                 print(f"{e} - at Toast/Popup")
         """Open captcha website"""
-        if self.captcha_settings.openCaptchaWebsite:
+        if self.captcha_settings.openCaptchaWebsite and not self.captcha_site_opened:
             if on_mobile:
                 run_system_command(f"termux-open {url}", timeout=5, retry=True)
             else:
@@ -240,6 +241,7 @@ class Captcha(commands.Cog):
                 else:
                     # Linux
                     run_system_command(f"xdg-open {url}", timeout=5, retry=True)
+            self.captcha_site_opened = True
 
     async def handle_solves(self):
         if self.bot.misc["hostMode"]:
@@ -302,6 +304,7 @@ class Captcha(commands.Cog):
                 self.bot.command_handler_status["captcha"] = False
                 self.bot.db.update_captcha_db()
                 await self.handle_solves()
+                self.captcha_site_opened = False
                 if self.bot.global_settings_dict.webhook.enabled:
                     webhook_url = (
                         self.bot.global_settings_dict.webhook.webhookCaptchaUrl
@@ -408,8 +411,8 @@ class Captcha(commands.Cog):
                 console_handler(self.bot.global_settings_dict.console)
 
                 if cap_dict["hcaptcha_solver"]["enabled"] and not image_captcha:
-                    if not self.solve_in_progress:
-                        self.solve_in_progress = True
+                    if not self.yescaptcha_in_progress:
+                        self.yescaptcha_in_progress = True
                         await self.bot.log("Attempting to solve hcaptcha", "#656b66")
                         solved = await self.bot.captcha_handler.solve_owo_bot_captcha(
                             self.bot.local_headers,
@@ -436,7 +439,7 @@ class Captcha(commands.Cog):
                                     "#d70000",
                                 )
                                 os._exit(0)
-                        self.solve_in_progress = False
+                        self.yescaptcha_in_progress = False
 
                 elif cap_dict["image_solver"]["enabled"] and image_captcha:
                     await self.bot.log("Attempting to solve image captcha", "#656b66")
