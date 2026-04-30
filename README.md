@@ -6,6 +6,7 @@
   <a href="https://discord.gg/hDDrKhWPqr"><img src="https://invidget.switchblade.xyz/hDDrKhWPqr" alt="Discord Invite"/> </a>
   <br/>
   <small><p>join our discord! (Join with a second account please, one that hasn't and won't use owobot!)<br>
+  <small><p>If you join with an account that plays owobot, you WILL get banned from using owo bot!)<br>
   Alternatively, send a friend request to `@echoquill` on discord for help!</p></small>
 </div>
 
