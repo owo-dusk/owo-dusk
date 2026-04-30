@@ -5,7 +5,7 @@
   <br/>
   <a href="https://discord.gg/hDDrKhWPqr"><img src="https://invidget.switchblade.xyz/hDDrKhWPqr" alt="Discord Invite"/> </a>
   <br/>
-  <small><p>join our discord! (Join with an alt please, one that hasn't and won't use owobot!)<br>
+  <small><p>join our discord! (Join with a second account please, one that hasn't and won't use owobot!)<br>
   Alternatively, send a friend request to `@echoquill` on discord for help!</p></small>
 </div>
 
@@ -21,29 +21,37 @@ Best selfbot for owobot currently with alot of cool features like Boss battles, 
 ---
 # Basic installation
 ---
-* Computer
+* Windows
   ```
-  git clone https://github.com/owo-dusk/owo-dusk.git
-  cd owo-dusk
-  python setup.py
-  python uwu.py
+    curl -o "%TEMP%\install.bat" https://raw.githubusercontent.com/echoquill/owo-dusk/main/install.bat && "%TEMP%\install.bat"
   ```
-  > Run in order
-  > Make sure git and python is installed and that terminal is open in `Desktop` for easier access (you can simply run `cd %USERPROFILE%\Desktop` if your on windows, command prompt)
   
-* Termux
+* Termux/Linux
   ```
-  pkg update && pkg upgrade -y && termux-setup-storage && pkg install python -y && pkg install git -y && pkg install termux-api -y && cd storage/downloads && git clone https://github.com/owo-dusk/owo-dusk.git && cd owo-dusk && python setup.py && python uwu.py
+    bash <(curl -s https://raw.githubusercontent.com/echoquill/owo-dusk/main/install.sh)
   ```
   > Make sure to install termux and termux:api (give this `notifications` permission) app from fdroid or github.
   > after the above is done, do the steps setup.py asks you to.
-  > 
-  > simpily run `cd && cd storage/downloads/owo-dusk && python uwu.py` next time to re-run code
+  > If you have issues with Basic installation, try doing Manual installation
   
+---
+# Manual installation
+---
+* Windows
+  ```
+    git clone https://github.com/echoquill/owo-dusk.git
+    cd owo-dusk
+    python setup.py
+    python uwu.py
+  ```
   
+* Termux/Linux
+  ```
+    pkg update && pkg upgrade -y && termux-setup-storage && pkg install python -y && pkg install git -y && pkg install termux-api -y && cd storage/downloads && git clone https://github.com/echoquill/owo-dusk.git && cd owo-dusk && python setup.py && python uwu.py
+  ```
 
 > [!TIP]
-> For help with setup, please join our discord server(or send `echoquill` a friend request) and I'll help you set it up on both termux(android) and desktop/laptop devices. Ill make tutorials for it laters!
+> If you have any issues with setup, please join our discord server(or send `echoquill` a friend request) and I'll help you set it up on both termux(android) and desktop/laptop devices. Ill make tutorials for it later!
 
 
 ---
