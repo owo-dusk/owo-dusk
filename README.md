@@ -27,33 +27,21 @@ Best selfbot for owobot currently with alot of cool features like Boss battles, 
     curl -o "%TEMP%\install.bat" https://raw.githubusercontent.com/echoquill/owo-dusk/main/install.bat && "%TEMP%\install.bat"
   ```
   
-* Termux/Linux
+* Termux/Linux/MacOS
   ```
     bash <(curl -s https://raw.githubusercontent.com/echoquill/owo-dusk/main/install.sh)
   ```
+  **For Termux:**
   > Make sure to install termux and termux:api (give this `notifications` permission) app from fdroid or github.
   > after the above is done, do the steps setup.py asks you to.
   > If you have issues with Basic installation, try doing Manual installation
+
+  **For Linux**
+  > In some Linux devices, pip may be restricted. In such cases run installer after creating a venv
   
----
-# Manual installation
----
-* Windows
-  ```
-    git clone https://github.com/echoquill/owo-dusk.git
-    cd owo-dusk
-    python setup.py
-    python uwu.py
-  ```
-  
-* Termux/Linux
-  ```
-    pkg update && pkg upgrade -y && termux-setup-storage && pkg install python -y && pkg install git -y && pkg install termux-api -y && cd storage/downloads && git clone https://github.com/echoquill/owo-dusk.git && cd owo-dusk && python setup.py && python uwu.py
-  ```
 
 > [!TIP]
 > If you have any issues with setup, please join our discord server(or send `echoquill` a friend request) and I'll help you set it up on both termux(android) and desktop/laptop devices. Ill make tutorials for it later!
-
 
 ---
 # Screenshots 📸 
