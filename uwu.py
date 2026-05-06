@@ -129,8 +129,8 @@ owoArt = r"""
  \__/ (_/\_) \__/     (____/\____/(____/(__\_)
 """
 owoPanel = Panel(Align.center(owoArt), style="purple ", highlight=False)
-version = "3.0.0"
-database_version = "3.0.0"
+version = "2.5.0"
+database_version = "2.5.0"
 
 
 """FLASK APP"""
