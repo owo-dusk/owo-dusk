@@ -12,7 +12,7 @@
 
 ---
 
-Supports BOTH MOBILE AND DESKTOP with captcha Notifiers for both. And we also support reaction bot, and have a custom dashboard for solving captchas (image ones) through your browser!
+OwO-Dusk - Most advanced and configurable selfbot available for OwOBot. Provides alot of features that makes playing OwOBot easier - Including Boss Battles, Hunt, Battle, Huntbot and many more!
 
 > [!IMPORTANT]
 > ⚠️🚨 WE ARE NOT responsible if you get banned using our selfbots. Selfbots are agains discord tos and also breaks owo bots rules. If you do plan on using it still then atleast take some steps to ensure that you won't be getting banned like no more than one/two account grinding in one servers, Only grinding in private servers, And not openly sharing the fact that you use selfbot to grind owo.
@@ -75,7 +75,11 @@ Supports BOTH MOBILE AND DESKTOP with captcha Notifiers for both. And we also su
 * https://github.com/TahaGorme/slashy
 > inspired website dashboard. Alot of js code was stolen from slashy; before 2.1.0^ script.js was an entire copy of slashy's (with permission ofc).
  
-
 ---
+# Donate
+---
+Litecoin (LTC) - ```La9tPWkcJqhhFpjA8EYudphawDCCUVapJV```
+USDT (TRX network / TRC20) - ```TFdDA8hWAXQZbBwET3FbR1C5bG8qEiNirP```
+Thanks in advance! DM me on Discord witch transaction id and I'll give a donator role!
 
 thanks for reading :>, I hope this tool could help you even if a little ❤ .
