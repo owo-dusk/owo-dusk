@@ -3,5 +3,5 @@ This audio file should then play when captcha comes up.
 
 Alternatively, you may copy the full path of the audio file and put it as path instead, incase you don't want to move the file here.
 
-It is reccomended to use smaller audio files, like ones under 30 seconds, 
+It is recommended to use smaller audio files, like ones under 30 seconds, 
 as the code will keep playing it even when the captha has been solved.
