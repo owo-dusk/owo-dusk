@@ -52,7 +52,10 @@
         },
         "others": {
             "logLootbox": true,
-            "logCrate": true
+            "logCrate": true,
+            "logChannelSwitch": false,
+            "pingOnChannelSwitch": false,
+            "webhookUserIdToPingOnChannelSwitch": "user id to ping on channel switch here"
         }
     },
     "console": {
