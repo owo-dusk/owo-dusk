@@ -3,7 +3,7 @@ import json
 from utils.misc import is_termux, run_system_command
 
 
-with open("config/misc.json", "r") as config_file:
+with open("config/misc.json", "r", encoding="utf-8") as config_file:
     misc_dict = json.load(config_file)
 
 

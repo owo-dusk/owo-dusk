@@ -20,7 +20,7 @@ from discord.ext.commands import ExtensionNotLoaded
 
 
 def load_json_dict(file_path="utils/stats.json"):
-    with open(file_path, "r") as config_file:
+    with open(file_path, "r", encoding="utf-8") as config_file:
         return json.load(config_file)
 
 
@@ -77,7 +77,7 @@ class Cookie(commands.Cog):
                 accounts_dict[str(self.bot.user.id)]["cookie"] = (
                     self.bot.time_in_seconds()
                 )
-                with open("utils/stats.json", "w") as f:
+                with open("utils/stats.json", "w", encoding="utf-8") as f:
                     json.dump(accounts_dict, f, indent=4)
 
     async def cog_load(self):
@@ -118,7 +118,7 @@ class Cookie(commands.Cog):
                         accounts_dict[str(self.bot.user.id)]["cookie"] = (
                             self.bot.time_in_seconds()
                         )
-                        with open("utils/stats.json", "w") as f:
+                        with open("utils/stats.json", "w", encoding="utf-8") as f:
                             json.dump(accounts_dict, f, indent=4)
 
 

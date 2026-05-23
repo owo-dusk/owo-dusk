@@ -89,7 +89,7 @@ if scratchSetup:
             print()
 
             """Numpy Installation"""
-            print("\033[1;36m[0]Attepmting to install numpy\033[m")
+            print("\033[1;36m[0]Attempting to install numpy\033[m")
             try:
                 subprocess.check_call(["pkg", "install", "python-numpy", "-y"])
                 print("\033[1;36m[0]installed numpy successfully!\033[m")
@@ -97,7 +97,7 @@ if scratchSetup:
                 print(f"\033[1;31m[x]error when trying to install numpy:-\n {e}\033[m")
 
             """PILL Installation"""
-            print("\033[1;36m[0]Attepmting to install PIL\033[m")
+            print("\033[1;36m[0]Attempting to install PIL\033[m")
             try:
                 subprocess.check_call(["pkg", "install", "python-pillow", "-y"])
                 print("\033[1;36m[0]installed PIL successfully!\033[m")
@@ -105,7 +105,7 @@ if scratchSetup:
                 print(f"\033[1;31m[x]error when trying to install PIL:-\n {e}\033[m")
 
             """Termux-api Installation"""
-            print("\033[1;36m[0]Attepmting to install termux-api...\033[m")
+            print("\033[1;36m[0]Attempting to install termux-api...\033[m")
             try:
                 subprocess.check_call(["pkg", "install", "termux-api", "-y"])
                 print("\033[1;36m[0]installed termux-api successfully!\033[m")
@@ -114,7 +114,7 @@ if scratchSetup:
                     f"\033[1;31m[x]error when trying to install termux-api:-\n {e}\033[m"
                 )
             if cap_cnf_dict["image_solver"]["enabled"]:
-                print("\033[1;36m[0]Attepmting to install onnxruntime...\033[m")
+                print("\033[1;36m[0]Attempting to install onnxruntime...\033[m")
                 try:
                     subprocess.check_call(
                         ["pkg", "install", "python-onnxruntime", "-y"]
@@ -176,7 +176,7 @@ if scratchSetup:
                     'a': Append
                     'r+': Read and write
                     """
-                    with open("tokens.txt", "w") as t:
+                    with open("tokens.txt", "w", encoding="utf-8") as t:
                         pass
 
                     async def validate_token(token, channelinput):
@@ -288,7 +288,7 @@ if scratchSetup:
                                     print(
                                         "\033[1;31m[x]Failed to get channel id, please try again.\033[m"
                                     )
-                        with open("tokens.txt", "a") as t:
+                        with open("tokens.txt", "a", encoding="utf-8") as t:
                             t.write(f"{tokeninput} {channelinput}\n")
                     print()
                     print()

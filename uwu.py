@@ -93,18 +93,18 @@ lock = threading.Lock()
 clear()
 
 
-def load_accounts_dict(file_path="utils/stats.json"):
-    with open(file_path, "r") as config_file:
+def load_accounts_dict(file_path="utils/stats.json"): #dead code btw
+    with open(file_path, "r", encoding="utf-8") as config_file:
         return json.load(config_file)
 
 
-with open("config/global_settings.json", "r") as config_file:
+with open("config/global_settings.json", "r", encoding="utf-8") as config_file:
     global_settings_dict = config_models.configs.FetchGlobalSettings(
         json.load(config_file)
     )
 
 
-with open("config/misc.json", "r") as config_file:
+with open("config/misc.json", "r", encoding="utf-8") as config_file:
     misc_dict = json.load(config_file)
 
 
@@ -381,7 +381,7 @@ class MyClient(commands.Bot):
             "hold_handler": False,
         }
 
-        with open("config/misc.json", "r") as config_file:
+        with open("config/misc.json", "r", encoding="utf-8") as config_file:
             self.misc = json.load(config_file)
 
         self.alias = self.misc["alias"]
@@ -519,7 +519,7 @@ class MyClient(commands.Bot):
                 custom_path if os.path.exists(custom_path) else default_config_path
             )
 
-            with open(config_path, "r") as config_file:
+            with open(config_path, "r", encoding="utf-8") as config_file:
                 self.settings_dict = json.load(config_file)
                 self.settings_dict_temp = config_models.configs.FetchSettings(
                     self.settings_dict
@@ -1075,7 +1075,7 @@ class MyClient(commands.Bot):
             accounts_dict = load_accounts_dict()
             if str(self.user.id) not in accounts_dict:
                 accounts_dict.update(self.default_config)
-                with open("utils/stats.json", "w") as f:
+                with open("utils/stats.json", "w", encoding="utf-8") as f:
                     json.dump(accounts_dict, f, indent=4)
 
         # Charts
@@ -1124,7 +1124,7 @@ def get_local_ip():
 def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
     while True:
         try:
-            with open(path, "r") as config_file:
+            with open(path, "r", encoding="utf-8") as config_file:
                 weekly_runtime_dict = json.load(config_file)
             weekday = utils.get_weekday()
 
@@ -1136,7 +1136,7 @@ def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
             else:
                 weekly_runtime_dict[weekday][1] = time.time()
 
-            with open(path, "w") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 json.dump(weekly_runtime_dict, f, indent=4)
 
         except Exception as e:
@@ -1148,7 +1148,7 @@ def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
 
 def start_runtime_loop(path="utils/data/weekly_runtime.json"):
     try:
-        with open(path, "r") as config_file:
+        with open(path, "r", encoding="utf-8") as config_file:
             weekly_runtime_dict = json.load(config_file)
 
         now = time.time()
@@ -1160,7 +1160,7 @@ def start_runtime_loop(path="utils/data/weekly_runtime.json"):
 
         weekly_runtime_dict["last_checked"] = now
 
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(weekly_runtime_dict, f, indent=4)
 
         loop_thread = threading.Thread(target=handle_weekly_runtime, daemon=True)
@@ -1373,9 +1373,9 @@ if __name__ == "__main__":
             "bold gold3",
         )
         if version_json["important_update"]:
-            printBox("It is reccomended to update....", "bold light_yellow3")
+            printBox("It is recommended to update....", "bold light_yellow3")
 
-    tokens_and_channels = [line.strip().split() for line in open("tokens.txt", "r")]
+    tokens_and_channels = [line.strip().split() for line in open("tokens.txt", "r", encoding="utf-8")]
     token_len = len(tokens_and_channels)
 
     printBox(f"-Recieved {token_len} tokens.".center(console_width - 2), "bold magenta")

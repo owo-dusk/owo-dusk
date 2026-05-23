@@ -19,7 +19,7 @@
 # -- For Hcaptcha -- #
 
 # 1. OwObot logs ip when verifying for captchas, so if any of your alts
-#    Get caught your other accounts may be banned as well. I personally reccomend
+#    Get caught your other accounts may be banned as well. I personally recommend
 #    Using vpn or more preferably TOR browser to verify manually instead
 #    Do note that if you have solved manually before with multiple alts, ips would have
 #    Already been logged. 
@@ -37,7 +37,7 @@
 # ----- SETTINGS ----- #
 
 [notifications]
-# If you want to go silent, set this to false. But not reccomended
+# If you want to go silent, set this to false. But not recommended
 notify_when_attempting_to_solve = true
 
 [image_solver]
