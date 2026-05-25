@@ -28,6 +28,8 @@
         "commandToStopUser": "stop",
         "commandToStartUser": "start",
         "commandToRestartAfterCaptcha": "restart_captcha",
+        "commandToSleep": "sleep",
+        "defaultSleepDuration": 600,
         "allowedUsers": []
     },
     "webhook": {
