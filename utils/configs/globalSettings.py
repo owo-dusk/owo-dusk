@@ -87,6 +87,8 @@ class TextCommands:
         self.restartCommand = d.get(
             "commandToRestartAfterCaptcha", "restart_captcha"
         )  # Changed
+        self.sleepCommand = d.get("commandToSleep", "sleep")
+        self.defaultSleepDuration = d.get("defaultSleepDuration", 600)
         self.allowedUsers = d.get("allowedUsers", [])
 
 
@@ -134,7 +136,9 @@ class WebhookOthers:
     def __init__(self, d: dict):
         self.lootbox = d.get("logLootbox")  # Changed
         self.crate = d.get("logCrate")  # Changed
-
+        self.logChannelSwitch = d.get("logChannelSwitch", False)
+        self.pingOnChannelSwitch = d.get("pingOnChannelSwitch", False)
+        self.pingUserIdChannelSwitch = d.get("webhookUserIdToPingOnChannelSwitch") or ""
 
 class Console:
     # Console commands on captcha.

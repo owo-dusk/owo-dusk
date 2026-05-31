@@ -9,48 +9,95 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-
+import asyncio
 from discord.ext import commands
 
 
 class Chat(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.timed_task = None  # track active timed task so we can cancel it
 
     @property
     def settings(self):
         return self.bot.global_settings_dict.textCommands
 
+    def parse_seconds(self, text: str):
+        """
+        parse a duration string from the end of a command
+        supports plain seconds (30) or suffixed (30s, 2m, 1h)
+        returns float seconds or None if not parseable
+        """
+        text = text.strip()
+        if not text:
+            return None
+        try:
+            multipliers = {"s": 1, "m": 60, "h": 3600}
+            if text[-1].lower() in multipliers:
+                return float(text[:-1]) * multipliers[text[-1].lower()]
+            return float(text)
+        except ValueError:
+            return None
+        
+    async def timed_reverse(self, seconds: float):
+        #sleep then reverse the bot state
+        await asyncio.sleep(seconds)
+        self.bot.command_handler_status["sleep"] = False
+        await self.bot.log(
+            "Sleep complete — starting owo-dusk.",
+            "#87875f",
+        )
+
     @commands.Cog.listener()
     async def on_message(self, message):
+        stop_cmd  = f"{self.settings.prefix}{self.settings.stopCommand}"
+        start_cmd = f"{self.settings.prefix}{self.settings.startCommand}"
+        sleep_cmd = f"{self.settings.prefix}{self.settings.sleepCommand}"
+        restart_cmd = f"{self.settings.prefix}{self.settings.restartCommand}"
+        
         if (
             message.author.id
-            in [self.bot.user.id, 1209017744696279041] + self.settings.allowedUsers
+            in [self.bot.user.id] + self.settings.allowedUsers
         ):
-            if (
-                f"{self.settings.prefix}{self.settings.stopCommand}"
-                in message.content.lower()
-            ):
+            content = message.content.lower()
+
+            if stop_cmd in content:
                 await self.bot.log(
                     "stopping owo-dusk.. Please be warned that this sometimes doesn't work as expected. Please don't rely on it much.",
                     "#87875f",
                 )
                 self.bot.command_handler_status["sleep"] = True
 
-            elif (
-                f"{self.settings.prefix}{self.settings.startCommand}"
-                in message.content.lower()
-            ):
+            elif start_cmd in content:
                 await self.bot.log("starting owo-dusk..", "#87875f")
                 self.bot.command_handler_status["sleep"] = False
 
-        if (
-            f"{self.settings.prefix}{self.settings.restartCommand}"
-            in message.content.lower()
-        ):
-            await self.bot.log("restarting owo-dusk after captcha", "#87875f")
-            self.bot.command_handler_status["captcha"] = False
+            elif sleep_cmd in content:
+                after = content.split(sleep_cmd, 1)[1].strip()  # get text after command
+                seconds = self.parse_seconds(after)
 
+                if seconds is None:
+                    seconds = self.settings.defaultSleepDuration  # fallback to default if no valid duration provided
+                    await self.bot.log(
+                        f"Invalid or no duration provided for sleep command. Defaulting to {seconds}s.",
+                        "#87875f",
+                    )
+
+                if self.timed_task and not self.timed_task.done():
+                    self.timed_task.cancel()  # cancel any existing timed task
+                await self.bot.log(
+                    f"Sleeping owo-dusk for {seconds} seconds..",
+                    "#87875f",
+                )
+                self.bot.command_handler_status["sleep"] = True
+                self.timed_task = asyncio.create_task(self.timed_reverse(seconds))
+
+        if restart_cmd in message.content.lower():
+            await self.bot.log(
+                "Restarting owo-dusk after captcha..",
+                "#87875f",
+            )
+            self.bot.command_handler_status["captcha"] = False
 
 async def setup(bot):
     await bot.add_cog(Chat(bot))

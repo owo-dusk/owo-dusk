@@ -40,6 +40,25 @@ class ChannelSwitcher(commands.Cog):
         else:
             await self.bot.log(f"Channel switcher: {resp}", "#9dc3f5")
 
+    async def handle_webhook(self, new_channel):
+        if not(self.bot.global_settings_dict.webhook.enabled and self.bot.global_settings_dict.webhook.others.logChannelSwitch):
+            return
+        
+        await self.bot.webhookSender(
+            title = f"{self.bot.user.name} - Channel Switched",
+            desc = f"**User** : <@{self.bot.user.id}>\n**Channel** : <#{new_channel.id}>\n{new_channel.name} (`{new_channel.guild.name}`)",
+            colors = "#9dc3f5",
+            img_url = None,
+            author_img_url = self.bot.user.display_avatar.url,
+            msg = (
+                f"<@{self.bot.global_settings_dict.webhook.others.pingUserIdChannelSwitch}>"
+                if self.bot.global_settings_dict.webhook.others.pingOnChannelSwitch
+                and self.bot.global_settings_dict.webhook.others.pingUserIdChannelSwitch
+                else None
+            ),
+            webhook_url=None,            
+        )
+
     async def change_channel(self):
         item = None
         for entry in self.settings.users:
@@ -64,6 +83,7 @@ class ChannelSwitcher(commands.Cog):
                     new_channel = await self.bot.fetch_channel(channel_id)
                     if new_channel:
                         await self.bot.empty_checks_and_switch(new_channel)
+                        await self.handle_webhook(new_channel)
                         return (
                             True,
                             f"Switched successfully to channel {new_channel.name}",

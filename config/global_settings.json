@@ -28,6 +28,8 @@
         "commandToStopUser": "stop",
         "commandToStartUser": "start",
         "commandToRestartAfterCaptcha": "restart_captcha",
+        "commandToSleep": "sleep",
+        "defaultSleepDuration": 600,
         "allowedUsers": []
     },
     "webhook": {
@@ -52,7 +54,10 @@
         },
         "others": {
             "logLootbox": true,
-            "logCrate": true
+            "logCrate": true,
+            "logChannelSwitch": false,
+            "pingOnChannelSwitch": false,
+            "webhookUserIdToPingOnChannelSwitch": "user id to ping on channel switch here"
         }
     },
     "console": {
