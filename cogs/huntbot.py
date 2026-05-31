@@ -127,7 +127,12 @@ class Huntbot(BaseCog):
         await self.bot.put_queue(self.cmd)
 
     async def upgrade_confirmation(self):
-        await self.upgrade_event.wait()
+        try:
+            await asyncio.wait_for(self.upgrade_event.wait(), timeout=240)
+        except asyncio.TimeoutError:
+            self.upgrade_event.set()
+            return
+        
         self.upgrade_event.clear()
         await self.bot.sleep_till(self.cooldowns.briefCooldown)
 
@@ -246,3 +251,4 @@ class Huntbot(BaseCog):
 
 async def setup(bot):
     await bot.add_cog(Huntbot(bot))
+
