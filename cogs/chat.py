@@ -16,13 +16,13 @@ from discord.ext import commands
 class Chat(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self._timed_task = None  # track active timed task so we can cancel it
+        self.timed_task = None  # track active timed task so we can cancel it
 
     @property
     def settings(self):
         return self.bot.global_settings_dict.textCommands
 
-    def _parse_seconds(self, text: str):
+    def parse_seconds(self, text: str):
         """
         parse a duration string from the end of a command
         supports plain seconds (30) or suffixed (30s, 2m, 1h)
@@ -39,7 +39,7 @@ class Chat(commands.Cog):
         except ValueError:
             return None
         
-    async def _timed_reverse(self, seconds: float):
+    async def timed_reverse(self, seconds: float):
         #sleep then reverse the bot state
         await asyncio.sleep(seconds)
         self.bot.command_handler_status["sleep"] = False
@@ -74,7 +74,7 @@ class Chat(commands.Cog):
 
             elif sleep_cmd in content:
                 after = content.split(sleep_cmd, 1)[1].strip()  # get text after command
-                seconds = self._parse_seconds(after)
+                seconds = self.parse_seconds(after)
 
                 if seconds is None:
                     seconds = self.settings.defaultSleepDuration  # fallback to default if no valid duration provided
@@ -83,14 +83,14 @@ class Chat(commands.Cog):
                         "#87875f",
                     )
 
-                if self._timed_task and not self._timed_task.done():
-                    self._timed_task.cancel()  # cancel any existing timed task
+                if self.timed_task and not self.timed_task.done():
+                    self.timed_task.cancel()  # cancel any existing timed task
                 await self.bot.log(
                     f"Sleeping owo-dusk for {seconds} seconds..",
                     "#87875f",
                 )
                 self.bot.command_handler_status["sleep"] = True
-                self._timed_task = asyncio.create_task(self._timed_reverse(seconds))
+                self.timed_task = asyncio.create_task(self.timed_reverse(seconds))
 
         if restart_cmd in message.content.lower():
             await self.bot.log(
