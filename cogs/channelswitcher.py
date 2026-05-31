@@ -40,7 +40,7 @@ class ChannelSwitcher(commands.Cog):
         else:
             await self.bot.log(f"Channel switcher: {resp}", "#9dc3f5")
 
-    async def send_channelSwitch_webhook(self, new_channel):
+    async def handle_webhook(self, new_channel):
         if not(self.bot.global_settings_dict.webhook.enabled and self.bot.global_settings_dict.webhook.others.logChannelSwitch):
             return
         
@@ -83,7 +83,7 @@ class ChannelSwitcher(commands.Cog):
                     new_channel = await self.bot.fetch_channel(channel_id)
                     if new_channel:
                         await self.bot.empty_checks_and_switch(new_channel)
-                        await self.send_channelSwitch_webhook(new_channel)
+                        await self.handle_webhook(new_channel)
                         return (
                             True,
                             f"Switched successfully to channel {new_channel.name}",
