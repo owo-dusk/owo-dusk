@@ -10,15 +10,14 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-from discord.ext import commands
 import asyncio
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
-class Boss(commands.Cog):
+class Boss(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.boss_tickets = 3
         self.sleeping = True
         self.joined_boss_ids = []

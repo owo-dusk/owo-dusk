@@ -17,7 +17,7 @@ from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from utils.notification import notify
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 def find_optimal_move(e_hand, u_hand, soft=False):
@@ -53,9 +53,9 @@ def fetch_bj_hands(embed):
         return None
 
 
-class Blackjack(commands.Cog):
+class Blackjack(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.game_event = asyncio.Event()
 
         self.cmd = {

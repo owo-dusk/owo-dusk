@@ -18,7 +18,7 @@ from discord.ext.commands import ExtensionNotLoaded
 
 from utils.huntBotSolver import solveHbCaptcha
 from utils.hbCalc import allocate_essence
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 password_reset_regex = r"(?<=Password will reset in )(\d+)"
 huntbot_time_regex = r"(\d+)([DHM])"
@@ -45,9 +45,9 @@ def fetch_essence(name):
     return int(match.group(1).replace(",", ""))
 
 
-class Huntbot(commands.Cog):
+class Huntbot(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.upgrade_event = asyncio.Event()
         self.cmd = {
             "cmd_name": self.bot.alias["huntbot"]["normal"],

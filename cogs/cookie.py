@@ -16,7 +16,7 @@ import threading
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 def load_json_dict(file_path="utils/stats.json"):
@@ -35,9 +35,9 @@ def load_dict():
 load_dict()
 
 
-class Cookie(commands.Cog):
+class Cookie(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.cmd = {
             "cmd_name": self.bot.alias["cookie"]["normal"],
             "cmd_arguments": "",

@@ -22,7 +22,7 @@ from discord import DMChannel
 
 from utils.misc import is_termux, run_system_command
 from utils.notification import notify
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 list_captcha = ["human", "captcha", "link", "letterword"]
@@ -89,9 +89,9 @@ def get_reccur_sleep_time(times_to_reccur):
     return 600 / times_to_reccur
 
 
-class Captcha(commands.Cog):
+class Captcha(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.sound = None
         self.reccured = 0
         self.content_to_notify = ""

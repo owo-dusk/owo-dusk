@@ -11,11 +11,12 @@
 # (at your option) any later version.
 import asyncio
 from discord.ext import commands
+from cogs._BASE import BaseCog
 
 
-class Chat(commands.Cog):
+class Chat(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.timed_task = None  # track active timed task so we can cancel it
 
     @property

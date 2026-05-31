@@ -15,7 +15,7 @@ import re
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 """
@@ -84,9 +84,9 @@ def len_gems_in_use(msg):
     return sum(1 for gem in to_check if gem in msg)
 
 
-class Gems(commands.Cog):
+class Gems(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.grouped_gems = None
         self.available_gems = {}
         self.inventory_check = False

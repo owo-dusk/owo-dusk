@@ -14,12 +14,12 @@ import asyncio
 
 from discord.ext import commands
 from utils.notification import notify
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
-class Battle(commands.Cog):
+class Battle(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.cmd = {
             "cmd_name": "",
             "prefix": True,

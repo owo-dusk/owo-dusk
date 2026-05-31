@@ -13,14 +13,14 @@
 import asyncio
 import time
 
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
-class CustomCommands(commands.Cog):
+class CustomCommands(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.cmd_tracker = []
 
     def search_cmd_tracker(self, cmd):

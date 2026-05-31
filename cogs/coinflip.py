@@ -17,16 +17,16 @@ from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from utils.notification import notify
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 won_pattern = r"you won \*\*<:cowoncy:\d+> ([\d,]+)"
 lose_pattern = r"spent \*\*<:cowoncy:\d+> ([\d,]+)"
 
 
-class Coinflip(commands.Cog):
+class Coinflip(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.cmd = {
             "cmd_name": self.bot.alias["coinflip"]["normal"],
             "cmd_arguments": None,
@@ -36,6 +36,7 @@ class Coinflip(commands.Cog):
         }
         self.turns_lost = 0
         self.exceeded_max_amount = False
+        self.test = self.bot.settings_dict_temp
 
         self.gamble_flags = {
             "goal_reached": False,

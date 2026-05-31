@@ -16,13 +16,14 @@ import re
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
+from cogs._BASE import BaseCog
 
 ARMY_REGEX = r"Today's remaining Broken Army Emblem : (\d+)"
 
 
-class Army(commands.Cog):
+class Army(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
         self.cmd = {
             "cmd_name": "army",

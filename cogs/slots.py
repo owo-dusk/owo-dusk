@@ -17,7 +17,7 @@ from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from utils.notification import notify
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 won_pattern = r"and won <:cowoncy:\d+> ([\d,]+)"
@@ -29,9 +29,9 @@ fix it spamming "won nothing"
 """
 
 
-class Slots(commands.Cog):
+class Slots(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.cmd = {
             "cmd_name": self.bot.alias["slots"]["normal"],
             "cmd_arguments": None,

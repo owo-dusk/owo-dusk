@@ -16,7 +16,7 @@ import random
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 quotes_url = "https://favqs.com/api/qotd"
@@ -39,9 +39,9 @@ async def fetch_quotes(session):
                 return data["quote"].get("body", None)
 
 
-class Level(commands.Cog):
+class Level(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.last_level_grind_message = None
         self.cmd = {"cmd_name": None, "prefix": False, "checks": True, "id": "level"}
 

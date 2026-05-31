@@ -15,7 +15,7 @@ import re
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 """
 SHOP-
@@ -27,9 +27,9 @@ SHOP-
 cash_regex = r"for \*\*(\d+)\*\* <:cowoncy:\d+>"
 
 
-class Shop(commands.Cog):
+class Shop(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.cmd = {
             "cmd_name": "buy",
             "cmd_arguments": "",

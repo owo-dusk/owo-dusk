@@ -17,7 +17,7 @@ import re
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 def load_json_dict(file_path="utils/stats.json"):
@@ -38,9 +38,9 @@ def load_dict():
 load_dict()
 
 
-class Daily(commands.Cog):
+class Daily(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
     @property
     def cooldowns(self):

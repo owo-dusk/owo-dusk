@@ -12,13 +12,14 @@
 
 import asyncio
 
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from discord.ext.commands import ExtensionNotLoaded
+from cogs._BASE import BaseCog
 
 
-class ChannelSwitcher(commands.Cog):
+class ChannelSwitcher(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         # Temporary, sets at start. so won't change
         self.default_channel_id = self.bot.channel_id
 

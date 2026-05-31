@@ -15,7 +15,7 @@ import json
 import re
 
 from discord.ext import commands
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 try:
@@ -36,9 +36,9 @@ def get_emoji_names(text, emoji_dict=emoji_dict):
     return emoji_names
 
 
-class Others(commands.Cog):
+class Others(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.zoo = False
         self.lootbox_cmd = {
             "cmd_name": self.bot.alias["lootbox"]["normal"],

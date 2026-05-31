@@ -15,12 +15,12 @@ import time
 
 from discord.ext import commands, tasks
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
-class Reactionbot(commands.Cog):
+class Reactionbot(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.cmd_states = {"hunt": 0, "battle": 0, "owo": 0, "pray": 0}
         self.pray_channel = None
         self.curse_channel = None

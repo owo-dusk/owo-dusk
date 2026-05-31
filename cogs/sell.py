@@ -15,6 +15,7 @@ import asyncio
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
+from cogs._BASE import BaseCog
 
 """
 TASK:
@@ -23,9 +24,9 @@ perhaps make a new category `animals` as we are already handling command being p
 """
 
 
-class Sell(commands.Cog):
+class Sell(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
         self.sell_cmd = {
             "cmd_name": "sell",

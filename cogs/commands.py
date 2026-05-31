@@ -14,14 +14,14 @@ import asyncio
 import time
 
 from collections import deque
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from datetime import datetime, timezone, timedelta
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
-class Commands(commands.Cog):
+class Commands(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.bot.checks = []
         self.calc_time = timedelta(0)
         self.command_times = deque(maxlen=3)

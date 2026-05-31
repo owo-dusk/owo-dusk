@@ -10,9 +10,9 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-from discord.ext import commands
 import asyncio
 from discord.ext.commands import ExtensionNotLoaded
+from cogs._BASE import BaseCog
 
 """
 TASK: recheck set_stat
@@ -20,9 +20,9 @@ imporve logging in here.
 """
 
 
-class Mail(commands.Cog):
+class Mail(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.bot.message_dispatcher.register(self.on_component_message)
         self.bot.message_dispatcher.register(self.on_component_message_edit, edit=True)
 

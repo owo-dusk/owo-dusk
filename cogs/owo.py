@@ -14,12 +14,12 @@ import asyncio
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
-class Owo(commands.Cog):
+class Owo(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.owo_ongoing = False
 
     @property

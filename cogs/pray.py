@@ -15,7 +15,7 @@ import random
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
-# from uwu import MyClient
+from cogs._BASE import BaseCog
 
 
 def cmd_argument(userid, ping):
@@ -25,9 +25,9 @@ def cmd_argument(userid, ping):
         return ""
 
 
-class Pray(commands.Cog):
+class Pray(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.pray_cmd_arguement = None
         self.curse_cmd_arguement = None
         self.startup = True
