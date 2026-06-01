@@ -93,7 +93,7 @@ lock = threading.Lock()
 clear()
 
 
-def load_accounts_dict(file_path="utils/stats.json"): #dead code btw
+def load_accounts_dict(file_path="utils/stats.json"):  # dead code btw
     with open(file_path, "r", encoding="utf-8") as config_file:
         return json.load(config_file)
 
@@ -527,8 +527,6 @@ class MyClient(commands.Bot):
 
             await self.start_cogs()
 
-    
-
     async def unload_cog(self, cog_name):
         try:
             if cog_name in self.extensions:
@@ -555,6 +553,18 @@ class MyClient(commands.Bot):
         else:
             reactionbot = False
 
+        should_start_looper = (
+            # owo
+            (commands_obj.owo.enabled and not reaction_bot_obj.owo)
+            # pray/curse
+            or (
+                (commands_obj.pray.enabled or commands_obj.curse.enabled)
+                and not reaction_bot_obj.prayAndCurse
+            )
+            # level grind
+            or commands_obj.lvlGrind.enabled
+        )
+
         self.commands_dict = {
             "army": commands_obj.army.enabled,
             "battle": commands_obj.battle.enabled
@@ -573,13 +583,10 @@ class MyClient(commands.Bot):
             "giveaway": self.settings_dict_temp.giveaway.enabled,
             "hunt": commands_obj.hunt.enabled and not reaction_bot_obj.huntAndBattle,
             "huntbot": commands_obj.huntbot.enabled,
-            "level": commands_obj.lvlGrind.enabled,
+            "looper": should_start_looper,
             "lottery": commands_obj.lottery.enabled,
             "mail": self.settings_dict_temp.mail,
             "others": True,
-            "owo": commands_obj.owo.enabled and not reaction_bot_obj.owo,
-            "pray": (commands_obj.pray.enabled or commands_obj.curse.enabled)
-            and not reaction_bot_obj.prayAndCurse,
             "reactionbot": reactionbot,
             "sell": commands_obj.sell.enabled or commands_obj.sac.enabled,
             "shop": commands_obj.shop.enabled,
@@ -1195,7 +1202,7 @@ def create_database(db_path="utils/data/db.sqlite"):
                 style="orange_red1",
             )
             os.remove(db_path)
-    
+
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
@@ -1375,7 +1382,9 @@ if __name__ == "__main__":
         if version_json["important_update"]:
             printBox("It is recommended to update....", "bold light_yellow3")
 
-    tokens_and_channels = [line.strip().split() for line in open("tokens.txt", "r", encoding="utf-8")]
+    tokens_and_channels = [
+        line.strip().split() for line in open("tokens.txt", "r", encoding="utf-8")
+    ]
     token_len = len(tokens_and_channels)
 
     printBox(f"-Recieved {token_len} tokens.".center(console_width - 2), "bold magenta")
@@ -1470,7 +1479,6 @@ if __name__ == "__main__":
                     f"Yescaptcha API has a balance of {bal}, which is approximately {round(bal / 30)} hcaptcha solves.",
                     style="tan",
                 )
-
 
     if (
         global_settings_dict.captcha.toastOrPopup

@@ -336,7 +336,7 @@ class Command:
         # Pray and Curse has user id as list while cookie uses int
         # Might need to cleanly handle this later.
         self.user_id = d.get("userid", None)
-        self.ping_user = d.get("pingUser", None)
+        self.ping_user = d.get("pingUser", False)
         if d.get("customChannel"):
             self.custom_channel = CustomChannel(d.get("customChannel"))
 
@@ -344,6 +344,9 @@ class Command:
         self.useQuote = d.get("useQuoteInstead", None)
         self.minLength = d.get("minLengthForRandomString", None)
         self.maxLength = d.get("maxLengthForRandomString", None)
+
+        # OwO only
+        self.prioritise = d.get("prioritise", False)
 
     def get_cd(self):
         validators.validateCooldown(self.cooldown)

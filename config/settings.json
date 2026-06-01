@@ -119,7 +119,8 @@
             ]
         },
         "owo": {
-            "enabled": false,
+            "enabled": true,
+            "prioritise": false,
             "cooldown": [
                 10,
                 13
@@ -167,9 +168,9 @@
             ]
         },
         "army": {
-            "enabled": true,
+            "enabled": false,
             "cooldown": [
-                60,
+                61,
                 70
             ]
         }
@@ -181,7 +182,7 @@
             "amount": 30000
         },
         "coinflip": {
-            "enabled": true,
+            "enabled": false,
             "startValue": 200,
             "multiplierOnLose": 2,
             "cooldown": [
@@ -194,7 +195,7 @@
             }
         },
         "slots": {
-            "enabled": true,
+            "enabled": false,
             "startValue": 200,
             "multiplierOnLose": 2,
             "cooldown": [
@@ -203,7 +204,7 @@
             ]
         },
         "blackjack": {
-            "enabled": true,
+            "enabled": false,
             "startValue": 200,
             "multiplierOnLose": 2,
             "cooldown": [

@@ -251,4 +251,3 @@ class Huntbot(BaseCog):
 
 async def setup(bot):
     await bot.add_cog(Huntbot(bot))
-
