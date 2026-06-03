@@ -2,4 +2,13 @@ token1 channel_id1
 token2 channel_id2
 token3 channel_id3
 
-so on, each line one token and one channel id seperated by a space for however many accounts you have
+and so on.. -- enter one token and one channel_id per line for however many accounts you have.
+
+Before entering your details, clear *everything* and replace them with your own tokens and channel_ids only.
+
+Important:
+• Separate each token and channel ID with a single space.
+• Do not add any spaces before the tokens and after the channel_ids.
+• Do not include quotation marks (" or ') around tokens or channel_ids.
+• Do not leave any extra blank lines.
+  i.e., If you have 3 accounts, use exactly 3 lines.
