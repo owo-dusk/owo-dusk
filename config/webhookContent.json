@@ -1,0 +1,102 @@
+{
+    "on_captcha": {
+        "title": "CAPTCHA Detected -  {username}",
+        "description": "**User** : <@{userid}>\n**Link** : [OwO Captcha]({captcha_url})",
+        "content": "",
+        "color": "#CF5319",
+        "thumbnail": "https://cdn.discordapp.com/emojis/755106539122982922.gif",
+        "author_name": "OwO-Dusk",
+        "author_image": "https://i.imgur.com/6zeCgXo.png",
+        "footer": ""
+    },
+    "on_captcha_solve": {
+        "title": "Captcha Solved - {username}",
+        "description": "**User <@{userid}>** : solved captcha successfully!",
+        "content": "",
+        "color": "#00FFAF",
+        "thumbnail": "https://cdn.discordapp.com/emojis/1090553827847045160.gif",
+        "author_name": "OwO-Dusk",
+        "author_image": "https://i.imgur.com/6zeCgXo.png",
+        "footer": ""
+    },
+    "on_captcha_ban": {
+        "title": "BAN Detected - {username}",
+        "description": "**User** : <@{userid}>\n**Link** : [Ban Message]({captcha_url})",
+        "content": "",
+        "color": "#00FFAF",
+        "thumbnail": "https://cdn.discordapp.com/emojis/1068981158081216662.gif",
+        "author_name": "OwO-Dusk",
+        "author_image": "https://i.imgur.com/6zeCgXo.png",
+        "footer": ""
+    },
+    "lootbox": {
+        "title": "Found lootbox! ✨",
+        "description": "**User <@{userid}>** : found a lootbox.",
+        "content": "",
+        "color": "#E7DA90",
+        "thumbnail": "https://cdn.discordapp.com/emojis/621847969146339378.gif",
+        "author_name": "OwO-Dusk",
+        "author_image": "https://i.imgur.com/6zeCgXo.png",
+        "footer": ""
+    },
+    "crate": {
+        "title": "Found crate! ✨",
+        "description": "**User <@{userid}>** : found a crate.",
+        "content": "",
+        "color": "#E7DA90",
+        "thumbnail": "https://cdn.discordapp.com/emojis/621848189103898654.gif",
+        "author_name": "OwO-Dusk",
+        "author_image": "https://i.imgur.com/6zeCgXo.png",
+        "footer": ""
+    },
+    "on_channel_switch": {
+        "title": "{username} switched channel!",
+        "description": "**{username}** Switched to **Channel** : <#{new_channel_id}> (In `{new_channel_guild}` server)",
+        "content": "",
+        "color": "",
+        "thumbnail": "",
+        "author_name": "{username}",
+        "author_image": "https://i.imgur.com/6zeCgXo.png",
+        "footer": ""
+    },
+    "daily_claim": {
+        "title": "Claimed daily - {username}",
+        "description": "**User** <@{userid}> claimed today's daily.",
+        "content": "",
+        "color": "#4B6EA3",
+        "thumbnail": "https://cdn.discordapp.com/emojis/1346253360151400542.gif",
+        "author_name": "OwO-Dusk",
+        "author_image": "https://i.imgur.com/6zeCgXo.png",
+        "footer": ""
+    },
+    "on_hunt_catch": {
+        "title": "Caught {best_rank} {best_catch} from hunt!",
+        "description": "> User: <@{userid}> caught a(an) {best_rank} {best_catch}.",
+        "content": "",
+        "color": "#5B0B74",
+        "thumbnail": "{animal_image_url}",
+        "author_name": "",
+        "author_image": "",
+        "footer": ""
+    },
+    "on_multiple_hunt_catch": {
+        "title": "{username} caught multiple animals from hunt!",
+        "description": "User: <@{userid}> caught the following pets:\n> {hunt_caught_emojies}\n-# Best catch: {best_rank} {best_catch}",
+        "content": "",
+        "color": "#5B0B74",
+        "thumbnail": "",
+        "author_name": "",
+        "author_image": "",
+        "footer": ""
+    },
+    "on_command_send": {
+        "title": "",
+        "description": "",
+        "content": "",
+        "color": "#646669",
+        "thumbnail": "",
+        "author_name": "",
+        "author_image": "",
+        "footer": "[{current_time}] {username} - {command_send}"
+    }
+}
