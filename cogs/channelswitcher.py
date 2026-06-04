@@ -30,6 +30,10 @@ class ChannelSwitcher(BaseCog):
     @property
     def settings(self):
         return self.bot.global_settings_dict.channelSwitcher
+    
+    @property
+    def webhook_settings(self):
+        return self.bot.global_settings_dict.webhook
 
     @tasks.loop()
     async def switch_channel_loop(self):
@@ -42,22 +46,13 @@ class ChannelSwitcher(BaseCog):
             await self.bot.log(f"Channel switcher: {resp}", "#9dc3f5")
 
     async def handle_webhook(self, new_channel):
-        if not(self.bot.global_settings_dict.webhook.enabled and self.bot.global_settings_dict.webhook.others.logChannelSwitch):
+        if not(self.webhook_settings.enabled and self.webhook_settings.others.logChannelSwitch):
             return
         
-        await self.bot.webhookSender(
-            title = f"{self.bot.user.name} - Channel Switched",
-            desc = f"**User** : <@{self.bot.user.id}>\n**Channel** : <#{new_channel.id}>\n{new_channel.name} (`{new_channel.guild.name}`)",
-            colors = "#9dc3f5",
-            img_url = None,
-            author_img_url = self.bot.user.display_avatar.url,
-            msg = (
-                f"<@{self.bot.global_settings_dict.webhook.others.pingUserIdChannelSwitch}>"
-                if self.bot.global_settings_dict.webhook.others.pingOnChannelSwitch
-                and self.bot.global_settings_dict.webhook.others.pingUserIdChannelSwitch
-                else None
-            ),
-            webhook_url=None,            
+        await self.bot.send_webhook(
+            "on_channel_switch",
+            new_channel_name = new_channel.name,
+            new_channel_id = new_channel.id
         )
 
     async def change_channel(self):

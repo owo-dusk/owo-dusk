@@ -198,24 +198,28 @@ class Hunt(BaseCog):
                     result_list, highest_rank = self.get_emoji_tier(msg_line)
                     if result_list:
                         if len(result_list) > 1:
-                            description = f"User: <@{self.bot.user.id}> caught the following pets:\n> "
+                            hunt_caught_emojies = ""
                             for item in result_list:
-                                description += f"{item['emoji']} "
-                            # Multiple items, compact mode.
-                            description += f"\n-# Best catch: {highest_rank['emoji']} {highest_rank['rarity']}"
-                            await self.bot.webhookSender(
-                                title="Caught multiple animals from hunt!",
-                                desc=description,
-                                colors="#5B0B74",
-                                author_name="Hunt",
-                                author_img_url="https://cdn.discordapp.com/emojis/633448858432831488.gif",
+                                hunt_caught_emojies += f"{item['emoji']} "
+                            best_catch = highest_rank["emoji"]
+                            best_rank = highest_rank["rarity"]
+
+                            await self.bot.send_webhook(
+                                "on_multiple_hunt_catch",
+                                hunt_caught_emojies=hunt_caught_emojies,
+                                best_catch=best_catch,
+                                best_rank=best_rank,
                             )
                         else:
-                            await self.bot.webhookSender(
-                                title=f"Caught {highest_rank['emoji']} {result_list[0]['emoji']} from hunt!",
-                                desc=f"> User: <@{self.bot.user.id}> caught a(an) {result_list[0]['rank']} {result_list[0]['emoji']}.",
-                                colors="#5B0B74",
-                                img_url=result_list[0]["emoji_url"],
+                            best_catch = highest_rank["emoji"]
+                            best_rank = highest_rank["rarity"]
+                            animal_image_url = result_list[0]["emoji_url"]
+                            await self.bot.send_webhook(
+                                "on_hunt_catch",
+                                hunt_caught_emojies=hunt_caught_emojies,
+                                best_catch=best_catch,
+                                best_rank=best_rank,
+                                animal_image_url=animal_image_url
                             )
 
                 await self.bot.sleep(self.settings.get_cd())

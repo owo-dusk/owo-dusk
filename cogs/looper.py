@@ -25,6 +25,13 @@ from cogs._BASE import BaseCog
 These commands: owo, pray, curse, level - can simply be send at specific intervals
 """
 
+"""
+TASK:
+
+handle pray/curse enabled at same times
+
+"""
+
 LOOPABLE_COMMANDS = ["owo", "pray", "curse", "level"]
 
 

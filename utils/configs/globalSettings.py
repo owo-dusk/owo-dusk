@@ -95,7 +95,7 @@ class TextCommands:
 class Webhook:
     def __init__(self, d: dict):
         self.enabled = d.get("enabled", False)
-        self.webhookUselessLog = d.get("webhookUselessLog", False)
+        self.logCommandSend = d.get("logCommandSend", False)
         self.webhookUrl = d.get("webhookUrl") or ""
         self.webhookCaptchaUrl = d.get("webhookCaptchaUrl") or ""
         self.pingUserId = d.get("webhookUserIdToPingOnCaptcha") or ""  # changed
@@ -137,8 +137,6 @@ class WebhookOthers:
         self.lootbox = d.get("logLootbox")  # Changed
         self.crate = d.get("logCrate")  # Changed
         self.logChannelSwitch = d.get("logChannelSwitch", False)
-        self.pingOnChannelSwitch = d.get("pingOnChannelSwitch", False)
-        self.pingUserIdChannelSwitch = d.get("webhookUserIdToPingOnChannelSwitch") or ""
 
 class Console:
     # Console commands on captcha.

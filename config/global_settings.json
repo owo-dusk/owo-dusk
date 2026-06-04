@@ -34,7 +34,7 @@
     },
     "webhook": {
         "enabled": false,
-        "webhookUselessLog": false,
+        "logCommandSend": false,
         "webhookUrl": "Webhook Url here!",
         "webhookCaptchaUrl": null,
         "webhookUserIdToPingOnCaptcha": "user id to ping here",
@@ -55,9 +55,7 @@
         "others": {
             "logLootbox": true,
             "logCrate": true,
-            "logChannelSwitch": false,
-            "pingOnChannelSwitch": false,
-            "webhookUserIdToPingOnChannelSwitch": "user id to ping on channel switch here"
+            "logChannelSwitch": true
         }
     },
     "console": {

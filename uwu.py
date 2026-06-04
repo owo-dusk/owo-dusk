@@ -107,6 +107,9 @@ with open("config/global_settings.json", "r", encoding="utf-8") as config_file:
 with open("config/misc.json", "r", encoding="utf-8") as config_file:
     misc_dict = json.load(config_file)
 
+with open("config/webhookContent.json", "r", encoding="utf-8") as config_file:
+    webhook_data_dict = json.load(config_file)
+
 
 with open("config/captcha.toml", "rb") as f:
     captcha_settings_dict = tomllib.load(f)
@@ -733,7 +736,7 @@ class MyClient(commands.Bot):
         color="#ffffff",
         bold=False,
         web_log=global_settings_dict.website.enabled,
-        webhook_useless_log=global_settings_dict.webhook.webhookUselessLog,
+        webhook_useless_log=global_settings_dict.webhook.logCommandSend,
         lineno=None,
         filename=None,
     ):
@@ -761,9 +764,7 @@ class MyClient(commands.Bot):
                 )
 
         if webhook_useless_log:
-            await self.webhookSender(
-                footer=f"[{current_time}] {self.username} - {text}", colors=color
-            )
+            await self.send_webhook("on_command_send", command_send=text)
 
     async def fetch_slash_commands(self, channel):
         if self.slash_commands.get(str(channel.id)):
@@ -774,45 +775,93 @@ class MyClient(commands.Bot):
             if command.application.id == self.owo_bot_id:
                 self.slash_commands[str(channel.id)].append(command)
 
-    async def webhookSender(
+
+    async def send_webhook(
         self,
-        title=None,
-        desc=None,
-        msg=None,
-        colors=None,
-        img_url=None,
-        author_name=None,
-        author_img_url=None,
-        footer=None,
-        webhook_url=None,
+        data_id: str,
+        username: str = "OwO-Dusk",
+        webhook_url: str = None,
+        pingid: str = None,
+        **kwargs,
     ):
-        global webhook_handler
-        if colors:
-            if isinstance(colors, str) and colors.startswith("#"):
-                color = int(colors.lstrip("#"), 16)
+        """ "example_data": {
+            "title": "",
+            "description": "",
+            "content": "",
+            "color": "",
+            "thumbnail": "",
+            "author_name": "",
+            "author_image": "",
+            "footer": ""
+        }"""
+        global webhook_handler, webhook_data_dict
+
+        data = webhook_data_dict.get(data_id, None)
+        if not data:
+            raise ValueError("Invalid data_id passed for fetching webhook embed data")
+        data = data.copy()
+
+        formattable_fields = [
+            "title",
+            "description",
+            "content",
+            "footer",
+            "author_name",
+            "thumbnail",
+            "author_image",
+        ]
+        for field in formattable_fields:
+            if data.get(field):
+                data[field] = data[field].format(
+                    # I could directly pass **kwargs here? Perhaps after proper documentation!
+                    username=self.user.name,
+                    userid=self.user.id,
+                    current_time=datetime.now().strftime("%H:%M:%S"),
+                    # channel switcher specific
+                    new_channel_name=kwargs.get("new_channel_name", None),
+                    new_channel_id=kwargs.get("new_channel_id", None),
+                    # captcha or ban specific
+                    captcha_url=kwargs.get("captcha_url", None),
+                    # hunt specific
+                    hunt_caught_emojies=kwargs.get("hunt_caught_emojies", None),
+                    best_catch=kwargs.get("best_catch", None),
+                    best_rank=kwargs.get("best_rank", None),
+                    animal_image_url=kwargs.get("animal_image_url", None),
+                    # Command specific
+                    command_send=kwargs.get("command_send", None)
+                )
+
+        color = data.get("color", None)
+        if color:
+            if isinstance(color, str) and color.startswith("#"):
+                color = int(color.lstrip("#"), 16)
             else:
-                color = int(colors)
+                color = int(color)
         else:
             color = 0x412280
 
-        embed = {"title": title, "description": desc, "color": color}
+        author_name = data.get("author_name", None)
+        if not author_name and data.get("author_image"):
+            author_name = "OwO-Dusk"
 
-        if footer:
-            embed["footer"] = {"text": footer}
+        embed = {
+            "title": data.get("title", None),
+            "description": data.get("description", None),
+            "color": color,
+            "footer": {"text": data.get("footer", None)},
+            "thumbnail": {"url": data.get("thumbnail", None)},
+            "author": {"name": author_name, "icon_url": data.get("author_image", None)},
+        }
 
-        if img_url:
-            embed["thumbnail"] = {"url": img_url}
+        content = data.get("content", "")
+        if pingid:
+            content += f"\n<@{pingid}>"
 
-        if author_img_url:
-            embed["author"] = {
-                "name": author_name if author_name else "OwO-Dusk",
-                "icon_url": author_img_url,
-            }
-
-        payload = {"username": "OwO-Dusk", "embeds": [embed]}
-
-        if msg:
-            payload["content"] = msg
+        payload = {
+            "username": username,
+            "embeds": [embed],
+            "content": content,
+        }
 
         async with self.webhook_lock:
             if not webhook_url:

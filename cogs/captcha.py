@@ -22,6 +22,7 @@ from discord import DMChannel
 
 from utils.misc import is_termux, run_system_command
 from utils.notification import notify
+from utils.others import validate_snowflake
 from cogs._BASE import BaseCog
 
 
@@ -117,6 +118,23 @@ class Captcha(BaseCog):
     @property
     def termux_settings(self):
         return self.captcha_settings.termux
+
+    @property
+    def webhook_settings(self):
+        return self.bot.global_settings_dict.webhook
+
+    def get_webhook(self):
+        webhook_url = (
+            self.webhook_settings.webhookCaptchaUrl
+        )
+        if not isinstance(webhook_url, str):
+            # Ensure webhook url is valid
+            webhook_url = None
+        elif "discord.com" not in webhook_url:
+            # Only accept discord webhook.
+            print(f"webhook Url {webhook_url} seems invalid")
+            webhook_url = None
+        return webhook_url
 
     async def kill_code(self):
         await asyncio.sleep(590)
@@ -305,25 +323,17 @@ class Captcha(BaseCog):
                 self.bot.db.update_captcha_db()
                 await self.handle_solves()
                 self.captcha_site_opened = False
-                if self.bot.global_settings_dict.webhook.enabled:
-                    webhook_url = (
-                        self.bot.global_settings_dict.webhook.webhookCaptchaUrl
-                    )
-                    if not isinstance(webhook_url, str):
-                        # Ensure webhook url is valid
-                        webhook_url = None
-                    elif "discord.com" not in webhook_url:
-                        # Only accept discord webhook.
-                        print(f"webhook Url {webhook_url} seems invalid")
-                        webhook_url = None
+                if self.webhook_settings.enabled:
 
-                    await self.bot.webhookSender(
-                        title=f"-{self.bot.username} - Captcha Solved",
-                        desc=f"**User** <@{self.bot.user.id}> solved captcha successfully!",
-                        colors="#00FFAF",
-                        img_url="https://cdn.discordapp.com/emojis/1090553827847045160.gif",
-                        author_img_url="https://i.imgur.com/6zeCgXo.png",
-                        webhook_url=webhook_url,
+                    await self.bot.send_webhook(
+                        "on_captcha_solve",
+                        webhook_url=self.get_webhook(),
+                        captcha_url=message.jump_url,
+                        pingid=(
+                            self.webhook_settings.pingUserId
+                            if validate_snowflake(self.webhook_settings.pingUserId)
+                            else None
+                        )
                     )
                 return
 
@@ -383,30 +393,16 @@ class Captcha(BaseCog):
                 ):
                     self.captcha_handler(message.channel, "Link")
 
-                if self.bot.global_settings_dict.webhook.enabled:
-                    webhook_url = (
-                        self.bot.global_settings_dict.webhook.webhookCaptchaUrl
-                    )
-                    if not isinstance(webhook_url, str):
-                        # Ensure webhook url is valid
-                        webhook_url = None
-                    elif "discord.com" not in webhook_url:
-                        # Only accept discord webhook.
-                        print(f"webhook Url {webhook_url} seems invalid")
-                        webhook_url = None
-
-                    await self.bot.webhookSender(
-                        title=f"-{self.bot.username} - CAPTCHA Detected",
-                        desc=f"**User** : <@{self.bot.user.id}>\n**Link** : [OwO Captcha]({message.jump_url})",
-                        colors="#CF5319",
-                        img_url="https://cdn.discordapp.com/emojis/755106539122982922.gif",
-                        author_img_url="https://i.imgur.com/6zeCgXo.png",
-                        msg=(
-                            f"<@{self.bot.global_settings_dict.webhook.enabled.pingUserId}>"
-                            if self.bot.global_settings_dict.webhook.enabled.pingUserId
+                if self.webhook_settings.enabled:
+                    await self.bot.send_webhook(
+                        "on_captcha",
+                        webhook_url=self.get_webhook(),
+                        captcha_url=message.jump_url,
+                        pingid=(
+                            self.webhook_settings.pingUserId
+                            if validate_snowflake(self.webhook_settings.pingUserId)
                             else None
-                        ),
-                        webhook_url=webhook_url,
+                        )
                     )
                 console_handler(self.bot.global_settings_dict.console)
 
@@ -465,29 +461,17 @@ class Captcha(BaseCog):
                 await self.bot.log("Ban detected!", "#d70000")
                 self.captcha_handler(message.channel, "Ban")
                 console_handler(self.bot.global_settings_dict.console, captcha=False)
-                if self.bot.global_settings_dict.webhook.enabled:
-                    webhook_url = (
-                        self.bot.global_settings_dict.webhook.webhookCaptchaUrl
-                    )
-                    if not isinstance(webhook_url, str):
-                        # Ensure webhook url is valid
-                        webhook_url = None
-                    elif "discord.com" not in webhook_url:
-                        # Only accept discord webhook.
-                        print(f"webhook Url {webhook_url} seems invalid")
-                        webhook_url = None
-                    await self.bot.webhookSender(
-                        title=f"-{self.bot.username} - BAN Detected",
-                        desc=f"**User** : <@{self.bot.user.id}>\n**Link** : [Ban Message]({message.jump_url})",
-                        colors="#00FFAF",
-                        img_url="https://cdn.discordapp.com/emojis/1068981158081216662.gif",
-                        author_img_url="https://i.imgur.com/6zeCgXo.png",
-                        msg=(
-                            f"<@{self.bot.global_settings_dict.webhook.enabled.pingUserId}>"
-                            if self.bot.global_settings_dict.webhook.enabled.pingUserId
+                if self.webhook_settings.enabled:
+
+                    await self.bot.send_webhook(
+                        "on_captcha",
+                        webhook_url=self.get_webhook(),
+                        captcha_url=message.jump_url,
+                        pingid=(
+                            self.webhook_settings.pingUserId
+                            if validate_snowflake(self.webhook_settings.pingUserId)
                             else None
-                        ),
-                        webhook_url=webhook_url,
+                        )
                     )
 
 

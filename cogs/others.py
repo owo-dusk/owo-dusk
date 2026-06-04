@@ -119,13 +119,7 @@ class Others(BaseCog):
                     await self.bot.put_queue(self.crate_cmd)
 
                 if self.webhook_settings.enabled and self.webhook_settings.others.crate:
-                    await self.bot.webhookSender(
-                        title="Found crate! ✨",
-                        desc=f"**User** <@{self.bot.user.id}> found a crate.",
-                        colors="#E7DA90",
-                        img_url="https://cdn.discordapp.com/emojis/621848189103898654.gif",
-                        author_img_url="https://i.imgur.com/6zeCgXo.png",
-                    )
+                    await self.bot.send_webhook("crate")
 
             elif (
                 "** You received a **lootbox**!" in message.content
@@ -135,13 +129,7 @@ class Others(BaseCog):
                     self.webhook_settings.enabled
                     and self.webhook_settings.others.lootbox
                 ):
-                    await self.bot.webhookSender(
-                        title="Found lootbox! ✨",
-                        desc=f"**User** <@{self.bot.user.id}> found a lootbox.",
-                        colors="#E7DA90",
-                        img_url="https://cdn.discordapp.com/emojis/621847969146339378.gif",
-                        author_img_url="https://i.imgur.com/6zeCgXo.png",
-                    )
+                    await self.bot.send_webhook("lootbox")
 
                 if self.auto_use.lootbox:
                     await self.bot.put_queue(self.lootbox_cmd)

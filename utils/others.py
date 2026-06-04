@@ -35,3 +35,12 @@ def get_hour():
 
 def get_date():
     return datetime.now().date().isoformat()  # e.g. "2025-05-31"
+
+def validate_snowflake(snowflake: str):
+    """
+    Accepts a snowflake (channel/guild) and validates it
+    The aim is not to ensure the id is valid, but to rather
+    ensure obviously not correct ids are filtered out
+    """
+    # 1. check if its full numbers
+    return snowflake.isdigit() and 16 <= len(snowflake) <= 20
