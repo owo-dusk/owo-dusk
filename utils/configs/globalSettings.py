@@ -125,8 +125,9 @@ class AnimalLogRank:
             "legendary",
             "fabled",
             "hidden",
+            "distorted"
         ]
-        # Check if distorted pet support is missing
+
         for rank in self._rank:
             setattr(self, rank, d.get(rank, False))
 

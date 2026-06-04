@@ -92,6 +92,7 @@ class Hunt(BaseCog):
             "legendary": (7, "<a:legendary:417955061801680909>"),
             "fabled": (8, "<a:fabled:438857004493307907>"),
             "hidden": (9, "<a:hidden:459203677438083074>"),
+            "distorted": (10, "<a:distorted:728812986147274835>"),
         }
         highest_rank = {"rarity": "", "emoji": ""}
 
