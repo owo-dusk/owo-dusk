@@ -466,7 +466,7 @@ class HuntbotUpgrader:
         self.enabled = d.get("enabled", False)
         self.sleeptime = d.get("sleeptime", None)
         self.traits = HuntbotTraits(d.get("traits", {}))
-        self.priorities = HuntbotPriorities(d.get("priorities", {}))
+        self.weights = HuntbotWeights(d.get("weights", {}))
 
     def get_cd(self):
         # Need to edit
@@ -487,7 +487,7 @@ class HuntbotTraits:
             setattr(self, trait, d.get(trait, False))
 
 
-class HuntbotPriorities:
+class HuntbotWeights:
     def __init__(self, d: dict):
         for trait in HUNTBOT_TRAITS:
             setattr(self, trait, d.get(trait, 0))

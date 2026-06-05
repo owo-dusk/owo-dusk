@@ -202,7 +202,7 @@ class Huntbot(BaseCog):
                         self.get_experience(embed)
                         data = allocate_essence(
                             self.upgrade_details,
-                            self.settings.upgrader.priorities,
+                            self.settings.upgrader.weights,
                         )
                         await self.bot.sleep(self.settings.upgrader.get_cd())
                         for trait, essence_alloc in data.items():
