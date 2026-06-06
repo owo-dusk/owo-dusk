@@ -365,6 +365,19 @@ class MyClient(commands.Bot):
         self.cmd_priorities = {}
         self.captcha_handler = hcaptcha_solver
         self.db = database.Database(self)
+        
+        # For sell/sac to know the rank of animals caught from hunt to dynamically handle them
+        # Updated through hunt.py Cog.
+        self.animal_rank_in_zoo = {
+            "common": False,
+            "uncommon": False,
+            "rare": False,
+            "epic": False,
+            "mythical": False,
+            "legendary": False,
+            "fabled": False,
+            "distorted": False
+        }
 
         # discord.py-self's module sets global random to fixed seed. reset that, locally.
         self.random = random.Random()
@@ -823,7 +836,7 @@ class MyClient(commands.Bot):
                     # captcha or ban specific
                     captcha_url=kwargs.get("captcha_url", None),
                     # hunt specific
-                    hunt_caught_emojies=kwargs.get("hunt_caught_emojies", None),
+                    hunt_caught_emojis=kwargs.get("hunt_caught_emojis", None),
                     best_catch=kwargs.get("best_catch", None),
                     best_rank=kwargs.get("best_rank", None),
                     animal_image_url=kwargs.get("animal_image_url", None),

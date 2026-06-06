@@ -81,7 +81,7 @@
     },
     "on_multiple_hunt_catch": {
         "title": "{username} caught multiple animals from hunt!",
-        "description": "User: <@{userid}> caught the following pets:\n> {hunt_caught_emojies}\n-# Best catch: {best_rank} {best_catch}",
+        "description": "User: <@{userid}> caught the following pets:\n> {hunt_caught_emojis}\n-# Best catch: {best_rank} {best_catch}",
         "content": "",
         "color": "#5B0B74",
         "thumbnail": "",

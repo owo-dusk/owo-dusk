@@ -108,7 +108,7 @@ class Hunt(BaseCog):
                         emoji_id = emoji[1:-1]
                         if "2" in emoji_id:
                             # quick work-around to discord adding 2 at end of emoji names
-                            # I guess this should fix invalid id error for all required emojies
+                            # I guess this should fix invalid id error for all required emojis
                             emoji_id = emoji_id[:-1]
                         url = f"https://emojiapi.dev/api/v1/{emoji_id}/100.png"
 
@@ -188,26 +188,28 @@ class Hunt(BaseCog):
                 )
 
                 sell_value = get_emoji_values(msg_line)
-                # Wait why are reducing 5 again when we are alrady reducing that from sell val? checkk
+                # Wait why are reducing 5 again when we are already reducing that from sell val? checkk
                 self.bot.update_cash(sell_value - 5, assumed=True)
                 self.bot.update_cash(5, reduce=True)
 
-                if (
-                    self.webhook_settings.enabled
-                    and self.webhook_settings.animalLog.enabled
-                ):
-                    result_list, highest_rank = self.get_emoji_tier(msg_line)
-                    if result_list:
+                # Get Tiers
+                result_list, highest_rank = self.get_emoji_tier(msg_line)
+                if result_list:
+                    # Handle webhook
+                    if (
+                        self.webhook_settings.enabled
+                        and self.webhook_settings.animalLog.enabled
+                    ):
                         if len(result_list) > 1:
-                            hunt_caught_emojies = ""
+                            hunt_caught_emojis = ""
                             for item in result_list:
-                                hunt_caught_emojies += f"{item['emoji']} "
+                                hunt_caught_emojis += f"{item['emoji']} "
                             best_catch = highest_rank["emoji"]
                             best_rank = highest_rank["rarity"]
 
                             await self.bot.send_webhook(
                                 "on_multiple_hunt_catch",
-                                hunt_caught_emojies=hunt_caught_emojies,
+                                hunt_caught_emojis=hunt_caught_emojis,
                                 best_catch=best_catch,
                                 best_rank=best_rank,
                             )
@@ -217,11 +219,15 @@ class Hunt(BaseCog):
                             animal_image_url = result_list[0]["emoji_url"]
                             await self.bot.send_webhook(
                                 "on_hunt_catch",
-                                hunt_caught_emojies=hunt_caught_emojies,
+                                hunt_caught_emojis=hunt_caught_emojis,
                                 best_catch=best_catch,
                                 best_rank=best_rank,
                                 animal_image_url=animal_image_url
                             )
+                    # Handle updation of rank held (sell/sac)
+                    for result in result_list:
+                        # Should be okay... hopefully
+                        self.bot.animal_rank_in_zoo[result["rank"]] = True
 
                 await self.bot.sleep(self.settings.get_cd())
                 self.cmd["cmd_name"] = (
