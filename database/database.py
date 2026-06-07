@@ -93,6 +93,29 @@ class Database:
             return results[0]["giveaways"]
         return None
 
+    async def fetch_cmd_lastran_time(self, command_name):
+        if command_name not in {"army", "pup", "piku", "run"}:
+            raise ValueError("Invalid command name.")
+        column_name = "run_cmd" if command_name == "run" else command_name
+
+        results = await database_handler.get_from_db(
+            f"SELECT {column_name} FROM user_stats WHERE user_id = ?",
+            (self.bot.user.id,),
+        )
+        if results:
+            return results[0][column_name] or 0
+        return 0
+
+    def update_cmd_lastran_time(self, command_name):
+        if command_name not in {"army", "pup", "piku", "run"}:
+            raise ValueError("Invalid command name.")
+        column_name = "run_cmd" if command_name == "run" else command_name
+
+        database_handler.update_database(
+            f"UPDATE user_stats SET {column_name} = ? WHERE user_id = ?",
+            (self.bot.time_in_seconds(), self.bot.user.id),
+        )
+
     def populate_stats_db(self):
         database_handler.update_database(
             "INSERT OR IGNORE INTO user_stats (user_id, daily, lottery, cookie, giveaways, captchas, cowoncy, boss, boss_ticket) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",

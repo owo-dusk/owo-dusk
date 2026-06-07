@@ -26,7 +26,7 @@ class captchaClient:
         try:
             response = requests.post(url, json={"clientKey": self.api}, timeout=10)
             data = response.json()
-            return int(data.get("balance", 0)) if data.get("errorId") == 0 else 0
+            return float(data.get("balance", 0)) if data.get("errorId") == 0 else 0
         except Exception:
             return 0
 

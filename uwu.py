@@ -603,7 +603,9 @@ class MyClient(commands.Bot):
             "lottery": commands_obj.lottery.enabled,
             "mail": self.settings_dict_temp.mail,
             "others": True,
+            "pupiku": commands_obj.pup.enabled or commands_obj.piku.enabled,
             "reactionbot": reactionbot,
+            "run": commands_obj.run.enabled,
             "sell": commands_obj.sell.enabled or commands_obj.sac.enabled,
             "shop": commands_obj.shop.enabled,
             "slots": gamble_obj.slots.enabled,
@@ -700,13 +702,25 @@ class MyClient(commands.Bot):
             return
         try:
             async with self.lock:
-                for index, command in enumerate(self.checks):
-                    if cmd_data:
-                        if command == cmd_data:
-                            self.checks.pop(index)
-                    else:
-                        if command.get("id", None) == id:
-                            self.checks.pop(index)
+                target_id = id or cmd_data.get("id", None)
+                if cmd_data:
+                    self.checks = [command for command in self.checks if command != cmd_data]
+                else:
+                    self.checks = [
+                        command
+                        for command in self.checks
+                        if command.get("id", None) != id
+                    ]
+                items = []
+                while not self.queue.empty():
+                    item = await self.queue.get()
+                    command = item[2]
+                    if command.get("id", None) != target_id:
+                        items.append(item)
+                for item in items:
+                    await self.queue.put(item)
+                if target_id in self.cmds_state:
+                    self.cmds_state[target_id]["in_queue"] = False
         except Exception as e:
             await self.log(f"Error: {e}, during remove_queue", "#c25560")
 
@@ -1278,7 +1292,7 @@ def create_database(db_path="utils/data/db.sqlite"):
         "CREATE TABLE IF NOT EXISTS gamble_winrate (hour INTEGER PRIMARY KEY, wins INTEGER, losses INTEGER, net INTEGER)"
     )
     c.execute(
-        "CREATE TABLE IF NOT EXISTS user_stats (user_id TEXT PRIMARY KEY, daily REAL, lottery REAL, cookie REAL, giveaways REAL, captchas INTEGER, cowoncy INTEGER, boss REAL, boss_ticket INTEGER, pup INTEGER, piku INTEGER, army INTEGER)"
+        "CREATE TABLE IF NOT EXISTS user_stats (user_id TEXT PRIMARY KEY, daily REAL, lottery REAL, cookie REAL, giveaways REAL, captchas INTEGER, cowoncy INTEGER, boss REAL, boss_ticket INTEGER, pup INTEGER, piku INTEGER, army INTEGER, run_cmd INTEGER)"
     )
     c.execute(
         "CREATE TABLE IF NOT EXISTS meta_data (key TEXT PRIMARY KEY, value INTEGER)"
@@ -1288,6 +1302,12 @@ def create_database(db_path="utils/data/db.sqlite"):
     )
     # Switch to WAL mode.
     c.execute("PRAGMA journal_mode=WAL;")
+
+    for column in ("pup", "piku", "army", "run_cmd"):
+        try:
+            c.execute(f"ALTER TABLE user_stats ADD COLUMN {column} INTEGER")
+        except sqlite3.OperationalError:
+            pass
 
     """# NOTE: Remove this once proper migration for database is in place:
     try:

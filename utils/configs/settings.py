@@ -302,6 +302,8 @@ class Commands:
         cmd_list = [
             "hunt",
             "battle",
+            "sell",
+            "sac",
             "pray",
             "curse",
             "lvlGrind",
@@ -309,7 +311,8 @@ class Commands:
             "owo",
             "army",
             "pup",
-            "piku"
+            "piku",
+            "run",
         ]
         for cmd in cmd_list:
             setattr(self, cmd, Command(d.get(cmd, {})))

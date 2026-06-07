@@ -41,6 +41,8 @@ class Pupiku(BaseCog):
             "pup": {"command_send_time": 0, "command_resp_time": 0},
             "piku": {"command_send_time": 0, "command_resp_time": 0},
         }
+        self.completed_today = set()
+        self.tomorrow_tasks = {}
 
     @property
     def pup_settings(self):
@@ -49,6 +51,14 @@ class Pupiku(BaseCog):
     @property
     def piku_settings(self):
         return self.bot.settings_dict_temp.commands.piku
+
+    def enabled_commands(self):
+        cmds = []
+        if self.pup_settings.enabled:
+            cmds.append("pup")
+        if self.piku_settings.enabled:
+            cmds.append("piku")
+        return cmds
 
     def set_and_validate_resp_time(self, cmd_name: str):
         # 1. set resp time
@@ -78,6 +88,34 @@ class Pupiku(BaseCog):
     def set_send_time(self, cmd_name: str):
         self.command_status[cmd_name]["command_send_time"] = time.monotonic()
 
+    async def mark_complete_today(self, cmd_name: str):
+        self.completed_today.add(cmd_name)
+        self.bot.db.update_cmd_lastran_time(cmd_name)
+        await self.bot.remove_queue(id=cmd_name)
+
+        task = self.tomorrow_tasks.pop(cmd_name, None)
+        if task and not task.done():
+            task.cancel()
+        self.tomorrow_tasks[cmd_name] = asyncio.create_task(
+            self.resume_tomorrow(cmd_name)
+        )
+
+    async def resume_tomorrow(self, cmd_name: str):
+        await asyncio.sleep(self.bot.calc_time())
+        self.completed_today.discard(cmd_name)
+        await self.send_pupiku(cmd=cmd_name, initial=True)
+
+    def detect_command_result(self, content: str):
+        if "Your garden is out of carrots!" in content:
+            return "piku", True
+        if "There are no puppies to adopt!" in content:
+            return "pup", True
+        if "You picked one PikPik carrot" in content:
+            return "piku", "today!" in content
+        if "You picked up one puppy" in content:
+            return "pup", "today!" in content
+        return "", False
+
     async def cog_load(self):
         if not (self.pup_settings.enabled or self.piku_settings.enabled):
             try:
@@ -85,30 +123,63 @@ class Pupiku(BaseCog):
             except ExtensionNotLoaded:
                 pass
         else:
-            asyncio.create_task(self.send_buy(send_pupiku=True))
+            asyncio.create_task(self.send_pupiku(startup=True))
 
     async def cog_unload(self):
         await self.bot.remove_queue(id="pup")
         await self.bot.remove_queue(id="piku")
+        for task in self.tomorrow_tasks.values():
+            if not task.done():
+                task.cancel()
 
-    async def send_pupiku(self, startup=False, cmd=None, final=False):
+    async def send_pupiku(
+        self, startup=False, cmd=None, final=False, initial=False, initial_delay=0
+    ):
         if startup:
             await self.bot.sleep_till(
                 self.bot.settings_dict_temp.cooldowns.shortCooldown
             )
-            cmds = ["pup", "piku"]
-            choice = self.bot.random.choice(cmds)
-            cmds.remove(choice)
+            cmds = self.enabled_commands()
+            self.bot.random.shuffle(cmds)
 
-            await self.bot.put_queue(self.__dict__[f"{choice}_cmd"])
-            await self.bot.sleep_till([1,3])
-            await self.bot.put_queue(self.__dict__[f"{cmds[0]}_cmd"])
+            delay = 0
+            for index, cmd_name in enumerate(cmds):
+                if index:
+                    delay += self.bot.random.uniform(1, 3)
+                asyncio.create_task(
+                    self.send_pupiku(
+                        cmd=cmd_name, initial=True, initial_delay=delay
+                    )
+                )
         else:
-            await self.bot.remove_queue(id=cmd)
-            cd = self.__dict__[f"{cmd}_settings"].get_cd()
-            if final:
-                cd+=self.bot.calc_time()
-            await self.bot.sleep(cd)
+            if cmd not in self.enabled_commands():
+                return
+            if cmd in self.completed_today:
+                return
+
+            if initial_delay:
+                await asyncio.sleep(initial_delay)
+            if cmd in self.completed_today:
+                return
+
+            if initial:
+                last_ran = await self.bot.db.fetch_cmd_lastran_time(cmd)
+                if not self.bot.should_run(last_ran):
+                    self.completed_today.add(cmd)
+                    self.tomorrow_tasks[cmd] = asyncio.create_task(
+                        self.resume_tomorrow(cmd)
+                    )
+                    return
+            else:
+                await self.bot.remove_queue(id=cmd)
+                if final:
+                    await self.mark_complete_today(cmd)
+                    return
+                else:
+                    await self.bot.sleep(getattr(self, f"{cmd}_settings").get_cd())
+                    if cmd in self.completed_today:
+                        return
+
             self.set_send_time(cmd)
             await self.bot.put_queue(self.__dict__[f"{cmd}_cmd"])
 
@@ -121,30 +192,17 @@ class Pupiku(BaseCog):
         if message.author.id != self.bot.owo_bot_id:
             return
 
-        final = False
-        cmd = ""
-        if "You picked one PikPik carrot" in message.content:
-            cmd = "piku"
-        elif "You picked up one puppy" in message.content:
-            cmd = "pup"
-        if "today!" in message.content:
-            # its a weird method, but the `!` at the end always exists
-            # when the day's total pup/piku is ran. A solid way to detect finish!
-            final = True
-
-        if cmd and self.set_and_validate_resp_time(cmd):
-            await self.send_pupiku(cmd=cmd, final=final)
+        detected_cmd, detected_final = self.detect_command_result(message.content)
+        if detected_cmd:
+            if detected_cmd not in self.enabled_commands():
+                return
+            if detected_final:
+                await self.mark_complete_today(detected_cmd)
+                return
+            if self.set_and_validate_resp_time(detected_cmd):
+                await self.send_pupiku(cmd=detected_cmd, final=detected_final)
             return
 
-        cmd = ""
-        if "🚫 **|** Your garden is out of carrots!" in message.content:
-            cmd = "piku"
-        elif "🚫 **|** There are no puppies to adopt!" in message.content:
-            cmd = "pup"
-
-        if cmd and self.set_and_validate_resp_time(cmd):
-            # command may have been ran and done in previous session
-            await self.send_pupiku(cmd=cmd, final=final)
 
 
         

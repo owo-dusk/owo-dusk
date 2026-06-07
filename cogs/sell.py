@@ -65,11 +65,11 @@ class Sell(BaseCog):
 
     @property
     def sell_settings(self):
-        self.bot.settings_dict_temp.animal.sell
+        return self.bot.settings_dict_temp.commands.sell
 
     @property
     def sac_settings(self):
-        self.bot.settings_dict_temp.animal.sac
+        return self.bot.settings_dict_temp.commands.sac
 
     def allocate_points(self, command: str, rarities: str):
         if command not in ("sell", "sac"):
