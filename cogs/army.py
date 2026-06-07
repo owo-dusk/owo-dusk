@@ -54,28 +54,25 @@ class Army(BaseCog):
         self.command_status["command_send_time"] = time.monotonic()
 
     def set_and_validate_resp_time(self):
-        # 1. set resp time
         resp_time = time.monotonic()
-        # 2. ensure send time is set and is not 0
+
+        # 1. Ensure send time is set and is not 0
         if not self.command_status["command_send_time"]:
             print("send time is 0 or not set")
             return False
-        # 3. ensure time gap isn't within 60s
+
+        # 2. Make sure last respond isn't within 60 seconds
         if self.command_status["command_resp_time"]:
-            # In case resp time is 0 then the logic would assume all first runs are invalid
             time_gap = resp_time - self.command_status["command_resp_time"]
             if time_gap < 60:
-                # The minumum cooldown of army command would be 60.
                 return False
-            # After time gap is calculated, modify command_resp_time
-            self.command_status["command_resp_time"] = resp_time
 
-        # 4. Check if resp time is around within 10~ s
+        # 3. Check if resp time is within 10s~ of send time
         time_gap = resp_time - self.command_status["command_send_time"]
         if time_gap < 0 or time_gap > 10:
             return False
 
-        # If all above checks are invalid, then it is likely a valid responce
+        self.command_status["command_resp_time"] = resp_time
         return True
 
     async def send_army(self, startup=False, finished=False):

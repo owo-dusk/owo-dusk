@@ -22,25 +22,21 @@ class Pupiku(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
 
-        # NOTE: Here we are using seperate id's
-        self.pup_cmd = {
-            "cmd_name": "pup",
-            "prefix": True,
-            "checks": True,
-            "id": "pup",
-        }
-
-        self.piku_cmd = {
-            "cmd_name": "piku",
-            "prefix": True,
-            "checks": True,
-            "id": "piku",
-        }
-
+        self.startupFinished = False
         self.command_status = {
             "pup": {"command_send_time": 0, "command_resp_time": 0},
             "piku": {"command_send_time": 0, "command_resp_time": 0},
         }
+
+    def get_cmd(self, cmd_name: str):
+        # NOTE: Here we are using seperate id's
+        base = {
+            "cmd_name": cmd_name,
+            "prefix": True,
+            "checks": self.startupFinished,
+            "id": cmd_name,
+        }
+        return base
 
     @property
     def pup_settings(self):
@@ -51,28 +47,25 @@ class Pupiku(BaseCog):
         return self.bot.settings_dict_temp.commands.piku
 
     def set_and_validate_resp_time(self, cmd_name: str):
-        # 1. set resp time
         resp_time = time.monotonic()
-        # 2. ensure send time is set and is not 0
+
+        # 1. Ensure send time is set and is not 0
         if not self.command_status[cmd_name]["command_send_time"]:
             print("send time is 0 or not set")
             return False
-        # 3. ensure time gap isn't within 60s
+
+        # 2. Make sure last respond isn't within 60 seconds
         if self.command_status[cmd_name]["command_resp_time"]:
-            # In case resp time is 0 then the logic would assume all first runs are invalid
             time_gap = resp_time - self.command_status[cmd_name]["command_resp_time"]
             if time_gap < 60:
-                # The minumum cooldown of Pup and Piku command would be 60.
                 return False
-        # After time gap is calculated, modify command_resp_time
-        self.command_status[cmd_name]["command_resp_time"] = resp_time
 
-        # 4. Check if resp time is around within 10~ s
+        # 3. Check if resp time is within 10s~ of send time
         time_gap = resp_time - self.command_status[cmd_name]["command_send_time"]
         if time_gap < 0 or time_gap > 10:
             return False
 
-        # If all above checks are invalid, then it is likely a valid responce
+        self.command_status[cmd_name]["command_resp_time"] = resp_time
         return True
 
     def set_send_time(self, cmd_name: str):
@@ -85,7 +78,7 @@ class Pupiku(BaseCog):
             except ExtensionNotLoaded:
                 pass
         else:
-            asyncio.create_task(self.send_buy(send_pupiku=True))
+            asyncio.create_task(self.send_pupiku(startup=True))
 
     async def cog_unload(self):
         await self.bot.remove_queue(id="pup")
@@ -93,24 +86,28 @@ class Pupiku(BaseCog):
 
     async def send_pupiku(self, startup=False, cmd=None, final=False):
         if startup:
-            await self.bot.sleep_till(
-                self.bot.settings_dict_temp.cooldowns.shortCooldown
-            )
-            cmds = ["pup", "piku"]
-            choice = self.bot.random.choice(cmds)
-            cmds.remove(choice)
+            while not self.startupFinished:
+                await self.bot.sleep_till(
+                    self.bot.settings_dict_temp.cooldowns.shortCooldown
+                )
+                cmds = ["pup", "piku"]
+                choice = self.bot.random.choice(cmds)
+                cmds.remove(choice)
 
-            await self.bot.put_queue(self.__dict__[f"{choice}_cmd"])
-            await self.bot.sleep_till([1,3])
-            await self.bot.put_queue(self.__dict__[f"{cmds[0]}_cmd"])
+                await self.bot.put_queue(self.get_cmd(choice))
+                await self.bot.sleep_till([1,3])
+                await self.bot.put_queue(self.get_cmd(cmds[0]))
+                # Incase of failure during initial start
+                # once one command is successful, this isnt an issue.
+                await self.bot.sleep(60)
         else:
             await self.bot.remove_queue(id=cmd)
-            cd = self.__dict__[f"{cmd}_settings"].get_cd()
+            cd = getattr(self, f"{cmd}_settings").get_cd()
             if final:
                 cd+=self.bot.calc_time()
             await self.bot.sleep(cd)
             self.set_send_time(cmd)
-            await self.bot.put_queue(self.__dict__[f"{cmd}_cmd"])
+            await self.bot.put_queue(self.get_cmd(cmd))
 
 
     @commands.Cog.listener()
@@ -118,8 +115,16 @@ class Pupiku(BaseCog):
         if not message.channel.id == self.bot.cm.id:
             return
 
+        if (message.author.id == self.bot.user.id):
+            if f"{self.bot.settings_dict_temp.prefix}pup" in message.content:
+                self.set_send_time("pup")
+            if f"{self.bot.settings_dict_temp.prefix}piku" in message.content:
+                self.set_send_time("piku")
+
         if message.author.id != self.bot.owo_bot_id:
             return
+
+        
 
         final = False
         cmd = ""
@@ -133,8 +138,12 @@ class Pupiku(BaseCog):
             final = True
 
         if cmd and self.set_and_validate_resp_time(cmd):
+            print(f"{self.bot.user.name} - re-queued {cmd}")
+            self.startupFinished = True
             await self.send_pupiku(cmd=cmd, final=final)
             return
+        else:
+            print(f"{self.bot.user.name} - failed re-queue {cmd}")
 
         cmd = ""
         if "🚫 **|** Your garden is out of carrots!" in message.content:
@@ -144,10 +153,9 @@ class Pupiku(BaseCog):
 
         if cmd and self.set_and_validate_resp_time(cmd):
             # command may have been ran and done in previous session
+            self.startupFinished = True
+            print(f"{self.bot.user.name} - done with {cmd}")
             await self.send_pupiku(cmd=cmd, final=final)
-
-
-        
 
 
 async def setup(bot):
