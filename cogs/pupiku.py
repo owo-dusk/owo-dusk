@@ -55,10 +55,10 @@ class Pupiku(BaseCog):
         resp_time = time.monotonic()
         # 2. ensure send time is set and is not 0
         if not self.command_status[cmd_name]["command_send_time"]:
-            print("send time is set and is not 0")
+            print("send time is 0 or not set")
             return False
         # 3. ensure time gap isn't within 60s
-        if not self.command_status[cmd_name]["command_resp_time"]:
+        if self.command_status[cmd_name]["command_resp_time"]:
             # In case resp time is 0 then the logic would assume all first runs are invalid
             time_gap = resp_time - self.command_status[cmd_name]["command_resp_time"]
             if time_gap < 60:
@@ -102,10 +102,10 @@ class Pupiku(BaseCog):
 
             await self.bot.put_queue(self.__dict__[f"{choice}_cmd"])
             await self.bot.sleep_till([1,3])
-            await self.bot.put_queue(cmds[0])
+            await self.bot.put_queue(self.__dict__[f"{cmds[0]}_cmd"])
         else:
             await self.bot.remove_queue(id=cmd)
-            cd = self.__dict__[f"{cmd}_setting"].get_cd()
+            cd = self.__dict__[f"{cmd}_settings"].get_cd()
             if final:
                 cd+=self.bot.calc_time()
             await self.bot.sleep(cd)
@@ -128,6 +128,8 @@ class Pupiku(BaseCog):
         elif "You picked up one puppy" in message.content:
             cmd = "pup"
         if "today!" in message.content:
+            # its a weird method, but the `!` at the end always exists
+            # when the day's total pup/piku is ran. A solid way to detect finish!
             final = True
 
         if cmd and self.set_and_validate_resp_time(cmd):
@@ -142,7 +144,6 @@ class Pupiku(BaseCog):
 
         if cmd and self.set_and_validate_resp_time(cmd):
             # command may have been ran and done in previous session
-            
             await self.send_pupiku(cmd=cmd, final=final)
 
 
