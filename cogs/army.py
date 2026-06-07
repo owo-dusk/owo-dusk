@@ -102,6 +102,7 @@ class Army(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        nick = self.bot.get_nick(message)
         if not message.channel.id == self.bot.cm.id:
             return
 
@@ -125,7 +126,7 @@ class Army(BaseCog):
                         print(value)
                         await self.send_army()
 
-            if "**🚫 | nully**, you can only find 15 emblems per day!" in message.content:
+            if f"**🚫 | {nick}**, you can only find 15 emblems per day!" in message.content:
                 # remove command from queue
                 await self.bot.remove_queue(id="army")
                 # update, sleep
@@ -139,3 +140,4 @@ class Army(BaseCog):
 
 async def setup(bot):
     await bot.add_cog(Army(bot))
+
