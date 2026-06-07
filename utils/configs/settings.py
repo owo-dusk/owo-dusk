@@ -18,6 +18,9 @@ import random
 
 from utils.configs import validators
 
+def GET_CD(cd: list):
+    validators.validateCooldown(cd)
+    return random.uniform(cd[0], cd[1])
 
 class Settings:
     def __init__(self, d: dict):
@@ -53,6 +56,9 @@ class Settings:
 
         # Custom command
         self.customCommands = CustomCommands(d.get("customCommands", {}))
+
+        # Auto sell/sac - Animal
+        self.animal = Animal(d.get("animal", {}))
 
 
 GEMS_RARITY = [
@@ -172,8 +178,7 @@ class ReactionBot:
         self.cooldown = d.get("cooldown", None)
 
     def get_cd(self):
-        validators.validateCooldown(self.cooldown)
-        return random.uniform(self.cooldown[0], self.cooldown[1])
+        return GET_CD(self.cooldown)
 
 
 class Misspell:
@@ -224,8 +229,7 @@ class Giveaway:
         self.channels = d.get("channelsToJoin", [])
 
     def get_cd(self):
-        validators.validateCooldown(self.cooldown)
-        return random.uniform(self.cooldown[0], self.cooldown[1])
+        return GET_CD(self.cooldown)
 
 
 class BossBattle:
@@ -273,8 +277,7 @@ class GambleItem:
             self.options = CoinflipOptions(cf_options)
 
     def get_cd(self):
-        validators.validateCooldown(self.cooldown)
-        return random.uniform(self.cooldown[0], self.cooldown[1])
+        return GET_CD(self.cooldown)
 
 
 class CoinflipOptions:
@@ -299,8 +302,6 @@ class Commands:
         cmd_list = [
             "hunt",
             "battle",
-            "sell",
-            "sac",
             "pray",
             "curse",
             "lvlGrind",
@@ -322,10 +323,6 @@ class Command:
     def __init__(self, d: dict):
         self.enabled = d.get("enabled", False)
         self.cooldown = d.get("cooldown", None)
-
-        # Sell or Sacrifice
-        if d.get("rarity"):
-            self.rarity = Rarity(d["rarity"])
 
         # Hunt and Battle
         self.shortform = d.get("useShortForm", None)
@@ -349,8 +346,7 @@ class Command:
         self.prioritise = d.get("prioritise", False)
 
     def get_cd(self):
-        validators.validateCooldown(self.cooldown)
-        return random.uniform(self.cooldown[0], self.cooldown[1])
+        return GET_CD(self.cooldown)
 
 
 class Lottery:
@@ -358,6 +354,22 @@ class Lottery:
         self.enabled = d.get("enabled", False)
         self.amount = d.get("amount", 0)
 
+
+class Animal:
+    def __init__(self, d: dict):
+        self.sell = AnimalSellSac(d.get("sell", {}))
+        self.sac = AnimalSellSac(d.get("sac", {}))
+        self.dynamicCooldown = d.get("dynamicCooldown", False)
+
+class AnimalSellSac:
+    def __init__(self, d: dict):
+        self.enabled = d.get("enabled", False)
+        self.weight = d.get("weight", 1)
+        self.rarity = Rarity(d.get("rarity", {}))
+        self.cooldown = d.get("cooldown", None)
+
+    def get_cd(self):
+        return GET_CD(self.cooldown)
 
 class Rarity:
     """
@@ -373,12 +385,14 @@ class Rarity:
             "mythical",
             "legendary",
             "fabled",
+            "hidden",
             "distorted",
         ]
         for rarity in self._rarities:
             setattr(self, rarity, d.get(rarity, False))
 
     def get_rarities(self):
+        # Get first letter of all enabled rarity joined with space as a string
         rarities = ""
         for rarity in self._rarities:
             if getattr(self, rarity):
@@ -404,8 +418,7 @@ class ShopCommand:
         self.items = ShopItems(d.get("itemsToBuy", {}))
 
     def get_cd(self):
-        validators.validateCooldown(self.cooldown)
-        return random.uniform(self.cooldown[0], self.cooldown[1])
+        return GET_CD(self.cooldown)
 
     def get_price_and_id(self, ring):
         for idx, (name, price) in enumerate(RING_PRICES, start=1):
@@ -469,9 +482,7 @@ class HuntbotUpgrader:
         self.weights = HuntbotWeights(d.get("weights", {}))
 
     def get_cd(self):
-        # Need to edit
-        validators.validateCooldown(self.sleeptime)
-        return random.uniform(self.sleeptime[0], self.sleeptime[1])
+        return GET_CD(self.sleeptime)
 
     def get_enabled_traits(self):
         enabled_traits = []

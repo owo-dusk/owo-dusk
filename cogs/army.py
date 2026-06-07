@@ -58,17 +58,17 @@ class Army(BaseCog):
         resp_time = time.monotonic()
         # 2. ensure send time is set and is not 0
         if not self.command_status["command_send_time"]:
-            print("send time is set and is not 0")
+            print("send time is 0 or not set")
             return False
         # 3. ensure time gap isn't within 60s
-        if not self.command_status["command_resp_time"]:
+        if self.command_status["command_resp_time"]:
             # In case resp time is 0 then the logic would assume all first runs are invalid
             time_gap = resp_time - self.command_status["command_resp_time"]
-            # After time gap is calculated, modify command_resp_time
-            self.command_status["command_resp_time"] = resp_time
             if time_gap < 60:
                 # The minumum cooldown of army command would be 60.
                 return False
+            # After time gap is calculated, modify command_resp_time
+            self.command_status["command_resp_time"] = resp_time
 
         # 4. Check if resp time is around within 10~ s
         time_gap = resp_time - self.command_status["command_send_time"]
@@ -140,4 +140,3 @@ class Army(BaseCog):
 
 async def setup(bot):
     await bot.add_cog(Army(bot))
-

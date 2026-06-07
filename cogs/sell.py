@@ -12,9 +12,10 @@
 
 import re
 import asyncio
+import time
+import heapq
 
-from discord.ext import commands
-from discord.ext.commands import ExtensionNotLoaded
+from discord.ext import commands, tasks
 from cogs._BASE import BaseCog
 
 """
@@ -23,66 +24,90 @@ improve cooldown system (somehow) to make both same.
 perhaps make a new category `animals` as we are already handling command being put seperately...?
 """
 
+"""
+Calculation of point_chart:
+(2 * sell_value + sac_value) / (sell_value + sac_value)
+"""
+POINT_CHART = {
+    "c": 1,
+    "u": 4,
+    "r": 13,
+    "e": 250,
+    "s": 5454,  # special
+    "m": 3750,
+    "g": 24000,  # gem
+    "l": 12000,
+    "d": 240000,
+    "f": 142857,
+    "h": 666666,
+}
+
+
+def get_command(name: str):
+    if name not in ("sell", "sac"):
+        raise ValueError("Invalid command name")
+
+    base = {
+        "cmd_name": name,
+        "cmd_arguments": "",
+        "prefix": True,
+        "checks": True,
+        "id": "sell",
+    }
+    return base
+
 
 class Sell(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
+        self.sell_point = 0
+        self.sac_point = 0
 
-        self.sell_cmd = {
-            "cmd_name": "sell",
-            "cmd_arguments": "",
-            "prefix": True,
-            "checks": True,
-            "id": "sell",
-        }
+    @property
+    def sell_settings(self):
+        self.bot.settings_dict_temp.animal.sell
 
-        self.sac_cmd = {
-            "cmd_name": self.bot.alias["sac"]["normal"],
-            "cmd_arguments": "",
-            "prefix": True,
-            "checks": True,
-            "id": "sell",
-        }
+    @property
+    def sac_settings(self):
+        self.bot.settings_dict_temp.animal.sac
 
-    def fetch_arguments(self, cmd):
-        return " ".join(self.bot.settings_dict["commands"][cmd]["rarity"])
+    def allocate_points(self, command: str, rarities: str):
+        if command not in ("sell", "sac"):
+            raise ValueError("Invalid command name")
+            
+        rarities_list = rarities.split()
+        for item in rarities_list:
+            self.__dict__[f"{command}_point"] += POINT_CHART[item]
 
-    async def sell_sac_queue(self, cmd, cooldown):
-        await self.bot.sleep_till(cooldown)
-        cmd["cmd_arguments"] = self.fetch_arguments(cmd["cmd_name"])
-        await self.bot.put_queue(cmd)
+    def calculate_allocation(self, command: str):
+        if command not in ("sell", "sac"):
+            raise ValueError("Invalid command name")
+        cmds = ["sell", "sac"]
+        cmds.pop(command)
+
+
+    @tasks.loop()
+    async def initiate_loop(self):
+        
+        await self.bot.sleep(10)
 
     async def cog_load(self):
-        if (
-            not self.bot.settings_dict["commands"]["sell"]["enabled"]
-            and not self.bot.settings_dict["commands"]["sac"]["enabled"]
-        ):
-            try:
-                asyncio.create_task(self.bot.unload_cog("cogs.sell"))
-            except ExtensionNotLoaded:
-                pass
-        else:
-            if (
-                self.bot.settings_dict["commands"]["sell"]["enabled"]
-                and self.bot.settings_dict["commands"]["sac"]["enabled"]
-            ) or (self.bot.settings_dict["commands"]["sell"]["enabled"]):
-                # start sell first.
-                asyncio.create_task(
-                    self.sell_sac_queue(
-                        self.sell_cmd,
-                        self.bot.settings_dict["commands"]["sell"]["cooldown"],
-                    )
-                )
-            else:
-                asyncio.create_task(
-                    self.sell_sac_queue(
-                        self.sac_cmd,
-                        self.bot.settings_dict["commands"]["sac"]["cooldown"],
-                    )
-                )
+        # start loop, cog will stay awake due to the necessity to calculate value
+        pass
 
     async def cog_unload(self):
         await self.bot.remove_queue(id="sell")
+
+
+
+
+
+
+
+
+
+
+    
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -117,32 +142,12 @@ class Sell(BaseCog):
                             "failed to fetch cowoncy from sales", "#af0087"
                         )
 
-                if self.bot.settings_dict["commands"]["sac"]["enabled"]:
-                    await self.sell_sac_queue(
-                        self.sac_cmd,
-                        self.bot.settings_dict["commands"]["sac"]["cooldown"],
-                    )
-                else:
-                    await self.sell_sac_queue(
-                        self.sell_cmd,
-                        self.bot.settings_dict["commands"]["sell"]["cooldown"],
-                    )
-
             elif (
                 "sacrificed" in message.content
                 and "for a total of" in message.content.lower()
             ):
                 await self.bot.remove_queue(id="sell")
-                if self.bot.settings_dict["commands"]["sell"]["enabled"]:
-                    await self.sell_sac_queue(
-                        self.sell_cmd,
-                        self.bot.settings_dict["commands"]["sell"]["cooldown"],
-                    )
-                else:
-                    await self.sell_sac_queue(
-                        self.sac_cmd,
-                        self.bot.settings_dict["commands"]["sac"]["cooldown"],
-                    )
+
             elif "you don't have enough animals! >:c" in message.content.lower():
                 await self.bot.remove_queue(id="sell")
 

@@ -11,6 +11,7 @@
 # (at your option) any later version.
 
 import asyncio
+import time
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
@@ -30,10 +31,15 @@ class Pupiku(BaseCog):
         }
 
         self.piku_cmd = {
-            "cmd_name": "pup",
+            "cmd_name": "piku",
             "prefix": True,
             "checks": True,
-            "id": "pup",
+            "id": "piku",
+        }
+
+        self.command_status = {
+            "pup": {"command_send_time": 0, "command_resp_time": 0},
+            "piku": {"command_send_time": 0, "command_resp_time": 0},
         }
 
     @property
@@ -44,49 +50,103 @@ class Pupiku(BaseCog):
     def piku_settings(self):
         return self.bot.settings_dict_temp.commands.piku
 
+    def set_and_validate_resp_time(self, cmd_name: str):
+        # 1. set resp time
+        resp_time = time.monotonic()
+        # 2. ensure send time is set and is not 0
+        if not self.command_status[cmd_name]["command_send_time"]:
+            print("send time is set and is not 0")
+            return False
+        # 3. ensure time gap isn't within 60s
+        if not self.command_status[cmd_name]["command_resp_time"]:
+            # In case resp time is 0 then the logic would assume all first runs are invalid
+            time_gap = resp_time - self.command_status[cmd_name]["command_resp_time"]
+            if time_gap < 60:
+                # The minumum cooldown of Pup and Piku command would be 60.
+                return False
+        # After time gap is calculated, modify command_resp_time
+        self.command_status[cmd_name]["command_resp_time"] = resp_time
+
+        # 4. Check if resp time is around within 10~ s
+        time_gap = resp_time - self.command_status[cmd_name]["command_send_time"]
+        if time_gap < 0 or time_gap > 10:
+            return False
+
+        # If all above checks are invalid, then it is likely a valid responce
+        return True
+
+    def set_send_time(self, cmd_name: str):
+        self.command_status[cmd_name]["command_send_time"] = time.monotonic()
+
     async def cog_load(self):
-        if not self.settings.enabled:
+        if not (self.pup_settings.enabled or self.piku_settings.enabled):
             try:
-                asyncio.create_task(self.bot.unload_cog("cogs.shop"))
+                asyncio.create_task(self.bot.unload_cog("cogs.pupiku"))
             except ExtensionNotLoaded:
                 pass
         else:
-            asyncio.create_task(self.send_buy(startup=True))
+            asyncio.create_task(self.send_buy(send_pupiku=True))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="shop")
+        await self.bot.remove_queue(id="pup")
+        await self.bot.remove_queue(id="piku")
 
-    async def send_buy(self, startup=False):
+    async def send_pupiku(self, startup=False, cmd=None, final=False):
         if startup:
             await self.bot.sleep_till(
                 self.bot.settings_dict_temp.cooldowns.shortCooldown
             )
+            cmds = ["pup", "piku"]
+            choice = self.bot.random.choice(cmds)
+            cmds.remove(choice)
+
+            await self.bot.put_queue(self.__dict__[f"{choice}_cmd"])
+            await self.bot.sleep_till([1,3])
+            await self.bot.put_queue(cmds[0])
         else:
-            await self.bot.remove_queue(id="shop")
-            await self.bot.sleep(self.settings.get_cd())
+            await self.bot.remove_queue(id=cmd)
+            cd = self.__dict__[f"{cmd}_setting"].get_cd()
+            if final:
+                cd+=self.bot.calc_time()
+            await self.bot.sleep(cd)
+            self.set_send_time(cmd)
+            await self.bot.put_queue(self.__dict__[f"{cmd}_cmd"])
 
-        items_to_buy = self.settings.get_items_to_buy(
-            cur_cash=self.bot.user_status["balance"],
-            cash_check=self.bot.settings_dict_temp.cashCheck,
-        )
-
-        item = self.bot.random.choice(items_to_buy)
-
-        if item:
-            self.cmd["cmd_arguments"] = item
-            await self.bot.put_queue(self.cmd)
-        else:
-            await self.send_buy()
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        nick = self.bot.get_nick(message)
-
         if not message.channel.id == self.bot.cm.id:
             return
-        if nick not in message.content:
+
+        if message.author.id != self.bot.owo_bot_id:
             return
 
+        final = False
+        cmd = ""
+        if "You picked one PikPik carrot" in message.content:
+            cmd = "piku"
+        elif "You picked up one puppy" in message.content:
+            cmd = "pup"
+        if "today!" in message.content:
+            final = True
+
+        if cmd and self.set_and_validate_resp_time(cmd):
+            await self.send_pupiku(cmd=cmd, final=final)
+            return
+
+        cmd = ""
+        if "🚫 **|** Your garden is out of carrots!" in message.content:
+            cmd = "piku"
+        elif "🚫 **|** There are no puppies to adopt!" in message.content:
+            cmd = "pup"
+
+        if cmd and self.set_and_validate_resp_time(cmd):
+            # command may have been ran and done in previous session
+            
+            await self.send_pupiku(cmd=cmd, final=final)
+
+
+        
 
 
 async def setup(bot):
