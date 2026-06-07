@@ -32,8 +32,11 @@
         "lottery": {"priority": 8, "basecd": 5, "log_color": "#6a9882"},
         "level": {"priority": 8, "basecd": 15, "log_color": "#939393"},
         "sell": {"priority": 9, "basecd": 1, "log_color": "#d0d0b8"},
-        "shop": {"priority": 9, "basecd": 15, "log_color": "#d0d0b8"},
+        "shop": {"priority": 9, "basecd": 4, "log_color": "#d0d0b8"},
         "upgrade": {"priority": 9, "basecd": 1, "log_color": "#6892e4"},
+        "army": {"priority": 10, "basecd": 60, "log_color": "#a86b32"},
+        "piku": {"priority": 10, "basecd": 60, "log_color": "#a86b32"},
+        "pup": {"priority": 10, "basecd": 60, "log_color": "#a86b32"},
         "customcommand": {"priority": 11, "basecd": 1, "log_color": "#c9a4bc"}
     },
     "alias": {
