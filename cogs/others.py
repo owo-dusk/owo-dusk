@@ -204,8 +204,9 @@ class Others(BaseCog):
                 await self.bot.set_stat(True)
         if re.search(EVENT_REGEX, message.content):
             # event message detected
-            await self.bot.log("OwO Event Detected! - DB not updated", "#aeb596")
-            self.bot.ongoing_owobot_event = True
+            if not self.bot.ongoing_owobot_event:
+                await self.bot.log("OwO Event Detected! - DB not updated", "#aeb596")
+                self.bot.ongoing_owobot_event = True
 
 
     async def on_component_message(self, message):
