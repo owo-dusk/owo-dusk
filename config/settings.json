@@ -144,26 +144,22 @@
     "animal": {
         "sell": {
             "enabled": true,
-            "weight": 1,
             "rarity": {
                 "common": true,
                 "uncommon": true,
                 "rare": true,
                 "epic": true,
-                "mythical": true,
+                "special": false,
+                "mythical": false,
+                "gem": false,
                 "legendary": false,
                 "fabled": false,
                 "hidden": false,
                 "distorted": false
-            },
-            "cooldown": [
-                300,
-                400
-            ]
+            }
         },
         "sac": {
             "enabled": true,
-            "weight": 1,
             "rarity": {
                 "common": true,
                 "uncommon": true,
@@ -174,13 +170,9 @@
                 "fabled": false,
                 "hidden": false,
                 "distorted": false
-            },
-            "cooldown": [
-                300,
-                400
-            ]
+            }
         },
-        "dynamicCooldown": false
+        "cooldown":[300,400]
     },
     "gamble": {
         "allottedAmount": 10000,

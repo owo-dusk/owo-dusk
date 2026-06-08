@@ -369,10 +369,13 @@ class MyClient(commands.Bot):
             "uncommon": False,
             "rare": False,
             "epic": False,
+            "special": False,
             "mythical": False,
+            "gem": False,
             "legendary": False,
             "fabled": False,
-            "distorted": False
+            "distorted": False,
+            "hidden": False
         }
 
         # discord.py-self's module sets global random to fixed seed. reset that, locally.
@@ -602,7 +605,7 @@ class MyClient(commands.Bot):
             "others": True,
             "pupiku": commands_obj.pup.enabled or commands_obj.piku.enabled,
             "reactionbot": reactionbot,
-            #"sell": commands_obj.sell.enabled or commands_obj.sac.enabled,
+            "sell": True,
             "shop": commands_obj.shop.enabled,
             "slots": gamble_obj.slots.enabled,
         }

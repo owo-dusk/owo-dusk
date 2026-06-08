@@ -11,9 +11,7 @@
 # (at your option) any later version.
 
 import re
-import asyncio
 import time
-import heapq
 
 from discord.ext import commands, tasks
 from cogs._BASE import BaseCog
@@ -24,54 +22,42 @@ improve cooldown system (somehow) to make both same.
 perhaps make a new category `animals` as we are already handling command being put seperately...?
 """
 
-"""
-Calculation of point_chart:
-(2 * sell_value + sac_value) / (sell_value + sac_value)
-"""
-POINT_CHART = {
-    "c": 1,
-    "u": 4,
-    "r": 13,
-    "e": 250,
-    "s": 5454,  # special
-    "m": 3750,
-    "g": 24000,  # gem
-    "l": 12000,
-    "d": 240000,
-    "f": 142857,
-    "h": 666666,
+
+
+RARITY_MAP = {
+    "c": "common",
+    "u": "uncommon",
+    "r": "rare",
+    "e": "epic",
+    "s": "special",  # special
+    "m": "mythical",
+    "g": "gem",
+    "l": "legendary",
+    "d": "distorted",
+    "f": "fabled",
+    "h": "hidden",
 }
-
-
-def get_command(name: str):
-    if name not in ("sell", "sac"):
-        raise ValueError("Invalid command name")
-
-    base = {
-        "cmd_name": name,
-        "cmd_arguments": "",
-        "prefix": True,
-        "checks": True,
-        "id": "sell",
-    }
-    return base
-
 
 class Sell(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
-        self.sell_point = 0
-        self.sac_point = 0
+        self.sell_lastran = 0
+        self.sac_lastran = 0
+        self.startup = True
+
+    @property
+    def animal_setting(self):
+        return self.bot.settings_dict_temp.animal
 
     @property
     def sell_settings(self):
-        self.bot.settings_dict_temp.animal.sell
+        return self.animal_setting.sell
 
     @property
     def sac_settings(self):
-        self.bot.settings_dict_temp.animal.sac
+        return self.animal_setting.sac
 
-    def allocate_points(self, command: str, rarities: str):
+    """def allocate_points(self, command: str, rarities: str):
         if command not in ("sell", "sac"):
             raise ValueError("Invalid command name")
             
@@ -83,32 +69,69 @@ class Sell(BaseCog):
         if command not in ("sell", "sac"):
             raise ValueError("Invalid command name")
         cmds = ["sell", "sac"]
-        cmds.pop(command)
+        cmds.pop(command)"""
+
+    def get_cmd_argument(self, cmd):
+        arg = self.__dict__["{cmd}_settings"].rarity.get_rarities()
+        if self.startup:
+            self.startup = False
+            return arg
+        
+        arg_list = arg.split()
+        filtered_items = [
+            item for item in arg_list 
+            if (rarity := RARITY_MAP[item]) and self.bot.animal_rank_in_zoo[rarity]
+            # https://www.geeksforgeeks.org/python/walrus-operator-in-python-3-8/
+        ]
+        return " ".join(filtered_items)
+
+    def get_command(self, name: str):
+        if name not in ("sell", "sac"):
+            raise ValueError("Invalid command name")
+
+        base = {
+            "cmd_name": name,
+            "cmd_arguments": self.get_cmd_argument(name),
+            "prefix": True,
+            "checks": True,
+            "id": name,
+        }
+        return base
+
+    def get_last_ran(self):
+        return "sell" if self.sell_lastran <= self.sac_lastran else "sac"
 
 
     @tasks.loop()
     async def initiate_loop(self):
-        await self.bot.sleep(10)
-        
+        choices = ["sell", "sac"]
+        self.bot.random.shuffle(choices)
+        for cmd in choices:
+            if not self.__dict__[f"{cmd}_settings"].enabled:
+                # skip disabled ones
+                continue
+            last_ran = self.__dict__[f"{cmd}_lastran"]
+            cd = self.animal_setting.get_cd()
+            gap = time.monotonic() - last_ran
+            if last_ran == 0 or gap > cd:
+                cmd_data = self.get_command(cmd)
+                await self.bot.sleep_till([10,15])
+                await self.bot.put_queue(
+                    cmd_data
+                )
+                self.__dict__[f"{cmd}_lastran"] = time.monotonic()
 
+        await self.bot.sleep_till([10,15])
+            
 
     async def cog_load(self):
         # start loop, cog will stay awake due to the necessity to calculate value
-        pass
+        self.initiate_loop.start()
 
     async def cog_unload(self):
+        # this shouldnt get removed since its suppossed to run.
         await self.bot.remove_queue(id="sell")
-
-
-
-
-
-
-
-
-
-
-    
+        await self.bot.remove_queue(id="sac")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -147,11 +170,11 @@ class Sell(BaseCog):
                 "sacrificed" in message.content
                 and "for a total of" in message.content.lower()
             ):
-                await self.bot.remove_queue(id="sell")
+                await self.bot.remove_queue(id="sac")
 
             elif "you don't have enough animals! >:c" in message.content.lower():
-                await self.bot.remove_queue(id="sell")
-
+                # May want to improve this later..
+                await self.bot.remove_queue(id=self.get_last_ran())
 
 async def setup(bot):
     await bot.add_cog(Sell(bot))
