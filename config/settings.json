@@ -24,7 +24,7 @@
             "notifyStreakLoss": false
         },
         "pray": {
-            "enabled": false,
+            "enabled": true,
             "cooldown": [
                 310,
                 400
@@ -34,7 +34,8 @@
             "customChannel": {
                 "enabled": false,
                 "channelId": 0
-            }
+            },
+            "count": true
         },
         "curse": {
             "enabled": false,
@@ -47,7 +48,8 @@
             "customChannel": {
                 "enabled": false,
                 "channelId": 0
-            }
+            },
+            "count": false
         },
         "lottery": {
             "enabled": false,
@@ -147,8 +149,8 @@
             "rarity": {
                 "common": true,
                 "uncommon": true,
-                "rare": true,
-                "epic": true,
+                "rare": false,
+                "epic": false,
                 "special": false,
                 "mythical": false,
                 "gem": false,
@@ -165,14 +167,14 @@
                 "uncommon": true,
                 "rare": true,
                 "epic": true,
-                "mythical": true,
+                "mythical": false,
                 "legendary": false,
                 "fabled": false,
                 "hidden": false,
                 "distorted": false
             }
         },
-        "cooldown":[300,400]
+        "cooldown":[30,40]
     },
     "gamble": {
         "allottedAmount": 10000,

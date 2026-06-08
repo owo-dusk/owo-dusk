@@ -66,6 +66,8 @@ class Looper(BaseCog):
         self.startup = True
         self.counter = itertools.count()  # for tie-breaking
         self.schedule_heap = []  # heap we are going to use
+        self.pray_counter = itertools.count(start=1) 
+        self.curse_counter = itertools.count(start=1)
 
         # For making code easier to read, last_ran will be connected
         # to `heap_settings` property
@@ -197,6 +199,9 @@ class Looper(BaseCog):
             if not cnf.custom_channel.enabled
             else cnf.custom_channel.channel,
         }
+
+        if cmd["cmd_arguments"] and getattr(self, f"{cmd_name}_settings").count:
+            cmd["cmd_arguments"] += f" {next(self.__dict__[f'{cmd_name}_counter'])}"
 
         await self.bot.put_queue(cmd)
         self.startup = False

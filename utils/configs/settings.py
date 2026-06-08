@@ -337,6 +337,7 @@ class Command:
         self.ping_user = d.get("pingUser", False)
         if d.get("customChannel"):
             self.custom_channel = CustomChannel(d.get("customChannel"))
+        self.count = d.get("count", False)
 
         # level grind
         self.useQuote = d.get("useQuoteInstead", None)
@@ -360,17 +361,16 @@ class Animal:
     def __init__(self, d: dict):
         self.sell = AnimalSellSac(d.get("sell", {}))
         self.sac = AnimalSellSac(d.get("sac", {}))
-        self.dynamicCooldown = d.get("dynamicCooldown", False)
-
-class AnimalSellSac:
-    def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.weight = d.get("weight", 1)
-        self.rarity = Rarity(d.get("rarity", {}))
         self.cooldown = d.get("cooldown", None)
 
     def get_cd(self):
         return GET_CD(self.cooldown)
+
+class AnimalSellSac:
+    def __init__(self, d: dict):
+        self.enabled = d.get("enabled", False)
+        self.rarity = Rarity(d.get("rarity", {}))
+        
 
 class Rarity:
     """
@@ -383,7 +383,9 @@ class Rarity:
             "uncommon",
             "rare",
             "epic",
+            "special",
             "mythical",
+            "gem",
             "legendary",
             "fabled",
             "hidden",

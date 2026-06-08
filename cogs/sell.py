@@ -72,7 +72,7 @@ class Sell(BaseCog):
         cmds.pop(command)"""
 
     def get_cmd_argument(self, cmd):
-        arg = self.__dict__["{cmd}_settings"].rarity.get_rarities()
+        arg = getattr(self, f"{cmd}_settings").rarity.get_rarities()
         if self.startup:
             self.startup = False
             return arg
@@ -107,7 +107,7 @@ class Sell(BaseCog):
         choices = ["sell", "sac"]
         self.bot.random.shuffle(choices)
         for cmd in choices:
-            if not self.__dict__[f"{cmd}_settings"].enabled:
+            if not getattr(self, f"{cmd}_settings").enabled:
                 # skip disabled ones
                 continue
             last_ran = self.__dict__[f"{cmd}_lastran"]

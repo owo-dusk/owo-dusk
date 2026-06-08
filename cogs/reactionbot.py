@@ -11,6 +11,7 @@
 # (at your option) any later version.
 
 import asyncio
+import itertools
 import time
 
 from discord.ext import commands, tasks
@@ -24,6 +25,8 @@ class Reactionbot(BaseCog):
         self.cmd_states = {"hunt": 0, "battle": 0, "owo": 0, "pray": 0}
         self.pray_channel = None
         self.curse_channel = None
+        self.pray_counter = itertools.count(start=1) 
+        self.curse_counter = itertools.count(start=1)
 
     @property
     def settings(self):
@@ -58,32 +61,23 @@ class Reactionbot(BaseCog):
             "owo": self.bot.alias["owo"]["normal"],
         }
 
-        arg = ""
-        if id in {"pray", "curse"} and self.fetch_setings(id).user_id:
-            user_id = self.bot.random.choice(self.fetch_setings(id).user_id)
-            if self.fetch_setings(id).ping_user:
-                arg = f"<@{user_id}>"
-            else:
-                arg = str(user_id)
-
-        channelId = None
         if id in ("pray", "curse"):
+            arg = ""
             settings = self.fetch_setings(id)
+            if settings.user_id:
+                user_id = self.bot.random.choice(settings.user_id)
+                if settings.ping_user:
+                    arg = f"<@{user_id}>"
+                else:
+                    arg = str(user_id)
+                if settings.count:
+                    arg += f" {next(self.__dict__[f'{cmd_name}_counter'])}"
+                
+
+            channelId = None
             if settings.custom_channel.enabled:
                 channelId = settings.custom_channel.channel
-                """try:
-                    if (
-                        not self.__dict__[f"{id}_channel"]
-                        or self.__dict__[f"{id}_channel"].id != channelId
-                    ):
-                        self.__dict__[f"{id}_channel"] = await self.bot.fetch_channel(
-                            channelId
-                        )
-                except Exception as e:
-                    await self.bot.log(
-                        f"Error - Failed to fetch channel with id {channelId}: {e}",
-                        "#c25560",
-                    )"""
+            
 
         base = {
             "cmd_name": cmd_name.get(id, id),

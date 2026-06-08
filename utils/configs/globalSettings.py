@@ -87,6 +87,7 @@ class TextCommands:
         self.restartCommand = d.get(
             "commandToRestartAfterCaptcha", "restart_captcha"
         )  # Changed
+        self.switchChannelCommand = d.get("CommandToSwitchChannel", "switch_channel")
         self.sleepCommand = d.get("commandToSleep", "sleep")
         self.defaultSleepDuration = d.get("defaultSleepDuration", 600)
         self.allowedUsers = d.get("allowedUsers", [])
