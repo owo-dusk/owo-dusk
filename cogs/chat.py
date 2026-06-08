@@ -55,6 +55,7 @@ class Chat(BaseCog):
         start_cmd = f"{self.settings.prefix}{self.settings.startCommand}"
         sleep_cmd = f"{self.settings.prefix}{self.settings.sleepCommand}"
         restart_cmd = f"{self.settings.prefix}{self.settings.restartCommand}"
+        switchchannel_cmd = f"{self.settings.prefix}{self.settings.switchChannelCommand}"
         
         if (
             message.author.id
@@ -62,18 +63,18 @@ class Chat(BaseCog):
         ):
             content = message.content.lower()
 
-            if stop_cmd in content:
+            if content.startswith(stop_cmd):
                 await self.bot.log(
                     "stopping owo-dusk.. Please be warned that this sometimes doesn't work as expected. Please don't rely on it much.",
                     "#87875f",
                 )
                 self.bot.command_handler_status["sleep"] = True
 
-            elif start_cmd in content:
+            elif content.startswith(start_cmd):
                 await self.bot.log("starting owo-dusk..", "#87875f")
                 self.bot.command_handler_status["sleep"] = False
 
-            elif sleep_cmd in content:
+            elif content.startswith(sleep_cmd):
                 after = content.split(sleep_cmd, 1)[1].strip()  # get text after command
                 seconds = self.parse_seconds(after)
 
@@ -93,12 +94,15 @@ class Chat(BaseCog):
                 self.bot.command_handler_status["sleep"] = True
                 self.timed_task = asyncio.create_task(self.timed_reverse(seconds))
 
-        if restart_cmd in message.content.lower():
-            await self.bot.log(
-                "Restarting owo-dusk after captcha..",
-                "#87875f",
-            )
-            self.bot.command_handler_status["captcha"] = False
+        if message.author.id == self.bot.user.id:
+            if message.content.lower().startswith(restart_cmd):
+                await self.bot.log(
+                    "Restarting owo-dusk after captcha..",
+                    "#87875f",
+                )
+                self.bot.command_handler_status["captcha"] = False
+            
+                
 
 async def setup(bot):
     await bot.add_cog(Chat(bot))
