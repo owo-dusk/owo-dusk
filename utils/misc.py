@@ -44,3 +44,9 @@ def generate_nonce():
     a = now - 1420070400000
     r = a << 22
     return str(r)
+
+
+def check_list_index(idx: int, item: list):
+    if 0 <= idx < len(item):
+        return True, item[idx]
+    return False, None

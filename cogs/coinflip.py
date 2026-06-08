@@ -109,11 +109,11 @@ class Coinflip(BaseCog):
                 if not self.gamble_flags["no_balance"]:
                     self.gamble_flags["no_balance"] = True
                     await self.bot.log(
-                        f"Amount to gamle next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping coinflip!",
+                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping coinflip!",
                         "#4a270c",
                     )
                     notify(
-                        f"Amount to gamle next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping coinflip!",
+                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping coinflip!",
                         "Coinflip - Insufficient balance",
                     )
 
@@ -147,11 +147,11 @@ class Coinflip(BaseCog):
 
             if amount_to_gamble > 250000:
                 await self.bot.log(
-                    f"Value to gamble ({amount_to_gamble}) exceeded 250k threshhold, stopping coinflip!",
+                    f"Value to gamble ({amount_to_gamble}) exceeded 250k threshold, stopping coinflip!",
                     "#4a270c",
                 )
                 notify(
-                    f"Value to gamble ({amount_to_gamble}) exceeded 250k threshhold, stopping coinflip!",
+                    f"Value to gamble ({amount_to_gamble}) exceeded 250k threshold, stopping coinflip!",
                     "Coinflip - Exceeded 250k limit",
                 )
                 self.exceeded_max_amount = True

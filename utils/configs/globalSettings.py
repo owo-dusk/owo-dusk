@@ -20,7 +20,7 @@ Task :
 Consider actually erroring instead of defaulting to values for non-cooldown parts
 Also confirm all settings are updating.
 
-also esure types aren't none, and values actually exist
+also ensure types aren't none, and values actually exist
 """
 
 from utils.configs import validators
@@ -73,7 +73,7 @@ class Account:
         self.commandsHandlerStart = d.get("commandsHandlerStartDelay", [])  # Changed
 
         # Ensures all cooldowns are valid:
-        # May want to conside namings in gloabl_setings.json file.
+        # May want to consider namings in global_settings.json file.
         validators.validateCooldown(self.startupDelay)
         validators.validateCooldown(self.commandsStart)
         validators.validateCooldown(self.commandsHandlerStart)
@@ -193,7 +193,7 @@ class ToastOrPopup:
         self.enabled = d.get("enabled", False)
         self.captchaContent = d.get("captchaContent", "captcha content missing")
         self.bannedContent = d.get("bannedContent", "banned content missing")
-        # Termux customisation
+        # Termux customization
         self.termuxToast = TermuxToast(d.get("termuxToast", {}))
 
 

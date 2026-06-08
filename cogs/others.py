@@ -43,7 +43,7 @@ def get_emoji_names(text, emoji_dict=emoji_dict):
     return emoji_names
 
 
-def valid_event_checket(content: str) -> bool:
+def valid_event_checker(content: str) -> bool:
     months = [
         "jan",
         "feb",
@@ -236,7 +236,7 @@ class Others(BaseCog):
         for component in message.components:
             if component.component_name == "text_display":
                 content = component.content.lower()
-                if not valid_event_checket(content):
+                if not valid_event_checker(content):
                     return
                 # First Update status
                 if not self.bot.ongoing_owobot_event:

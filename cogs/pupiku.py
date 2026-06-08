@@ -29,7 +29,7 @@ class Pupiku(BaseCog):
         }
 
     def get_cmd(self, cmd_name: str):
-        # NOTE: Here we are using seperate id's
+        # NOTE: Here we are using separate id's
         base = {
             "cmd_name": cmd_name,
             "prefix": True,
@@ -98,7 +98,7 @@ class Pupiku(BaseCog):
                 await self.bot.sleep_till([1, 3])
                 await self.bot.put_queue(self.get_cmd(cmds[0]))
                 # Incase of failure during initial start
-                # once one command is successful, this isnt an issue.
+                # once one command is successful, this isn't an issue.
                 await self.bot.sleep(60)
         else:
             await self.bot.remove_queue(id=cmd)

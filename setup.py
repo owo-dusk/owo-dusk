@@ -358,7 +358,7 @@ try:
         except ValueError:
             print(f"{COLORS.BOLD_RED}[x]please enter valid integer!{COLORS.RESET}")
         except Exception as e:
-            print(f"{COLORS.BOLD_RED}[x]An error occured:-\n {e}{COLORS.RESET}")
+            print(f"{COLORS.BOLD_RED}[x]An error occurred:-\n {e}{COLORS.RESET}")
 
     collected_tokens = asyncio.run(collect_tokens(token_count))
 
@@ -400,6 +400,6 @@ except Exception as e:
 
 print()
 print(
-    f"{COLORS.BOLD_MAGENTA}EchoQuill - Thank you for using owo-dusk, I hope you have a great day ahead!\nif there is any error then letme know through https://discord.gg/pyvKUh5mMU{COLORS.RESET}"
+    f"{COLORS.BOLD_MAGENTA}EchoQuill - Thank you for using owo-dusk, I hope you have a great day ahead!\nif there is any error then let me know through https://discord.gg/pyvKUh5mMU{COLORS.RESET}"
 )
 sys.exit(0)

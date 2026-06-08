@@ -68,7 +68,7 @@ class ChannelSwitcher(BaseCog):
         available_channels = item.channels if item else []
         available_channels = available_channels + self.settings.allUsers
         valid_channels = [cid for cid in available_channels if cid != self.cur_channel]
-        # Converts to set (no repitations)
+        # Converts to set (no repetition)
         valid_channels = list(set(valid_channels))
 
         # Temporary

@@ -8,7 +8,7 @@ def current_timestamp():
 def is_month_over(recorded_at: datetime) -> bool:
     now = datetime.now(timezone.utc)
 
-    # Tuple comparision is soo cool!
+    # Tuple comparison is soo cool!
     return (now.year, now.month) > (recorded_at.year, recorded_at.month)
 
 

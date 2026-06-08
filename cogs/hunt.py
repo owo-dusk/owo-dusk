@@ -188,7 +188,7 @@ class Hunt(BaseCog):
                 )
 
                 sell_value = get_emoji_values(msg_line)
-                # Wait why are reducing 5 again when we are already reducing that from sell val? checkk
+                # Wait why are reducing 5 again when we are already reducing that from sell val? check
                 self.bot.update_cash(sell_value - 5, assumed=True)
                 self.bot.update_cash(5, reduce=True)
 

@@ -125,11 +125,11 @@ class Blackjack(BaseCog):
             if not self.gamble_flags["no_balance"]:
                 self.gamble_flags["no_balance"] = True
                 await self.bot.log(
-                    f"Amount to gamle next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping blackjack!",
+                    f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping blackjack!",
                     "#4a270c",
                 )
                 notify(
-                    f"Amount to gamle next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping blackjack!",
+                    f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping blackjack!",
                     "blackjack - Insufficient balance",
                 )
 
@@ -162,11 +162,11 @@ class Blackjack(BaseCog):
 
         if amount_to_gamble > 250000:
             await self.bot.log(
-                f"Value to gamble ({amount_to_gamble}) exceeded 250k threshhold, stopping blackjack!",
+                f"Value to gamble ({amount_to_gamble}) exceeded 250k threshold, stopping blackjack!",
                 "#4a270c",
             )
             notify(
-                f"Value to gamble ({amount_to_gamble}) exceeded 250k threshhold, stopping blackjack!",
+                f"Value to gamble ({amount_to_gamble}) exceeded 250k threshold, stopping blackjack!",
                 "blackjack - Exceeded 250k limit",
             )
             self.exceeded_max_amount = True

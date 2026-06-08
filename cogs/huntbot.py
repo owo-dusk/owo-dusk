@@ -162,7 +162,7 @@ class Huntbot(BaseCog):
             elif "Here is your password!" in message.content:
                 ans = await solveHbCaptcha(message.attachments[0].url, self.bot.session)
                 await self.bot.log(
-                    "huntbot receieved password, attempting to solve!", "#afaf87"
+                    "huntbot received password, attempting to solve!", "#afaf87"
                 )
                 await self.send_ah(
                     timeToSleep=self.bot.settings_dict_temp.cooldowns.briefCooldown,

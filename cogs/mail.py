@@ -16,7 +16,7 @@ from cogs._BASE import BaseCog
 
 """
 TASK: recheck set_stat
-imporve logging in here.
+improve logging in here.
 """
 
 
@@ -207,7 +207,7 @@ class Mail(BaseCog):
                             )
                             return
 
-                    # If neither we reset states. This isnt suppossed to trigger.
+                    # If neither we reset states. This isn't supposed to trigger.
                     # Task: Log error here.
                     await self.bot.set_stat(True)
                     self.message_id = 0

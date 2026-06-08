@@ -39,12 +39,12 @@ class Reactionbot(BaseCog):
     def pray_curse_channels(self):
         channels = []
         for cmd in ["pray", "curse"]:
-            cnf = self.fetch_setings(cmd)
+            cnf = self.fetch_settings(cmd)
             if cnf:
                 channels.append(cnf.custom_channel if cnf.enabled else self.bot.cm.id)
         return channels
 
-    def fetch_setings(self, cmd):
+    def fetch_settings(self, cmd):
         return getattr(self.bot.settings_dict_temp.commands, cmd)
 
     def fetch_cmd(self, id):
@@ -63,7 +63,7 @@ class Reactionbot(BaseCog):
 
         if id in ("pray", "curse"):
             arg = ""
-            settings = self.fetch_setings(id)
+            settings = self.fetch_settings(id)
             if settings.user_id:
                 user_id = self.bot.random.choice(settings.user_id)
                 if settings.ping_user:

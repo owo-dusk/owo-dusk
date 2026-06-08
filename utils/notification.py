@@ -9,7 +9,7 @@ with open("config/misc.json", "r", encoding="utf-8") as config_file:
 
 def notify(content, title):
     if misc_dict["hostMode"]:
-        # Notification isn't suppported in hosts and will trigger crash if unhandled
+        # Notification isn't supported in hosts and will trigger crash if unhandled
         return
 
     on_mobile = is_termux()

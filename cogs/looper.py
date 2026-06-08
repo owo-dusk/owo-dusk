@@ -103,7 +103,7 @@ class Looper(BaseCog):
         # temporary, look if something like to_dict exists for objects
         if cmd == "pray":
             return self.pray_settings
-        else:  # Please don't accidently misspell lol
+        else:  # Please don't accidentally misspell lol
             return self.curse_settings
 
     @property
@@ -206,7 +206,7 @@ class Looper(BaseCog):
             "cmd_arguments": pray_cmd_argument(cnf.user_id, cnf.ping_user),
             "prefix": True,
             "checks": False,
-            "id": "pray",  # pray will be utilised as id for curse aswell
+            "id": "pray",  # pray will be utilised as id for curse as well
             "channel": None
             if not cnf.custom_channel.enabled
             else cnf.custom_channel.channel,
@@ -241,7 +241,7 @@ class Looper(BaseCog):
         self.try_append_all()
 
         if not self.schedule_heap:
-            # weird why the code wouldnt stop
+            # weird why the code would'nt stop
             await asyncio.sleep(1)
             return
 

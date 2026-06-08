@@ -48,7 +48,7 @@ class Boss(BaseCog):
         last_reset_ts, self.boss_tickets = await self.bot.db.fetch_boss_stats()
 
         if self.boss_tickets > 3 or self.boss_tickets < 0:
-            # Termporary fix reverting issues with bad logic in prev version.
+            # Temporary fix reverting issues with bad logic in prev version.
             self.bot.db.reset_boss_ticket()
             self.boss_tickets = 3
 

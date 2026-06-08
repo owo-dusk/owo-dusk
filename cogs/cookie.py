@@ -54,8 +54,6 @@ class Cookie(BaseCog):
     def settings(self):
         return self.bot.settings_dict_temp.commands.cookie
 
-    """change to conver times"""
-
     async def start_cookie(self):
         if str(self.bot.user.id) in accounts_dict:
             last_cookie_time = accounts_dict[str(self.bot.user.id)].get("cookie", 0)

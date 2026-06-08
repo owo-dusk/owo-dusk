@@ -13,27 +13,27 @@
 
 """
 The approach here is simple (if we count out the coding part).
-We are using greedy approach here, invest in the trait with possiblity to level up the highest,
+We are using greedy approach here, invest in the trait with possibility to level up the highest,
 counting out the best solution to invest in duration, cost etc first...
 but hey this also works fine, users can disable the trait they dont want to invest in
-to prevent the code from investing essense in those.
+to prevent the code from investing essence in those.
 
-If in-case essense we have is not enough to level up any traits to next level,
-then it will focus on priorities that I have set instead.
+If in-case essence we have is not enough to level up any traits to next level,
+then it will focus on weights that I have set instead.
 
 Whatever this is:
 https://www.geeksforgeeks.org/introduction-to-greedy-algorithm-data-structures-and-algorithm-tutorials/
 """
 
 
-def allocate_essence(input_data, prio_obj):
+def allocate_essence(input_data, weight_obj):
     """
     inc:  The base multiplier for the level cost calculation.
     pow:  The exponent applied to (level+1) to compute cost.
     base: The starting value for the stat.
     upg:  The change in the stat per level (can be negative for improvements like cost reduction).
     max:  The maximum level the trait can reach.
-    prio: The priority (set by me) according to what I believe needs to be upgraded first!
+    weight: The weight (set by me) according to what I believe needs to be upgraded first!
     """
     traits = {
         "efficiency": {
@@ -42,7 +42,7 @@ def allocate_essence(input_data, prio_obj):
             "base": 25,
             "upg": 1,
             "max": 215,
-            "prio": 4,
+            "weight": 4,
         },
         "duration": {
             "inc": 10,
@@ -50,26 +50,26 @@ def allocate_essence(input_data, prio_obj):
             "base": 0.5,
             "upg": 0.1,
             "max": 235,
-            "prio": 2,
+            "weight": 2,
         },
-        "cost": {"inc": 1000, "pow": 3.4, "base": 10, "upg": -1, "max": 5, "prio": 5},
-        "gain": {"inc": 10, "pow": 1.8, "base": 0, "upg": 25, "max": 200, "prio": 4},
-        "exp": {"inc": 10, "pow": 1.8, "base": 0, "upg": 35, "max": 200, "prio": 3},
+        "cost": {"inc": 1000, "pow": 3.4, "base": 10, "upg": -1, "max": 5, "weight": 5},
+        "gain": {"inc": 10, "pow": 1.8, "base": 0, "upg": 25, "max": 200, "weight": 4},
+        "exp": {"inc": 10, "pow": 1.8, "base": 0, "upg": 35, "max": 200, "weight": 3},
         "radar": {
             "inc": 50,
             "pow": 2.5,
             "base": 0,
             "upg": 0.00000004,
             "max": 999,
-            "prio": 1,
+            "weight": 1,
         },
     }
 
     for trait in traits.keys():
-        prio = getattr(prio_obj, trait, 0)
-        traits[trait]["prio"] = prio
+        weight = getattr(weight_obj, trait, 0)
+        traits[trait]["weight"] = weight
 
-    """Total essense"""
+    """Total essence"""
     available_essence = input_data.get("essence", 0)
 
     """Fetch enabled traits"""
@@ -90,7 +90,7 @@ def allocate_essence(input_data, prio_obj):
         t: enabled_traits[t].get("current_level", 0) for t in enabled_traits
     }
 
-    """Contains a dict of currently invested essense for each trait"""
+    """Contains a dict of currently invested essence for each trait"""
     current_invested = {t: enabled_traits[t].get("invested", 0) for t in enabled_traits}
 
     """Essence from total available essence, which has yet to be distributed."""
@@ -128,8 +128,8 @@ def allocate_essence(input_data, prio_obj):
                 current_invested[t] = 0
                 continue
 
-            """Get priority for the trait"""
-            benefit = trait_data["prio"]
+            """Get weight for the trait"""
+            benefit = trait_data["weight"]
             ratio = benefit / required if required > 0 else 0
 
             if required <= remaining and ratio > best_ratio:
@@ -167,7 +167,7 @@ def allocate_essence(input_data, prio_obj):
                 if required <= 0:
                     continue
 
-                benefit = trait_data["prio"]
+                benefit = trait_data["weight"]
                 ratio = benefit / required if required > 0 else 0
 
                 # Select the trait with best ratio.

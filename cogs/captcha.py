@@ -100,7 +100,7 @@ class Captcha(BaseCog):
         self.yescaptcha_in_progress = False
         self.captcha_site_opened = False
 
-    def fetch_setings(self, cmd):
+    def fetch_settings(self, cmd):
         return getattr(self.bot.settings_dict_temp.commands, cmd)
 
     @property
@@ -337,7 +337,7 @@ class Captcha(BaseCog):
         channels = [self.bot.dm.id, self.bot.cm.id, self.bot.boss_channel_id]
 
         for cmd in ("pray", "curse"):
-            cnf = self.fetch_setings(cmd).custom_channel
+            cnf = self.fetch_settings(cmd).custom_channel
             if cnf.enabled:
                 channels.append(cnf.channel)
 

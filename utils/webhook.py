@@ -42,7 +42,7 @@ class webhookSender:
                 headers={"Content-Type": "application/json"},
             ) as resp:
                 _ = await resp.text()
-                # Task 3: handle webhook ratelimits
+                # Task 3: handle webhook rate limits
 
     async def worker(self):
         async with aiohttp.ClientSession() as session:

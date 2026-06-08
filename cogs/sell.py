@@ -19,7 +19,7 @@ from cogs._BASE import BaseCog
 """
 TASK:
 improve cooldown system (somehow) to make both same.
-perhaps make a new category `animals` as we are already handling command being put seperately...?
+perhaps make a new category `animals` as we are already handling command being put separately...?
 """
 
 
@@ -126,7 +126,7 @@ class Sell(BaseCog):
         self.initiate_loop.start()
 
     async def cog_unload(self):
-        # this shouldnt get removed since its suppossed to run.
+        # this shouldn't get removed since its supposed to run.
         await self.bot.remove_queue(id="sell")
         await self.bot.remove_queue(id="sac")
 

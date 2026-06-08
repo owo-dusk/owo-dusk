@@ -30,7 +30,7 @@ class Commands(BaseCog):
         self.last_msg = 0
 
     @property
-    def command_hander_settings(self):
+    def command_handler_settings(self):
         return self.bot.settings_dict_temp.cooldowns.commandHandler
 
     def sleep_required(self):
@@ -77,7 +77,7 @@ class Commands(BaseCog):
     @tasks.loop()
     async def send_commands(self):
         try:
-            cnf = self.command_hander_settings
+            cnf = self.command_handler_settings
             priority, _, cmd = await self.bot.queue.get()
             cmd_id = cmd.get("id")
             custom_channel_id = cmd.get("channel")
@@ -147,7 +147,7 @@ class Commands(BaseCog):
     @tasks.loop(seconds=1)
     async def monitor_checks(self):
         try:
-            delay = self.command_hander_settings.readdingToQueue
+            delay = self.command_handler_settings.readdingToQueue
             current_time = datetime.now(timezone.utc)
             if (
                 not self.bot.command_handler_status["state"]

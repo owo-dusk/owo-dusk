@@ -237,7 +237,7 @@ def fetch_weekly_runtime():
 
 
 def web_start(port, shouldHost, ver, paswd):
-    # Set global varavibles with respective values
+    # Set global variables with respective values
     global password, version
     password = paswd
     version = ver

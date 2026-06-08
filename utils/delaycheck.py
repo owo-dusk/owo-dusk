@@ -39,7 +39,7 @@ def get_shard_id(server_id, total_shards):
     e = int(server_id)
     """
     bin() returns binary of an int, 
-    first two charactrer is removed since it starts with prefix '0b'
+    first two character is removed since it starts with prefix '0b'
     """
     binary_str = bin(e)[2:]
     if len(binary_str) > 22:

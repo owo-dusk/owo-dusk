@@ -134,9 +134,6 @@ database_version = "2.5.0"
 
 """FLASK APP"""
 
-# Remved
-
-
 def printBox(text, color, title=None):
     test_panel = Panel(text, style=color, title=title)
     if not misc_dict["console"]["compactMode"]:
@@ -289,7 +286,7 @@ def popup_main_loop():
         button = tk.Button(popup, text="OK", command=popup.destroy)
         button.pack(pady=10)
 
-        # Directly calling these fuctions may cause issues
+        # Directly calling these functions may cause issues
         # popup.after helps ensure that doesn't happen
         popup.after(0, popup.lift)
         popup.after(0, popup.focus_force)
@@ -304,7 +301,7 @@ def popup_main_loop():
 class MessageDispatcher:
     """
     This is used like a middle man between on_socket_raw_receive and
-    reciever functions
+    receiver functions
     """
 
     def __init__(self):
@@ -916,7 +913,7 @@ class MyClient(commands.Bot):
             # left off here!
 
         """
-        TASK: remove repition here
+        TASK: remove repetition here
         """
         await self.wait_until_ready()
         if not self.command_handler_status["captcha"] or bypass:
@@ -985,7 +982,7 @@ class MyClient(commands.Bot):
         )  # gets 00:00 of the day
         time_until_12am_pst = (
             midnight_pst + timedelta(days=1) - current_time_pst
-        )  # adds a day to the midnight to get time till next midnight, then subract it with current time
+        )  # adds a day to the midnight to get time till next midnight, then subtract it with current time
         total_seconds = time_until_12am_pst.total_seconds()  # turn that time to seconds
         # 12am = 00:00, I might need this the next time I take a look here.
         return total_seconds
@@ -1444,7 +1441,7 @@ if __name__ == "__main__":
     ]
     token_len = len(tokens_and_channels)
 
-    printBox(f"-Recieved {token_len} tokens.".center(console_width - 2), "bold magenta")
+    printBox(f"-Received {token_len} tokens.".center(console_width - 2), "bold magenta")
 
     # Create database or modify if required
     create_database()
