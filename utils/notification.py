@@ -23,4 +23,4 @@ def notify(content, title):
     else:
         from plyer import notification
 
-        notification.notify(title=title, message=content, app_icon=None, timeout=15)
+        notification.notify(title=str(title), message=str(content), app_icon="", timeout=15)
