@@ -149,6 +149,7 @@ class Gems:
         self.tiers = d.get("tiers", {})
         self.gemsToUse = d.get("gemsToUse", {})
         self.disableHuntIfNoGems = d.get("disableHuntIfNoGems", False)
+        self.dynamicSpecialGem = d.get("dynamicSpecialGemUsage", False)
         self.useLowest = d.get("order", {}).get("lowestToHighest", False)
 
 

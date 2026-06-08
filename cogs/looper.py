@@ -170,7 +170,6 @@ class Looper(BaseCog):
             await self.bot.wait_for(
                 "message", check=lambda m: self.check(m, content, channel_id), timeout=30.0
             )
-            print(f"recieved msg for {content}")
         except asyncio.TimeoutError:
             print("this is bad, check failed miserably!")
 
@@ -236,10 +235,8 @@ class Looper(BaseCog):
             # Iam curious how .sleep handles negatives 0o
             await asyncio.sleep(sleep_for)
         heapq.heappop(self.schedule_heap)
-        print(f"sending {settings['id']}")
         await settings["send"]()
         self.append_heap(settings["id"])
-        print(self.schedule_heap)
 
     """gets executed when the cog is first loaded"""
 

@@ -22,7 +22,7 @@ from discord import DMChannel
 
 from utils.misc import is_termux, run_system_command
 from utils.notification import notify
-from utils.others import validate_snowflake
+from utils.timestamp import validate_snowflake
 from cogs._BASE import BaseCog
 
 

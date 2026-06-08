@@ -23,40 +23,6 @@
             "showStreakInConsole": false,
             "notifyStreakLoss": false
         },
-        "sell": {
-            "enabled": false,
-            "cooldown": [
-                410,
-                500
-            ],
-            "rarity": {
-                "common": true,
-                "uncommon": true,
-                "rare": true,
-                "epic": true,
-                "mythical": true,
-                "legendary": false,
-                "fabled": false,
-                "distorted": false
-            }
-        },
-        "sac": {
-            "enabled": false,
-            "cooldown": [
-                410,
-                500
-            ],
-            "rarity": {
-                "common": true,
-                "uncommon": true,
-                "rare": true,
-                "epic": true,
-                "mythical": true,
-                "legendary": false,
-                "fabled": false,
-                "distorted": false
-            }
-        },
         "pray": {
             "enabled": false,
             "cooldown": [
@@ -71,7 +37,7 @@
             }
         },
         "curse": {
-            "enabled": true,
+            "enabled": false,
             "cooldown": [
                 310,
                 400
@@ -127,7 +93,7 @@
             ]
         },
         "autoHuntBot": {
-            "enabled": true,
+            "enabled": false,
             "cashToSpend": 10000,
             "upgrader": {
                 "enabled": true,
@@ -175,6 +141,47 @@
             ]
         }
     },
+    "animal": {
+        "sell": {
+            "enabled": true,
+            "weight": 1,
+            "rarity": {
+                "common": true,
+                "uncommon": true,
+                "rare": true,
+                "epic": true,
+                "mythical": true,
+                "legendary": false,
+                "fabled": false,
+                "hidden": false,
+                "distorted": false
+            },
+            "cooldown": [
+                300,
+                400
+            ]
+        },
+        "sac": {
+            "enabled": true,
+            "weight": 1,
+            "rarity": {
+                "common": true,
+                "uncommon": true,
+                "rare": true,
+                "epic": true,
+                "mythical": true,
+                "legendary": false,
+                "fabled": false,
+                "hidden": false,
+                "distorted": false
+            },
+            "cooldown": [
+                300,
+                400
+            ]
+        },
+        "dynamicCooldown": false
+    },
     "gamble": {
         "allottedAmount": 10000,
         "goalSystem": {
@@ -214,7 +221,7 @@
         }
     },
     "bossBattle": {
-        "enabled": true,
+        "enabled": false,
         "joinChancePercent": 80,
         "joinAllGuilds": true,
         "guildJoinRules": {
@@ -317,8 +324,9 @@
                 "huntGem": true,
                 "empoweredGem": true,
                 "luckyGem": true,
-                "specialGem": false
+                "specialGem": true
             },
+            "dynamicSpecialGemUsage": true,
             "disableHuntIfNoGems": false
         },
         "autoLootbox": true,

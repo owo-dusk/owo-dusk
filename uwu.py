@@ -46,7 +46,7 @@ from queue import Queue
 import components_v2
 import database
 import utils.configs as config_models
-import utils.others as utils
+import utils.timestamp as utils
 from utils.misspell import misspell_word
 from utils.notification import notify
 from utils.webhook import webhookSender
@@ -114,9 +114,6 @@ with open("config/webhookContent.json", "r", encoding="utf-8") as config_file:
 with open("config/captcha.toml", "rb") as f:
     captcha_settings_dict = tomllib.load(f)
 
-
-"""with open("config/settings.json", "r") as config_file:
-    settings_dict = json.load(config_file)"""
 
 
 console.rule("[bold blue1]:>", style="navy_blue")
@@ -345,7 +342,6 @@ class MyClient(commands.Bot):
         self.session = None
         self.state_event = asyncio.Event()
         self.queue = asyncio.PriorityQueue()
-        self.settings_dict = None
         self.message_dispatcher = MessageDispatcher()
         self.settings_dict_temp = None
         self.global_settings_dict = global_settings_dict
@@ -396,6 +392,8 @@ class MyClient(commands.Bot):
             "sleep": False,
             "hold_handler": False,
         }
+
+        self.ongoing_owobot_event = False
 
         with open("config/misc.json", "r", encoding="utf-8") as config_file:
             self.misc = json.load(config_file)
@@ -536,9 +534,8 @@ class MyClient(commands.Bot):
             )
 
             with open(config_path, "r", encoding="utf-8") as config_file:
-                self.settings_dict = json.load(config_file)
                 self.settings_dict_temp = config_models.configs.FetchSettings(
-                    self.settings_dict
+                    json.load(config_file)
                 )
 
             await self.start_cogs()
@@ -603,8 +600,9 @@ class MyClient(commands.Bot):
             "lottery": commands_obj.lottery.enabled,
             "mail": self.settings_dict_temp.mail,
             "others": True,
+            "pupiku": commands_obj.pup.enabled or commands_obj.piku.enabled,
             "reactionbot": reactionbot,
-            "sell": commands_obj.sell.enabled or commands_obj.sac.enabled,
+            #"sell": commands_obj.sell.enabled or commands_obj.sac.enabled,
             "shop": commands_obj.shop.enabled,
             "slots": gamble_obj.slots.enabled,
         }
@@ -1289,16 +1287,8 @@ def create_database(db_path="utils/data/db.sqlite"):
     # Switch to WAL mode.
     c.execute("PRAGMA journal_mode=WAL;")
 
-    """# NOTE: Remove this once proper migration for database is in place:
-    try:
-        c.execute("ALTER TABLE user_stats ADD COLUMN pup INTEGER")
-        c.execute("ALTER TABLE user_stats ADD COLUMN piku INTEGER")
-        c.execute("ALTER TABLE user_stats ADD COLUMN army INTEGER")
-    except Exception:
-        pass"""
 
     # Populate
-
     # -- gamble_winrate
     for hr in range(24):
         # hour does not have 24 in 24 hr format!!
@@ -1322,6 +1312,13 @@ def create_database(db_path="utils/data/db.sqlite"):
         "INSERT OR IGNORE INTO meta_data (key, value) VALUES (?, ?)",
         ("version", version),
     )
+
+    c.execute(
+        "INSERT OR IGNORE INTO meta_data (key, value) VALUES (?, ?)",
+        ("event_till_timestamp", 0),
+    )
+
+
 
     # -- command priority
     c.execute("SELECT * FROM command_priority WHERE user_id = ?", ("default",))

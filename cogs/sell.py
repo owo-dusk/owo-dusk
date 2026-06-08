@@ -88,8 +88,9 @@ class Sell(BaseCog):
 
     @tasks.loop()
     async def initiate_loop(self):
-        
         await self.bot.sleep(10)
+        
+
 
     async def cog_load(self):
         # start loop, cog will stay awake due to the necessity to calculate value
@@ -125,7 +126,7 @@ class Sell(BaseCog):
             ):
                 await self.bot.remove_queue(id="sell")
 
-                if self.bot.settings_dict["cashCheck"]:
+                if self.bot.settings_dict_temp.cashCheck:
                     try:
                         self.bot.update_cash(
                             int(

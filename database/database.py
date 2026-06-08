@@ -10,12 +10,15 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import utils.others as utils
+import utils.timestamp as utils
 from . import worker
 
 # Thankfully Database class won't be touching this, would have been a mess otherwise!
 database_handler = worker.databaseWorker()
 
+
+# NOTE: Just a note for myself, keep in mind that updation which is in relation to time takes place through update_stats_db
+# also we need to move daily, lottery and cookie to DB before properly rewriting this mess
 
 class Database:
     def __init__(self, bot):
@@ -95,12 +98,12 @@ class Database:
 
     def populate_stats_db(self):
         database_handler.update_database(
-            "INSERT OR IGNORE INTO user_stats (user_id, daily, lottery, cookie, giveaways, captchas, cowoncy, boss, boss_ticket) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (self.bot.user.id, 0, 0, 0, 0, 0, 0, 0, 3),
+            "INSERT OR IGNORE INTO user_stats (user_id, daily, lottery, cookie, giveaways, captchas, cowoncy, boss, boss_ticket, pup, piku, army) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (self.bot.user.id, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0),
         )
 
     def update_stats_db(self, column_name, value):
-        if column_name not in {"daily", "lottery", "cookie", "giveaways", "boss"}:
+        if column_name not in {"daily", "lottery", "cookie", "giveaways", "boss", "pup", "piku", "army"}:
             # Captcha and cowoncy handled seperately
             raise ValueError("Invalid column name.")
 
@@ -246,3 +249,47 @@ class Database:
         database_handler.update_database(
             f"UPDATE gamble_winrate SET {item} = {item} + 1 WHERE hour = ?", (hr,)
         )
+
+    async def fetch_cmd_lastran_time(self, cmd):
+        # For Pupiku and Army.
+        if cmd not in {"pup", "piku", "army"}:
+            raise ValueError("Invalid column name.")
+        
+        results = await database_handler.get_from_db(
+            f"SELECT {cmd} FROM user_stats WHERE user_id = ?",
+            (self.bot.user.id,),
+        )
+
+        if results:
+            return results[0][cmd]
+        print(
+            f"seems like user_stats have not been properly initialised -> {self.bot.user.name}"
+        )
+        return 0
+
+    def update_cmd_lastran_time(self, cmd):
+        # For Pupiku and Army.
+        if cmd not in {"pup", "piku", "army"}:
+            raise ValueError("Invalid column name.")
+
+        database_handler.update_database(
+            f"UPDATE user_stats SET {cmd} = ? WHERE user_id = ?",
+            (self.bot.time_in_seconds(), self.bot.user.id),
+        )
+
+    def update_event_timestamp(self, timestamp):
+        # event_till_timestamp
+        database_handler.update_database(
+            "UPDATE meta_data SET value = ? WHERE key = ?",
+            (timestamp, "event_till_timestamp"),
+        )
+
+    async def get_event_timestamp(self):
+        rows = await database_handler.get_from_db(
+            "SELECT value FROM meta_data WHERE key = ?",
+            ("event_till_timestamp",),
+        )
+        return rows[0]["value"]
+
+    
+

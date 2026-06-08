@@ -17,7 +17,7 @@ import sys
 import json
 from flask import Flask, jsonify, render_template, request
 
-from utils.others import get_weekday
+from utils.timestamp import get_weekday
 
 app = Flask(__name__)
 website_logs = []

@@ -15,8 +15,11 @@ import json
 import re
 
 from discord.ext import commands
+from utils.misc import check_list_index
+from utils.timestamp import discord_timestamp_to_datetime, calc_time_till_event, calc_time_till_timestamp
 from cogs._BASE import BaseCog
 
+EVENT_REGEX = r"\*\*\|\*\* `\[\d+\/10"
 
 try:
     with open("utils/emojis.json", "r", encoding="utf-8") as file:
@@ -34,6 +37,28 @@ def get_emoji_names(text, emoji_dict=emoji_dict):
     emojis = pattern.findall(text)
     emoji_names = [emoji_dict[char]["name"] for char in emojis if char in emoji_dict]
     return emoji_names
+
+def valid_event_checket(content: str) -> bool:
+    months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+    if not any(month in content for month in months):
+        # Month not in message, even message will always have one
+        return False
+
+    if "event" not in content:
+        # Event message should contain `event` right!
+        return False
+
+    # These are flags to increase accuracy but word-work could be changed in future
+    # so iam fine with even one of them being in there
+
+    celebration_flag = "celebration" in content
+    rewards_flag = "possible rewards" in content
+    catch_rates_flag = "catch rates" in content
+
+    if celebration_flag or rewards_flag or catch_rates_flag:
+        return True
+
+    return False
 
 
 class Others(BaseCog):
@@ -55,6 +80,8 @@ class Others(BaseCog):
             "slash_cmd_name": "crate",
             "id": "crate",
         }
+        self.event_date_detected = False
+        self.bot.message_dispatcher.register(self.on_component_message)
 
     @property
     def auto_use(self):
@@ -67,10 +94,10 @@ class Others(BaseCog):
     @commands.Cog.listener()
     async def on_message(self, message):
         nick = self.bot.get_nick(message)
-        if (
-            message.channel.id == self.bot.cm.id
-            and message.author.id == self.bot.owo_bot_id
-        ):
+        if not message.author.id == self.bot.owo_bot_id:
+            return
+
+        if message.channel.id == self.bot.cm.id:
             # Accept Rules
             if (
                 "**you must accept these rules to use the bot!**"
@@ -135,7 +162,10 @@ class Others(BaseCog):
                     await self.bot.put_queue(self.lootbox_cmd)
                     # give time for command to run
                     await asyncio.sleep(2.5)
-                    self.bot.user_status["no_gems"] = False
+                    
+            elif "<a:boxopen:427019823747301377> **|** and finds" in message.content:
+                # Lootbox opened
+                self.bot.user_status["no_gems"] = False
 
             # Add animals to team
             elif "Create one with `owo team add {animal}`" in message.content:
@@ -172,6 +202,89 @@ class Others(BaseCog):
 
                 self.zoo = False
                 await self.bot.set_stat(True)
+        if re.search(EVENT_REGEX, message.content):
+            # event message detected
+            await self.bot.log("OwO Event Detected! - DB not updated", "#aeb596")
+            self.bot.ongoing_owobot_event = True
+
+
+    async def on_component_message(self, message):
+        if self.event_date_detected:
+            return
+
+        if not message.author.id == self.bot.owo_bot_id:
+            return
+
+        for component in message.components:
+            if component.component_name == "text_display":
+                content = component.content.lower()
+                if not valid_event_checket(content):
+                    return
+                # First Update status
+                if not self.bot.ongoing_owobot_event:
+                    await self.bot.log("OwO Event Detected!", "#aeb596")
+                self.bot.ongoing_owobot_event = True
+                # This is like the life-saver of this!
+                # every even message contains this,
+                # but again, this can be worded differently in future... ;(
+                magic_word = "how long is the event?"
+                magic_word_length = len(magic_word)
+
+                if magic_word in content:
+                    
+                    # Here we would try figure out common patterns to find quest end.
+
+                    # Index where magic word **starts**
+                    start_idx = content.index(magic_word)
+                    after_magic_word = start_idx + magic_word_length
+
+                    next_45_chars = content[after_magic_word : after_magic_word + 45]
+
+
+                    
+                    # 1. Discord Time stamp
+                    # This would be the most accurate approach!
+                    timestamp_matches = re.search(r"<t:(\d+):f>", next_45_chars)
+                    timestamp = None
+                    time_till_event_ends = None
+                    if timestamp_matches:
+                        timestamp = int(timestamp_matches.group(1))
+
+                        time_till_event_ends = discord_timestamp_to_datetime(timestamp)
+
+                    if not time_till_event_ends:
+                        # 2. Day based approach
+                        initiated_timestamp = None
+                        # Note: we use 1 as index because divider component is ignored
+                        # If this doesn't get matched then that would mean there is a pattern change
+                        # In announcement command so would need to be reworked based on that...
+                        exists, timestamp_component = check_list_index(1, message.components)
+                        if exists and timestamp_component.component_name == "text_display":
+                            timestamp_matches = re.search(r"<t:(\d+):f>", timestamp_component.content)
+                            if timestamp_matches:
+                                initiated_timestamp = int(timestamp_matches.group(1))
+
+
+                        if initiated_timestamp:
+                            initiated_datetime = discord_timestamp_to_datetime(initiated_timestamp)
+                            # an even typically lasts around 7 days
+                            # this approach is less accurate, we may need to rely on when using the gem
+                            # causes the message not allowing user to use the special gem
+                            # as a fall back.
+                            time_till_event_ends = calc_time_till_event(initiated_datetime)
+                    
+                    # Here UPDATE DATABASE!
+                    if time_till_event_ends:
+                        self.event_date_detected = True
+                        self.bot.db.update_event_timestamp(int(time_till_event_ends.timestamp()))
+                        await self.bot.log(f"OwO Event should last till {time_till_event_ends.strftime('%d-%b-%Y %I:%M %p')}", "#aeb596")
+                        # Toggle off
+                        seconds_remaining = calc_time_till_timestamp(time_till_event_ends)
+                        await asyncio.sleep(max(0, seconds_remaining))
+                        await self.bot.log("Stopping special gem usage, event end time.", "#924444")
+                        self.bot.ongoing_owobot_event = False
+                        self.event_date_detected = False
+
 
 
 async def setup(bot):
