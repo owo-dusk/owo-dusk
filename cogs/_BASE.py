@@ -15,7 +15,6 @@ THIS FILE PURELY EXISTS FOR TYPEHINTS,
 ignore!
 """
 
-
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from discord.ext import commands
@@ -23,6 +22,7 @@ from discord.ext import commands
 if TYPE_CHECKING:
     # Always false at runtime!
     from uwu import MyClient
+
 
 class BaseCog(commands.Cog):
     def __init__(self, bot: MyClient):

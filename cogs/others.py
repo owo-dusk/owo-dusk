@@ -16,7 +16,11 @@ import re
 
 from discord.ext import commands
 from utils.misc import check_list_index
-from utils.timestamp import discord_timestamp_to_datetime, calc_time_till_event, calc_time_till_timestamp
+from utils.timestamp import (
+    discord_timestamp_to_datetime,
+    calc_time_till_event,
+    calc_time_till_timestamp,
+)
 from cogs._BASE import BaseCog
 
 EVENT_REGEX = r"\*\*\|\*\* `\[\d+\/10"
@@ -38,8 +42,22 @@ def get_emoji_names(text, emoji_dict=emoji_dict):
     emoji_names = [emoji_dict[char]["name"] for char in emojis if char in emoji_dict]
     return emoji_names
 
+
 def valid_event_checket(content: str) -> bool:
-    months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+    months = [
+        "jan",
+        "feb",
+        "mar",
+        "apr",
+        "may",
+        "jun",
+        "jul",
+        "aug",
+        "sep",
+        "oct",
+        "nov",
+        "dec",
+    ]
     if not any(month in content for month in months):
         # Month not in message, even message will always have one
         return False
@@ -162,7 +180,7 @@ class Others(BaseCog):
                     await self.bot.put_queue(self.lootbox_cmd)
                     # give time for command to run
                     await asyncio.sleep(2.5)
-                    
+
             elif "<a:boxopen:427019823747301377> **|** and finds" in message.content:
                 # Lootbox opened
                 self.bot.user_status["no_gems"] = False
@@ -208,7 +226,6 @@ class Others(BaseCog):
                 await self.bot.log("OwO Event Detected! - DB not updated", "#aeb596")
                 self.bot.ongoing_owobot_event = True
 
-
     async def on_component_message(self, message):
         if self.event_date_detected:
             return
@@ -232,7 +249,6 @@ class Others(BaseCog):
                 magic_word_length = len(magic_word)
 
                 if magic_word in content:
-                    
                     # Here we would try figure out common patterns to find quest end.
 
                     # Index where magic word **starts**
@@ -241,8 +257,6 @@ class Others(BaseCog):
 
                     next_45_chars = content[after_magic_word : after_magic_word + 45]
 
-
-                    
                     # 1. Discord Time stamp
                     # This would be the most accurate approach!
                     timestamp_matches = re.search(r"<t:(\d+):f>", next_45_chars)
@@ -259,33 +273,51 @@ class Others(BaseCog):
                         # Note: we use 1 as index because divider component is ignored
                         # If this doesn't get matched then that would mean there is a pattern change
                         # In announcement command so would need to be reworked based on that...
-                        exists, timestamp_component = check_list_index(1, message.components)
-                        if exists and timestamp_component.component_name == "text_display":
-                            timestamp_matches = re.search(r"<t:(\d+):f>", timestamp_component.content)
+                        exists, timestamp_component = check_list_index(
+                            1, message.components
+                        )
+                        if (
+                            exists
+                            and timestamp_component.component_name == "text_display"
+                        ):
+                            timestamp_matches = re.search(
+                                r"<t:(\d+):f>", timestamp_component.content
+                            )
                             if timestamp_matches:
                                 initiated_timestamp = int(timestamp_matches.group(1))
 
-
                         if initiated_timestamp:
-                            initiated_datetime = discord_timestamp_to_datetime(initiated_timestamp)
+                            initiated_datetime = discord_timestamp_to_datetime(
+                                initiated_timestamp
+                            )
                             # an even typically lasts around 7 days
                             # this approach is less accurate, we may need to rely on when using the gem
                             # causes the message not allowing user to use the special gem
                             # as a fall back.
-                            time_till_event_ends = calc_time_till_event(initiated_datetime)
-                    
+                            time_till_event_ends = calc_time_till_event(
+                                initiated_datetime
+                            )
+
                     # Here UPDATE DATABASE!
                     if time_till_event_ends:
                         self.event_date_detected = True
-                        self.bot.db.update_event_timestamp(int(time_till_event_ends.timestamp()))
-                        await self.bot.log(f"OwO Event should last till {time_till_event_ends.strftime('%d-%b-%Y %I:%M %p')}", "#aeb596")
+                        self.bot.db.update_event_timestamp(
+                            int(time_till_event_ends.timestamp())
+                        )
+                        await self.bot.log(
+                            f"OwO Event should last till {time_till_event_ends.strftime('%d-%b-%Y %I:%M %p')}",
+                            "#aeb596",
+                        )
                         # Toggle off
-                        seconds_remaining = calc_time_till_timestamp(time_till_event_ends)
+                        seconds_remaining = calc_time_till_timestamp(
+                            time_till_event_ends
+                        )
                         await asyncio.sleep(max(0, seconds_remaining))
-                        await self.bot.log("Stopping special gem usage, event end time.", "#924444")
+                        await self.bot.log(
+                            "Stopping special gem usage, event end time.", "#924444"
+                        )
                         self.bot.ongoing_owobot_event = False
                         self.event_date_detected = False
-
 
 
 async def setup(bot):

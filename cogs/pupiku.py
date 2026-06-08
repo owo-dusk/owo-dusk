@@ -95,7 +95,7 @@ class Pupiku(BaseCog):
                 cmds.remove(choice)
 
                 await self.bot.put_queue(self.get_cmd(choice))
-                await self.bot.sleep_till([1,3])
+                await self.bot.sleep_till([1, 3])
                 await self.bot.put_queue(self.get_cmd(cmds[0]))
                 # Incase of failure during initial start
                 # once one command is successful, this isnt an issue.
@@ -104,18 +104,17 @@ class Pupiku(BaseCog):
             await self.bot.remove_queue(id=cmd)
             cd = getattr(self, f"{cmd}_settings").get_cd()
             if final:
-                cd+=self.bot.calc_time()
+                cd += self.bot.calc_time()
             await self.bot.sleep(cd)
             self.set_send_time(cmd)
             await self.bot.put_queue(self.get_cmd(cmd))
-
 
     @commands.Cog.listener()
     async def on_message(self, message):
         if not message.channel.id == self.bot.cm.id:
             return
 
-        if (message.author.id == self.bot.user.id):
+        if message.author.id == self.bot.user.id:
             if f"{self.bot.settings_dict_temp.prefix}pup" in message.content:
                 self.set_send_time("pup")
             if f"{self.bot.settings_dict_temp.prefix}piku" in message.content:
@@ -123,8 +122,6 @@ class Pupiku(BaseCog):
 
         if message.author.id != self.bot.owo_bot_id:
             return
-
-        
 
         final = False
         cmd = ""

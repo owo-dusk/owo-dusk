@@ -123,7 +123,10 @@ class Army(BaseCog):
                         print(value)
                         await self.send_army()
 
-            if f"**🚫 | {nick}**, you can only find 15 emblems per day!" in message.content:
+            if (
+                f"**🚫 | {nick}**, you can only find 15 emblems per day!"
+                in message.content
+            ):
                 # remove command from queue
                 await self.bot.remove_queue(id="army")
                 # update, sleep
@@ -131,8 +134,6 @@ class Army(BaseCog):
                 await asyncio.sleep(self.bot.calc_time())
                 # re run
                 await self.send_army()
-                
-
 
 
 async def setup(bot):

@@ -126,7 +126,7 @@ class AnimalLogRank:
             "legendary",
             "fabled",
             "hidden",
-            "distorted"
+            "distorted",
         ]
 
         for rank in self._rank:
@@ -139,6 +139,7 @@ class WebhookOthers:
         self.lootbox = d.get("logLootbox")  # Changed
         self.crate = d.get("logCrate")  # Changed
         self.logChannelSwitch = d.get("logChannelSwitch", False)
+
 
 class Console:
     # Console commands on captcha.

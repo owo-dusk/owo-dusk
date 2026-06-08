@@ -249,10 +249,7 @@ class Gems(BaseCog):
                     should_use = self.settings.gemsToUse.get(gem_type_key)
                 else:
                     should_use = self.should_use_special_gem()
-                if (
-                    should_use
-                    and available_gems[tier].get(gem_id, 0) > 0
-                ):
+                if should_use and available_gems[tier].get(gem_id, 0) > 0:
                     current_group.append(gem_id)
 
             if current_group:
@@ -363,7 +360,10 @@ class Gems(BaseCog):
 
         elif "you already have an active Special gem" in message.content:
             if self.is_special_gem_failure():
-                await self.bot.log("Warn: Special Gem being disabled, seems like the event ended", "#924444")
+                await self.bot.log(
+                    "Warn: Special Gem being disabled, seems like the event ended",
+                    "#924444",
+                )
                 self.bot.ongoing_owobot_event = False
                 # Reset rest of the states:
                 self.recent_special_gem_usage = 0

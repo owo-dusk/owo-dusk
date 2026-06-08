@@ -66,7 +66,7 @@ class Looper(BaseCog):
         self.startup = True
         self.counter = itertools.count()  # for tie-breaking
         self.schedule_heap = []  # heap we are going to use
-        self.pray_counter = itertools.count(start=1) 
+        self.pray_counter = itertools.count(start=1)
         self.curse_counter = itertools.count(start=1)
 
         # For making code easier to read, last_ran will be connected
@@ -131,13 +131,23 @@ class Looper(BaseCog):
             # i mean it just does what its supposed to do: send command first!
             "pray": {
                 "enabled": enabled["pray"],
-                "next_run": now + (self.pray_settings.get_cd() if not self.startup else self.owo_settings.get_cd()),
+                "next_run": now
+                + (
+                    self.pray_settings.get_cd()
+                    if not self.startup
+                    else self.owo_settings.get_cd()
+                ),
                 "send": lambda: self.send_pray_curse("pray"),
                 "id": "pray",
             },
             "curse": {
                 "enabled": enabled["curse"],
-                "next_run": now + (self.curse_settings.get_cd() if not self.startup else self.owo_settings.get_cd()),
+                "next_run": now
+                + (
+                    self.curse_settings.get_cd()
+                    if not self.startup
+                    else self.owo_settings.get_cd()
+                ),
                 "send": lambda: self.send_pray_curse("curse"),
                 "id": "curse",
             },
@@ -170,7 +180,9 @@ class Looper(BaseCog):
     async def block_till_send(self, content, channel_id=None):
         try:
             await self.bot.wait_for(
-                "message", check=lambda m: self.check(m, content, channel_id), timeout=30.0
+                "message",
+                check=lambda m: self.check(m, content, channel_id),
+                timeout=30.0,
             )
         except asyncio.TimeoutError:
             print("this is bad, check failed miserably!")

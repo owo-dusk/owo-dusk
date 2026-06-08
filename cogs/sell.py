@@ -23,7 +23,6 @@ perhaps make a new category `animals` as we are already handling command being p
 """
 
 
-
 RARITY_MAP = {
     "c": "common",
     "u": "uncommon",
@@ -37,6 +36,7 @@ RARITY_MAP = {
     "f": "fabled",
     "h": "hidden",
 }
+
 
 class Sell(BaseCog):
     def __init__(self, bot):
@@ -76,10 +76,11 @@ class Sell(BaseCog):
         if self.startup:
             self.startup = False
             return arg
-        
+
         arg_list = arg.split()
         filtered_items = [
-            item for item in arg_list 
+            item
+            for item in arg_list
             if (rarity := RARITY_MAP[item]) and self.bot.animal_rank_in_zoo[rarity]
             # https://www.geeksforgeeks.org/python/walrus-operator-in-python-3-8/
         ]
@@ -101,7 +102,6 @@ class Sell(BaseCog):
     def get_last_ran(self):
         return "sell" if self.sell_lastran <= self.sac_lastran else "sac"
 
-
     @tasks.loop()
     async def initiate_loop(self):
         choices = ["sell", "sac"]
@@ -115,14 +115,11 @@ class Sell(BaseCog):
             gap = time.monotonic() - last_ran
             if last_ran == 0 or gap > cd:
                 cmd_data = self.get_command(cmd)
-                await self.bot.sleep_till([10,15])
-                await self.bot.put_queue(
-                    cmd_data
-                )
+                await self.bot.sleep_till([10, 15])
+                await self.bot.put_queue(cmd_data)
                 self.__dict__[f"{cmd}_lastran"] = time.monotonic()
 
-        await self.bot.sleep_till([10,15])
-            
+        await self.bot.sleep_till([10, 15])
 
     async def cog_load(self):
         # start loop, cog will stay awake due to the necessity to calculate value
@@ -175,6 +172,7 @@ class Sell(BaseCog):
             elif "you don't have enough animals! >:c" in message.content.lower():
                 # May want to improve this later..
                 await self.bot.remove_queue(id=self.get_last_ran())
+
 
 async def setup(bot):
     await bot.add_cog(Sell(bot))

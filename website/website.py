@@ -204,7 +204,9 @@ def fetch_weekly_runtime():
         return "Invalid Password", 401
     try:
         # Fetch json data
-        with open("utils/data/weekly_runtime.json", "r", encoding="utf-8") as config_file:
+        with open(
+            "utils/data/weekly_runtime.json", "r", encoding="utf-8"
+        ) as config_file:
             data_dict = json.load(config_file)
 
         runtime_data = [

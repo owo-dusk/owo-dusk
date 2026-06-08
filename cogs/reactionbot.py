@@ -25,7 +25,7 @@ class Reactionbot(BaseCog):
         self.cmd_states = {"hunt": 0, "battle": 0, "owo": 0, "pray": 0}
         self.pray_channel = None
         self.curse_channel = None
-        self.pray_counter = itertools.count(start=1) 
+        self.pray_counter = itertools.count(start=1)
         self.curse_counter = itertools.count(start=1)
 
     @property
@@ -72,12 +72,10 @@ class Reactionbot(BaseCog):
                     arg = str(user_id)
                 if settings.count:
                     arg += f" {next(self.__dict__[f'{cmd_name}_counter'])}"
-                
 
             channelId = None
             if settings.custom_channel.enabled:
                 channelId = settings.custom_channel.channel
-            
 
         base = {
             "cmd_name": cmd_name.get(id, id),

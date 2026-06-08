@@ -124,9 +124,7 @@ class Captcha(BaseCog):
         return self.bot.global_settings_dict.webhook
 
     def get_webhook(self):
-        webhook_url = (
-            self.webhook_settings.webhookCaptchaUrl
-        )
+        webhook_url = self.webhook_settings.webhookCaptchaUrl
         if not isinstance(webhook_url, str):
             # Ensure webhook url is valid
             webhook_url = None
@@ -324,7 +322,6 @@ class Captcha(BaseCog):
                 await self.handle_solves()
                 self.captcha_site_opened = False
                 if self.webhook_settings.enabled:
-
                     await self.bot.send_webhook(
                         "on_captcha_solve",
                         webhook_url=self.get_webhook(),
@@ -333,7 +330,7 @@ class Captcha(BaseCog):
                             self.webhook_settings.pingUserId
                             if validate_snowflake(self.webhook_settings.pingUserId)
                             else None
-                        )
+                        ),
                     )
                 return
 
@@ -402,7 +399,7 @@ class Captcha(BaseCog):
                             self.webhook_settings.pingUserId
                             if validate_snowflake(self.webhook_settings.pingUserId)
                             else None
-                        )
+                        ),
                     )
                 console_handler(self.bot.global_settings_dict.console)
 
@@ -424,9 +421,11 @@ class Captcha(BaseCog):
                                     webhook_url=self.get_webhook(),
                                     pingid=(
                                         self.webhook_settings.pingUserId
-                                        if validate_snowflake(self.webhook_settings.pingUserId)
+                                        if validate_snowflake(
+                                            self.webhook_settings.pingUserId
+                                        )
                                         else None
-                                    )
+                                    ),
                                 )
                             os._exit(0)
                         else:
@@ -450,9 +449,11 @@ class Captcha(BaseCog):
                                         webhook_url=self.get_webhook(),
                                         pingid=(
                                             self.webhook_settings.pingUserId
-                                            if validate_snowflake(self.webhook_settings.pingUserId)
+                                            if validate_snowflake(
+                                                self.webhook_settings.pingUserId
+                                            )
                                             else None
-                                        )
+                                        ),
                                     )
                                 os._exit(0)
                         self.yescaptcha_in_progress = False
@@ -482,7 +483,6 @@ class Captcha(BaseCog):
                 self.captcha_handler(message.channel, "Ban")
                 console_handler(self.bot.global_settings_dict.console, captcha=False)
                 if self.webhook_settings.enabled:
-
                     await self.bot.send_webhook(
                         "on_captcha_ban",
                         webhook_url=self.get_webhook(),
@@ -491,7 +491,7 @@ class Captcha(BaseCog):
                             self.webhook_settings.pingUserId
                             if validate_snowflake(self.webhook_settings.pingUserId)
                             else None
-                        )
+                        ),
                     )
 
 

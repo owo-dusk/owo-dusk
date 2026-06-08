@@ -222,7 +222,7 @@ class Hunt(BaseCog):
                                 hunt_caught_emojis=hunt_caught_emojis,
                                 best_catch=best_catch,
                                 best_rank=best_rank,
-                                animal_image_url=animal_image_url
+                                animal_image_url=animal_image_url,
                             )
                     # Handle updation of rank held (sell/sac)
                     for result in result_list:

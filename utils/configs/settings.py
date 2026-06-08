@@ -18,9 +18,11 @@ import random
 
 from utils.configs import validators
 
+
 def GET_CD(cd: list):
     validators.validateCooldown(cd)
     return random.uniform(cd[0], cd[1])
+
 
 class Settings:
     def __init__(self, d: dict):
@@ -310,7 +312,7 @@ class Commands:
             "owo",
             "army",
             "pup",
-            "piku"
+            "piku",
         ]
         for cmd in cmd_list:
             setattr(self, cmd, Command(d.get(cmd, {})))
@@ -366,11 +368,12 @@ class Animal:
     def get_cd(self):
         return GET_CD(self.cooldown)
 
+
 class AnimalSellSac:
     def __init__(self, d: dict):
         self.enabled = d.get("enabled", False)
         self.rarity = Rarity(d.get("rarity", {}))
-        
+
 
 class Rarity:
     """

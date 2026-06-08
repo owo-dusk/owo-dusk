@@ -115,7 +115,6 @@ with open("config/captcha.toml", "rb") as f:
     captcha_settings_dict = tomllib.load(f)
 
 
-
 console.rule("[bold blue1]:>", style="navy_blue")
 console_width = console.size.width
 listUserIds = []
@@ -361,7 +360,7 @@ class MyClient(commands.Bot):
         self.cmd_priorities = {}
         self.captcha_handler = hcaptcha_solver
         self.db = database.Database(self)
-        
+
         # For sell/sac to know the rank of animals caught from hunt to dynamically handle them
         # Updated through hunt.py Cog.
         self.animal_rank_in_zoo = {
@@ -375,7 +374,7 @@ class MyClient(commands.Bot):
             "legendary": False,
             "fabled": False,
             "distorted": False,
-            "hidden": False
+            "hidden": False,
         }
 
         # discord.py-self's module sets global random to fixed seed. reset that, locally.
@@ -789,7 +788,6 @@ class MyClient(commands.Bot):
             if command.application.id == self.owo_bot_id:
                 self.slash_commands[str(channel.id)].append(command)
 
-
     async def send_webhook(
         self,
         data_id: str,
@@ -842,7 +840,7 @@ class MyClient(commands.Bot):
                     best_rank=kwargs.get("best_rank", None),
                     animal_image_url=kwargs.get("animal_image_url", None),
                     # Command specific
-                    command_send=kwargs.get("command_send", None)
+                    command_send=kwargs.get("command_send", None),
                 )
 
         color = data.get("color", None)
@@ -1290,7 +1288,6 @@ def create_database(db_path="utils/data/db.sqlite"):
     # Switch to WAL mode.
     c.execute("PRAGMA journal_mode=WAL;")
 
-
     # Populate
     # -- gamble_winrate
     for hr in range(24):
@@ -1320,8 +1317,6 @@ def create_database(db_path="utils/data/db.sqlite"):
         "INSERT OR IGNORE INTO meta_data (key, value) VALUES (?, ?)",
         ("event_till_timestamp", 0),
     )
-
-
 
     # -- command priority
     c.execute("SELECT * FROM command_priority WHERE user_id = ?", ("default",))

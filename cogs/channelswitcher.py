@@ -30,7 +30,7 @@ class ChannelSwitcher(BaseCog):
     @property
     def settings(self):
         return self.bot.global_settings_dict.channelSwitcher
-    
+
     @property
     def webhook_settings(self):
         return self.bot.global_settings_dict.webhook
@@ -46,13 +46,16 @@ class ChannelSwitcher(BaseCog):
             await self.bot.log(f"Channel switcher: {resp}", "#9dc3f5")
 
     async def handle_webhook(self, new_channel):
-        if not(self.webhook_settings.enabled and self.webhook_settings.others.logChannelSwitch):
+        if not (
+            self.webhook_settings.enabled
+            and self.webhook_settings.others.logChannelSwitch
+        ):
             return
-        
+
         await self.bot.send_webhook(
             "on_channel_switch",
-            new_channel_name = new_channel.name,
-            new_channel_id = new_channel.id
+            new_channel_name=new_channel.name,
+            new_channel_id=new_channel.id,
         )
 
     async def change_channel(self):

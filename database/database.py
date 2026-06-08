@@ -20,6 +20,7 @@ database_handler = worker.databaseWorker()
 # NOTE: Just a note for myself, keep in mind that updation which is in relation to time takes place through update_stats_db
 # also we need to move daily, lottery and cookie to DB before properly rewriting this mess
 
+
 class Database:
     def __init__(self, bot):
         # We pass a "reference" here
@@ -103,7 +104,16 @@ class Database:
         )
 
     def update_stats_db(self, column_name, value):
-        if column_name not in {"daily", "lottery", "cookie", "giveaways", "boss", "pup", "piku", "army"}:
+        if column_name not in {
+            "daily",
+            "lottery",
+            "cookie",
+            "giveaways",
+            "boss",
+            "pup",
+            "piku",
+            "army",
+        }:
             # Captcha and cowoncy handled seperately
             raise ValueError("Invalid column name.")
 
@@ -254,7 +264,7 @@ class Database:
         # For Pupiku and Army.
         if cmd not in {"pup", "piku", "army"}:
             raise ValueError("Invalid column name.")
-        
+
         results = await database_handler.get_from_db(
             f"SELECT {cmd} FROM user_stats WHERE user_id = ?",
             (self.bot.user.id,),
@@ -290,6 +300,3 @@ class Database:
             ("event_till_timestamp",),
         )
         return rows[0]["value"]
-
-    
-

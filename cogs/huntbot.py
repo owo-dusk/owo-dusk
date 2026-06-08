@@ -132,7 +132,7 @@ class Huntbot(BaseCog):
         except asyncio.TimeoutError:
             self.upgrade_event.set()
             return
-        
+
         self.upgrade_event.clear()
         await self.bot.sleep_till(self.cooldowns.briefCooldown)
 
