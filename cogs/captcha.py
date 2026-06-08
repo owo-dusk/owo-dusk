@@ -418,6 +418,16 @@ class Captcha(BaseCog):
                             await self.bot.log("FAILED to solve hcaptcha", "#d70000")
                             self.captcha_handler(message.channel, "Link")
                             print("stopping code.... Reason -> Failed Hcaptcha attempt")
+                            if self.webhook_settings.enabled:
+                                await self.bot.send_webhook(
+                                    "on_captcha_solve_fail",
+                                    webhook_url=self.get_webhook(),
+                                    pingid=(
+                                        self.webhook_settings.pingUserId
+                                        if validate_snowflake(self.webhook_settings.pingUserId)
+                                        else None
+                                    )
+                                )
                             os._exit(0)
                         else:
                             balance = self.bot.captcha_handler.balance
@@ -434,6 +444,16 @@ class Captcha(BaseCog):
                                     f"credits exhausted - balance: {balance}, stopping...",
                                     "#d70000",
                                 )
+                                if self.webhook_settings.enabled:
+                                    await self.bot.send_webhook(
+                                        "on_captcha_solve_no_credits",
+                                        webhook_url=self.get_webhook(),
+                                        pingid=(
+                                            self.webhook_settings.pingUserId
+                                            if validate_snowflake(self.webhook_settings.pingUserId)
+                                            else None
+                                        )
+                                    )
                                 os._exit(0)
                         self.yescaptcha_in_progress = False
 
@@ -464,7 +484,7 @@ class Captcha(BaseCog):
                 if self.webhook_settings.enabled:
 
                     await self.bot.send_webhook(
-                        "on_captcha",
+                        "on_captcha_ban",
                         webhook_url=self.get_webhook(),
                         captcha_url=message.jump_url,
                         pingid=(

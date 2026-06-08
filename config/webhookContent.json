@@ -19,6 +19,26 @@
         "author_image": "https://i.imgur.com/6zeCgXo.png",
         "footer": ""
     },
+    "on_captcha_solve_fail": {
+        "title": "Captcha Solver FAILED - {username}",
+        "description": "**User <@{userid}>** : Yescaptcha failed to solve the captcha...\nThe points spend, if this was an issue on yescaptcha's end should be refunded in a few minutes.",
+        "content": "",
+        "color": "#00FFAF",
+        "thumbnail": "https://cdn.discordapp.com/emojis/934876792093835364.png",
+        "author_name": "OwO-Dusk",
+        "author_image": "https://i.imgur.com/6zeCgXo.png",
+        "footer": ""
+    },
+    "on_captcha_solve_no_credits": {
+        "title": "Captcha Solver FAILED - {username}",
+        "description": "**User <@{userid}>** : Yescaptcha failed to solve the captcha...\nThis is due to limited balance in Yescaptcha account.\nIncase any points was spend earlier and the solve failed on yescaptcha's end - the lost points should be refunded in a few minutes",
+        "content": "",
+        "color": "#00FFAF",
+        "thumbnail": "https://cdn.discordapp.com/emojis/934876792093835364.png",
+        "author_name": "OwO-Dusk",
+        "author_image": "https://i.imgur.com/6zeCgXo.png",
+        "footer": ""
+    },
     "on_captcha_ban": {
         "title": "BAN Detected - {username}",
         "description": "**User** : <@{userid}>\n**Link** : [Ban Message]({captcha_url})",
