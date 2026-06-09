@@ -15,8 +15,17 @@ import sys
 import subprocess
 import tomllib
 
+from utils.colors import COLORS
+
+from utils.system import (
+    clear,
+    install_package,
+    install_termux_package,
+    is_termux,
+)
+
 try:
-    os.system("cls") if os.name == "nt" else os.system("clear")
+    clear()
 except Exception:
     pass
 
@@ -27,29 +36,6 @@ def load_json_dict(file_path="config/captcha.toml"):
 
 
 cap_cnf_dict = load_json_dict()
-
-
-class COLORS:
-    RESET = "\033[m"
-    BOLD_GREEN = "\033[1;32m"
-    BOLD_RED = "\033[1;31m"
-    BOLD_YELLOW = "\033[1;33m"
-    BOLD_CYAN = "\033[1;36m"
-    BOLD_BLUE = "\033[1;34m"
-    BOLD_MAGENTA = "\033[1;35m"
-
-
-def is_termux():
-    termux_prefix = os.environ.get("PREFIX")
-    termux_home = os.environ.get("HOME")
-
-    if termux_prefix and "com.termux" in termux_prefix:
-        return True
-    elif termux_home and "com.termux" in termux_home:
-        return True
-    else:
-        return os.path.isdir("/data/data/com.termux")
-
 
 print(
     f"{COLORS.BOLD_GREEN}Welcome to OwO-Dusk\nThis setup will guide you through with the setup of OwO-Dusk\nThank you for your trust in OwO-Dusk <3{COLORS.RESET}"
@@ -72,9 +58,7 @@ if scratchSetup:
     print(f"{COLORS.BOLD_CYAN}[0]attempting to install requirements.txt{COLORS.RESET}")
     try:
         try:
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
-            )
+            install_package("-r", "requirements.txt")
         except Exception:
             if is_termux():
                 print(
@@ -82,9 +66,9 @@ if scratchSetup:
                 )
                 subprocess.check_call(["pkg", "update", "-y"])
                 subprocess.check_call(["pkg", "upgrade", "-y"])
-                subprocess.check_call(
-                    [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
-                )
+                install_package("-r", "requirements.txt")
+            else:
+                raise
         print(
             f"{COLORS.BOLD_CYAN}[0]Installed modules from requirements.txt successfully!{COLORS.RESET}"
         )
@@ -98,64 +82,25 @@ if scratchSetup:
             )
             print()
 
-            """Numpy Installation"""
-            print(f"{COLORS.BOLD_CYAN}[0]Attempting to install numpy{COLORS.RESET}")
-            try:
-                subprocess.check_call(["pkg", "install", "python-numpy", "-y"])
-                print(
-                    f"{COLORS.BOLD_CYAN}[0]installed numpy successfully!{COLORS.RESET}"
-                )
-            except Exception as e:
-                print(
-                    f"{COLORS.BOLD_RED}[x]error when trying to install numpy:-\n {e}{COLORS.RESET}"
-                )
+            # Numpy Installation
+            if not install_termux_package("python-numpy", "numpy"):
+                raise RuntimeError("Failed to install numpy")
 
-            """PILL Installation"""
-            print(f"{COLORS.BOLD_CYAN}[0]Attempting to install PIL{COLORS.RESET}")
-            try:
-                subprocess.check_call(["pkg", "install", "python-pillow", "-y"])
-                print(f"{COLORS.BOLD_CYAN}[0]installed PIL successfully!{COLORS.RESET}")
-            except Exception as e:
-                print(
-                    f"{COLORS.BOLD_RED}[x]error when trying to install PIL:-\n {e}{COLORS.RESET}"
-                )
+            # PIL Installation
+            if not install_termux_package("python-pillow", "PIL"):
+                raise RuntimeError("Failed to install PIL")
 
-            """Termux-api Installation"""
-            print(
-                f"{COLORS.BOLD_CYAN}[0]Attempting to install termux-api...{COLORS.RESET}"
-            )
-            try:
-                subprocess.check_call(["pkg", "install", "termux-api", "-y"])
-                print(
-                    f"{COLORS.BOLD_CYAN}[0]installed termux-api successfully!{COLORS.RESET}"
-                )
-            except Exception as e:
-                print(
-                    f"{COLORS.BOLD_RED}[x]error when trying to install termux-api:-\n {e}{COLORS.RESET}"
-                )
+            # Termux-api installation
+            if not install_termux_package("termux-api"):
+                raise RuntimeError("Failed to install termux-api")
+
             if cap_cnf_dict["image_solver"]["enabled"]:
-                print(
-                    f"{COLORS.BOLD_CYAN}[0]Attempting to install onnxruntime...{COLORS.RESET}"
-                )
-                try:
-                    subprocess.check_call(
-                        ["pkg", "install", "python-onnxruntime", "-y"]
-                    )
-                    print(
-                        f"{COLORS.BOLD_CYAN}[0]installed onnxruntime successfully!{COLORS.RESET}"
-                    )
-                except Exception as e:
-                    print(
-                        f"{COLORS.BOLD_RED}[x]error when trying to install Onnxruntime:-\n {e}{COLORS.RESET}"
-                    )
+                if not install_termux_package("python-onnxruntime", "onnxruntime"):
+                    raise RuntimeError("Failed to install onnxruntime")
 
         else:
             print(f"{COLORS.BOLD_CYAN}installing normally...{COLORS.RESET}")
-            to_install = [
-                sys.executable,
-                "-m",
-                "pip",
-                "install",
+            packages = [
                 "numpy",
                 "pillow",
                 "playsound3",
@@ -163,12 +108,12 @@ if scratchSetup:
                 "psutil",
             ]
             if cap_cnf_dict["image_solver"]["enabled"]:
-                to_install.append("onnxruntime")
+                packages.append("onnxruntime")
 
             try:
-                subprocess.check_call(to_install)
+                install_package(*packages)
                 print(
-                    f"{COLORS.BOLD_CYAN}[0]Installed numpy and PIL successfully!{COLORS.RESET}"
+                    f"{COLORS.BOLD_CYAN}[0]Installed numpy, PIL and dependencies successfully!{COLORS.RESET}"
                 )
             except Exception as e:
                 print(
