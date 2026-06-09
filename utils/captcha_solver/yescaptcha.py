@@ -7,7 +7,7 @@ import json
 class captchaClient:
     def __init__(self, api):
         self.api = api
-        self.balance = self.get_yescaptcha_balance() or 0
+        self.balance = self.get_yescaptcha_balance_sync() or 0
         self._site_key = "a6a1d5ce-612d-472d-8e37-7601408fbc09"
         self._payload = {
             "authorize": True,
@@ -21,7 +21,9 @@ class captchaClient:
         }
         self._auth_url = r"https://discord.com/api/v9/oauth2/authorize?client_id=408785106942164992&response_type=code&redirect_uri=https://owobot.com/api/auth/discord/redirect&scope=identify guilds"
 
-    def get_yescaptcha_balance(self):
+    # We aren't supposed to use sync copies for this.. There must be a better solution
+    # Double check - for the time being it works!
+    def get_yescaptcha_balance_sync(self):
         url = "https://api.yescaptcha.com/getBalance"
         try:
             response = requests.post(url, json={"clientKey": self.api}, timeout=10)
@@ -30,8 +32,22 @@ class captchaClient:
         except Exception:
             return 0
 
-    def update_balance(self):
-        self.balance = self.get_yescaptcha_balance()
+    async def get_yescaptcha_balance(self, session: aiohttp.ClientSession) -> int:
+        url = "https://api.yescaptcha.com/getBalance"
+        try:
+            # aiohttp uses total timeout instead of a simple integer
+            timeout = aiohttp.ClientTimeout(total=10)
+            
+            async with session.post(url, json={"clientKey": self.api}, timeout=timeout) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return int(data.get("balance", 0)) if data.get("errorId") == 0 else 0
+                return 0
+        except Exception:
+            return 0
+
+    async def update_balance(self):
+        self.balance = await self.get_yescaptcha_balance()
 
     async def solve_hcaptcha_logic(self, retries=3):
         """
@@ -107,7 +123,7 @@ class captchaClient:
 
     async def solve_owo_bot_captcha(self, discord_headers, tries):
         discord_headers["Referer"] = self._auth_url
-        self.update_balance()
+        await self.update_balance()
         if self.balance < 30:
             print("Not enough balance")
             return False
@@ -179,7 +195,7 @@ class captchaClient:
                 },
             ) as verify_resp:
                 if verify_resp.status == 200:
-                    self.update_balance()
+                    await self.update_balance()
                     return True
                 else:
                     error_text = await verify_resp.text()

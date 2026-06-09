@@ -116,6 +116,7 @@ database_version = "2.5.0"
 
 """FLASK APP"""
 
+
 def printBox(text, color, title=None):
     test_panel = Panel(text, style=color, title=title)
     if not misc_dict["console"]["compactMode"]:
