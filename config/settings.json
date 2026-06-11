@@ -1,7 +1,7 @@
 {
-    "setprefix": "w",
-    "useSlashCommands": true,
-    "claimMail": true,
+    "setprefix": "owo ",
+    "useSlashCommands": false,
+    "claimMail": false,
     "autoDaily": true,
     "cashCheck": true,
     "commands": {
@@ -24,7 +24,7 @@
             "notifyStreakLoss": false
         },
         "pray": {
-            "enabled": true,
+            "enabled": false,
             "cooldown": [
                 310,
                 400
@@ -35,7 +35,7 @@
                 "enabled": false,
                 "channelId": 0
             },
-            "count": true
+            "count": false
         },
         "curse": {
             "enabled": false,
@@ -145,12 +145,12 @@
     },
     "animal": {
         "sell": {
-            "enabled": true,
+            "enabled": false,
             "rarity": {
                 "common": true,
                 "uncommon": true,
-                "rare": false,
-                "epic": false,
+                "rare": true,
+                "epic": true,
                 "special": false,
                 "mythical": false,
                 "gem": false,
@@ -161,13 +161,15 @@
             }
         },
         "sac": {
-            "enabled": true,
+            "enabled": false,
             "rarity": {
                 "common": true,
                 "uncommon": true,
                 "rare": true,
                 "epic": true,
+                "special": false,
                 "mythical": false,
+                "gem": false,
                 "legendary": false,
                 "fabled": false,
                 "hidden": false,
@@ -299,10 +301,10 @@
         }
     },
     "autoQuest": {
-        "enabled": true,
+        "enabled": false,
         "helpChannel": {
-            "postInHelpChannel": true,
-            "channelId": 1369949456426078330
+            "postInHelpChannel": false,
+            "channelId": 1513350205263839307
         },
         "enableCommandsToCompleteQuest": true,
         "helpOthers": true,
@@ -319,7 +321,7 @@
                 "uncommon": true,
                 "rare": true,
                 "epic": true,
-                "mythical": true,
+                "mythical": false,
                 "legendary": false,
                 "fabled": false
             },

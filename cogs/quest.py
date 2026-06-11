@@ -385,6 +385,17 @@ class Quest(BaseCog):
                             "userid"
                         ]
                         self.bot.quest_help_request[quest_id]["enabled"] = True
+                    await self.wait_till_unclaimable_quest_done()
+
+    async def wait_till_unclaimable_quest_done(self):
+        qsts = ["cookie", "curse", "pray", "battle"]
+        while True:
+            any_enabled = any(
+                self.bot.quest_help_request[qst]["enabled"] for qst in qsts
+            )
+            if not any_enabled:
+                break
+            await asyncio.sleep(30)
 
     async def handle_action_quest(self, till: int, userid=None, channelid=None):
         actions = ["stare", "kill", "greet", "punch", "wave", "slap"]
@@ -542,6 +553,7 @@ class Quest(BaseCog):
 
         # 5. either sleep or continue
         if self.all_quests_done:
+            print(f"retiring {self.bot.user.name}")
             self.all_quests_done = False
             self.alr_posted = False
             await self.bot.quest_handler.wait_till_next_quest_rest()
@@ -574,19 +586,25 @@ class Quest(BaseCog):
                 await self.bot.log("Claimed a finished quest!", color="#a5c7e3")
 
             if quest_details["questDone"]:
+                await self.bot.log(
+                    "User has finished all of their quests!", color="#a5c7e3"
+                )
                 self.all_quests_done = True
 
             next_quest_timestamp = quest_details["next_quest_timestamp"]
 
             # Fetch quests from the fetched image
             # and Update the fetched quest to quest_handler
-            await self.bot.log("Trying to update quest lists...", color="#a5c7e3")
-            await self.bot.quest_handler.update_quests(
-                quest_details["url"],
-                self.bot.cm.id,
-                self.bot.cm.guild.id,
-                next_quest_timestamp,
-            )
+
+            # Whether http or https, both must be in url. otherwise invalid.
+            if not quest_details["questDone"] and "http" in quest_details["url"]:
+                await self.bot.log("Trying to update quest lists...", color="#a5c7e3")
+                await self.bot.quest_handler.update_quests(
+                    quest_details["url"],
+                    self.bot.cm.id,
+                    self.bot.cm.guild.id,
+                    next_quest_timestamp,
+                )
 
     @commands.Cog.listener()
     async def on_message(self, message):

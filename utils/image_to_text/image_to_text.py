@@ -19,17 +19,18 @@ async def get_text_from_url(
     image_url: str, session: aiohttp.ClientSession, api_key: str = "helloworld"
 ):
     url = "https://api.ocr.space/parse/image"
+    print(f" Attempting {image_url} url")
     if api_key == "":
         api_key = "helloworld"
 
-    payload = {
-        "apikey": api_key,
-        "url": image_url,
-        "language": "eng",
-        "isOverlayRequired": True,
-        "ocrengine": "2",
-        "filetype": "png",
-    }
+    """payload = {
+        'apikey': api_key,
+        'url': image_url,
+        'language': "eng",
+        'isOverlayRequired': "true",
+        'ocrengine': '2',
+        "filetype": "png"
+    }"""
 
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0",
@@ -41,8 +42,16 @@ async def get_text_from_url(
 
     try:
         timeout = aiohttp.ClientTimeout(total=15)
+        # More safer I suppose
+        data = aiohttp.FormData()
+        data.add_field("apikey", api_key)
+        data.add_field("url", image_url)
+        data.add_field("language", "eng")
+        data.add_field("isOverlayRequired", "true")
+        data.add_field("ocrengine", "2")
+
         async with session.post(
-            url, data=payload, headers=headers, timeout=timeout
+            url, data=data, headers=headers, timeout=timeout
         ) as response:
             response.raise_for_status()
             result = await response.json()
@@ -71,33 +80,27 @@ async def get_text_from_url(
                 print("No positional overlay data returned for this page.")
                 continue
 
-            for page in parsed_results:
-                overlay = page.get("TextOverlay")
-                if not overlay or not overlay.get("Lines"):
-                    print("No positional overlay data returned for this page.")
-                    continue
+            result = []
+            for line in overlay["Lines"]:
+                words = line.get("Words", [])
+                x_coord = 0
+                y_coord = 0
+                if words:
+                    x_coord = words[0].get("Left", 0)
+                    y_coord = words[0].get("Top", 0)
 
-                result = []
-                for line in overlay["Lines"]:
-                    words = line.get("Words", [])
-                    x_coord = 0
-                    y_coord = 0
-                    if words:
-                        x_coord = words[0].get("Left", 0)
-                        y_coord = words[0].get("Top", 0)
+                text_portion = line.get("LineText")
+                # text_portion = next(iter(text_portion)).strip()
+                text = re.sub(r"[^a-zA-Z0-9 /]", "", text_portion)
+                result.append(
+                    {
+                        "text": text,
+                        "x_axis": int(x_coord),
+                        "y_axis": int(y_coord),
+                    }
+                )
 
-                    text_portion = line.get("LineText")
-                    # text_portion = next(iter(text_portion)).strip()
-                    text = re.sub(r"[^a-zA-Z0-9 /]", "", text_portion)
-                    result.append(
-                        {
-                            "text": text,
-                            "x_axis": int(x_coord),
-                            "y_axis": int(y_coord),
-                        }
-                    )
-
-            return result
+        return result
 
     except aiohttp.ClientError as e:
         print(f"HTTP Request failed: {e}")
