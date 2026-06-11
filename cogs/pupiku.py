@@ -40,11 +40,11 @@ class Pupiku(BaseCog):
 
     @property
     def pup_settings(self):
-        return self.bot.settings_dict_temp.commands.pup
+        return self.bot.settings_dict.commands.pup
 
     @property
     def piku_settings(self):
-        return self.bot.settings_dict_temp.commands.piku
+        return self.bot.settings_dict.commands.piku
 
     def set_and_validate_resp_time(self, cmd_name: str):
         resp_time = time.monotonic()
@@ -88,7 +88,7 @@ class Pupiku(BaseCog):
         if startup:
             while not self.startupFinished:
                 await self.bot.sleep_till(
-                    self.bot.settings_dict_temp.cooldowns.shortCooldown
+                    self.bot.settings_dict.cooldowns.shortCooldown
                 )
                 cmds = ["pup", "piku"]
                 choice = self.bot.random.choice(cmds)
@@ -115,9 +115,9 @@ class Pupiku(BaseCog):
             return
 
         if message.author.id == self.bot.user.id:
-            if f"{self.bot.settings_dict_temp.prefix}pup" in message.content:
+            if f"{self.bot.settings_dict.prefix}pup" in message.content:
                 self.set_send_time("pup")
-            if f"{self.bot.settings_dict_temp.prefix}piku" in message.content:
+            if f"{self.bot.settings_dict.prefix}piku" in message.content:
                 self.set_send_time("piku")
 
         if message.author.id != self.bot.owo_bot_id:

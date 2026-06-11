@@ -48,11 +48,11 @@ class Cookie(BaseCog):
 
     @property
     def cooldowns(self):
-        return self.bot.settings_dict_temp.cooldowns
+        return self.bot.settings_dict.cooldowns
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.commands.cookie
+        return self.bot.settings_dict.commands.cookie
 
     async def start_cookie(self):
         if str(self.bot.user.id) in accounts_dict:

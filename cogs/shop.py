@@ -40,7 +40,7 @@ class Shop(BaseCog):
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.commands.shop
+        return self.bot.settings_dict.commands.shop
 
     async def cog_load(self):
         if not self.settings.enabled:
@@ -57,7 +57,7 @@ class Shop(BaseCog):
     async def send_buy(self, startup=False):
         if startup:
             await self.bot.sleep_till(
-                self.bot.settings_dict_temp.cooldowns.shortCooldown
+                self.bot.settings_dict.cooldowns.shortCooldown
             )
         else:
             await self.bot.remove_queue(id="shop")
@@ -65,7 +65,7 @@ class Shop(BaseCog):
 
         items_to_buy = self.settings.get_items_to_buy(
             cur_cash=self.bot.user_status["balance"],
-            cash_check=self.bot.settings_dict_temp.cashCheck,
+            cash_check=self.bot.settings_dict.cashCheck,
         )
 
         item = self.bot.random.choice(items_to_buy)

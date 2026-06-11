@@ -101,7 +101,7 @@ class Captcha(BaseCog):
         self.captcha_site_opened = False
 
     def fetch_settings(self, cmd):
-        return getattr(self.bot.settings_dict_temp.commands, cmd)
+        return getattr(self.bot.settings_dict.commands, cmd)
 
     @property
     def captcha_settings(self):
@@ -310,7 +310,7 @@ class Captcha(BaseCog):
         ):
             if "I have verified that you are human! Thank you! :3" in message.content:
                 time_to_sleep = self.bot.random_float(
-                    self.bot.settings_dict_temp.cooldowns.captchaRestart
+                    self.bot.settings_dict.cooldowns.captchaRestart
                 )
                 await self.bot.log(
                     f"Captcha solved! - sleeping {time_to_sleep}s before restart.",

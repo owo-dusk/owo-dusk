@@ -75,19 +75,19 @@ class Looper(BaseCog):
 
     @property
     def owo_settings(self):
-        return self.bot.settings_dict_temp.commands.owo
+        return self.bot.settings_dict.commands.owo
 
     @property
     def pray_settings(self):
-        return self.bot.settings_dict_temp.commands.pray
+        return self.bot.settings_dict.commands.pray
 
     @property
     def curse_settings(self):
-        return self.bot.settings_dict_temp.commands.curse
+        return self.bot.settings_dict.commands.curse
 
     @property
     def reaction_bot_settings(self):
-        return self.bot.settings_dict_temp.cooldowns.reactionBot
+        return self.bot.settings_dict.cooldowns.reactionBot
 
     @property
     def is_enabled_dict(self):
@@ -108,7 +108,7 @@ class Looper(BaseCog):
 
     @property
     def level_settings(self):
-        return self.bot.settings_dict_temp.commands.lvlGrind
+        return self.bot.settings_dict.commands.lvlGrind
 
     def heap_settings(self, cmd):
         now = time.monotonic()
@@ -201,9 +201,19 @@ class Looper(BaseCog):
 
     async def send_pray_curse(self, cmd_name):
         cnf = self.get_pray_curse_settings(cmd_name)
+        for cmd in {"pray", "curse"}:
+            quest_cnf = self.bot.quest_help_request[cmd]
+            if quest_cnf["enabled"]:
+                break
+            
+        quest_help_arg = None
+        channel = None
+        if quest_cnf["enabled"]:
+            quest_help_arg = f"<@{quest_cnf['userid']}>"
+            channel = quest_cnf["channel"]
         cmd = {
             "cmd_name": cmd_name,
-            "cmd_arguments": pray_cmd_argument(cnf.user_id, cnf.ping_user),
+            "cmd_arguments": pray_cmd_argument(cnf.user_id, cnf.ping_user) if not quest_help_arg else quest_help_arg,
             "prefix": True,
             "checks": False,
             "id": "pray",  # pray will be utilised as id for curse as well
@@ -211,14 +221,32 @@ class Looper(BaseCog):
             if not cnf.custom_channel.enabled
             else cnf.custom_channel.channel,
         }
+        if channel:
+            cmd["channel"] =  channel
 
         if cmd["cmd_arguments"] and getattr(self, f"{cmd_name}_settings").count:
             cmd["cmd_arguments"] += f" {next(self.__dict__[f'{cmd_name}_counter'])}"
 
         await self.bot.put_queue(cmd)
         self.startup = False
-        await self.block_till_send(self.bot.settings_dict_temp.prefix + cmd["cmd_name"])
+        await self.block_till_send(self.bot.settings_dict.prefix + cmd["cmd_name"])
 
+        if quest_cnf["enabled"]:
+            self.bot.quest_help_request[cmd_name]["till"]-=1
+            current, completed = await self.bot.quest_handler.qh.update_progress(
+                self.bot.user.id, cnf['userid'], "battle_friend"
+            )
+            if current is not None:
+                await self.bot.quest_handler.sync_progress(cmd_name, current, completed)
+
+            if completed or self.bot.quest_help_request[cmd_name]["till"]<=0:
+                # reset
+                self.bot.quest_help_request[cmd_name] = {
+                    "till": 0,
+                    "enabled": False,
+                    "userid": 0,
+                    "channel": 0
+                }
     async def send_level(self):
         if self.level_settings.useQuote:
             msg = await fetch_quotes(self.bot.session)

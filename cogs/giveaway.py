@@ -33,11 +33,11 @@ class Giveaway(BaseCog):
 
     @property
     def cooldowns(self):
-        return self.bot.settings_dict_temp.cooldowns
+        return self.bot.settings_dict.cooldowns
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.giveaway
+        return self.bot.settings_dict.giveaway
 
     """Join previous giveaways"""
 

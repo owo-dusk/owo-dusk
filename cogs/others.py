@@ -103,7 +103,7 @@ class Others(BaseCog):
 
     @property
     def auto_use(self):
-        return self.bot.settings_dict_temp.autoUse
+        return self.bot.settings_dict.autoUse
 
     @property
     def webhook_settings(self):
@@ -127,6 +127,9 @@ class Others(BaseCog):
                     and not message.components[0].children[0].disabled
                 ):
                     await message.components[0].children[0].click()
+
+            
+
 
             if (
                 nick not in message.content
@@ -197,7 +200,7 @@ class Others(BaseCog):
                     "id": "zoo",
                 }
                 await self.bot.sleep_till(
-                    self.bot.settings_dict_temp.cooldowns.shortCooldown
+                    self.bot.settings_dict.cooldowns.shortCooldown
                 )
                 await self.bot.put_queue(team_cmd, priority=True)
 
@@ -225,6 +228,19 @@ class Others(BaseCog):
             if not self.bot.ongoing_owobot_event:
                 await self.bot.log("OwO Event Detected! - DB not updated", "#aeb596")
                 self.bot.ongoing_owobot_event = True
+
+        # Battle quest
+        if not self.bot.ongoing_battle_external_quest:
+            return
+        if f"<@{self.bot.user.id}" == message.content:
+            if message.embeds and message.embeds[0].footer:
+                emb = message.embeds[0]
+                if emb.footer.text.lower() == "this challenge will expire in 10 minutes":
+                    if (
+                        message.components[0].children[0]
+                        and not message.components[0].children[0].disabled
+                    ):
+                        await message.components[0].children[0].click()
 
     async def on_component_message(self, message):
         if self.event_date_detected:

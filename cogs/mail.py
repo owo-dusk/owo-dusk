@@ -83,7 +83,7 @@ class Mail(BaseCog):
         return int(pages[0]) < int(pages[1])
 
     async def cog_load(self):
-        if not self.bot.settings_dict_temp.mail:
+        if not self.bot.settings_dict.mail:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.mail"))
             except ExtensionNotLoaded:

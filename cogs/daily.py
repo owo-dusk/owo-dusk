@@ -44,7 +44,7 @@ class Daily(BaseCog):
 
     @property
     def cooldowns(self):
-        return self.bot.settings_dict_temp.cooldowns
+        return self.bot.settings_dict.cooldowns
 
     async def start_daily(self):
         if str(self.bot.user.id) in accounts_dict:
@@ -70,7 +70,7 @@ class Daily(BaseCog):
                     json.dump(accounts_dict, f, indent=4)
 
     async def cog_load(self):
-        if not self.bot.settings_dict_temp.daily:
+        if not self.bot.settings_dict.daily:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.daily"))
             except ExtensionNotLoaded:

@@ -31,6 +31,7 @@ class GlobalSettings:
         self.typingIndicator = d.get("typingIndicator", False)
         self.silentMessage = d.get("silentMessages", False)  # Changed
         self.offlineStatus = d.get("offlineStatus", False)
+        self.ocrApi = d.get("ocrApi", "helloworld")
 
         # Website Dashboard
         self.website = Website(d.get("website", {}))

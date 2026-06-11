@@ -47,7 +47,7 @@ class Sell(BaseCog):
 
     @property
     def animal_setting(self):
-        return self.bot.settings_dict_temp.animal
+        return self.bot.settings_dict.animal
 
     @property
     def sell_settings(self):
@@ -84,15 +84,22 @@ class Sell(BaseCog):
             if (rarity := RARITY_MAP[item]) and self.bot.animal_rank_in_zoo[rarity]
             # https://www.geeksforgeeks.org/python/walrus-operator-in-python-3-8/
         ]
-        return " ".join(filtered_items)
+        arg = " ".join(filtered_items).strip()
+        if arg != "":
+            return " ".join(filtered_items)
+        return None
 
     def get_command(self, name: str):
         if name not in ("sell", "sac"):
             raise ValueError("Invalid command name")
 
+        arg = self.get_cmd_argument(name)
+        if not arg:
+            return None
+
         base = {
             "cmd_name": name,
-            "cmd_arguments": self.get_cmd_argument(name),
+            "cmd_arguments": arg,
             "prefix": True,
             "checks": True,
             "id": name,
@@ -115,9 +122,10 @@ class Sell(BaseCog):
             gap = time.monotonic() - last_ran
             if last_ran == 0 or gap > cd:
                 cmd_data = self.get_command(cmd)
-                await self.bot.sleep_till([10, 15])
-                await self.bot.put_queue(cmd_data)
-                self.__dict__[f"{cmd}_lastran"] = time.monotonic()
+                if cmd_data:
+                    await self.bot.sleep_till([10, 15])
+                    await self.bot.put_queue(cmd_data)
+                    self.__dict__[f"{cmd}_lastran"] = time.monotonic()
 
         await self.bot.sleep_till([10, 15])
 
@@ -146,7 +154,7 @@ class Sell(BaseCog):
             ):
                 await self.bot.remove_queue(id="sell")
 
-                if self.bot.settings_dict_temp.cashCheck:
+                if self.bot.settings_dict.cashCheck:
                     try:
                         self.bot.update_cash(
                             int(

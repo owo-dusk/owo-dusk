@@ -48,7 +48,7 @@ class Army(BaseCog):
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.commands.army
+        return self.bot.settings_dict.commands.army
 
     def set_send_time(self):
         self.command_status["command_send_time"] = time.monotonic()
@@ -82,7 +82,7 @@ class Army(BaseCog):
             if not self.bot.should_run(last_ran):
                 await asyncio.sleep(self.bot.calc_time())
             await self.bot.sleep_till(
-                self.bot.settings_dict_temp.cooldowns.shortCooldown
+                self.bot.settings_dict.cooldowns.shortCooldown
             )
         else:
             await self.bot.remove_queue(id="army")
@@ -108,7 +108,7 @@ class Army(BaseCog):
 
         if (
             message.author.id == self.bot.user.id
-            and f"{self.bot.settings_dict_temp.prefix}army" in message.content
+            and f"{self.bot.settings_dict.prefix}army" in message.content
         ):
             self.set_send_time()
 

@@ -57,7 +57,7 @@ class CustomCommands(BaseCog):
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.customCommands
+        return self.bot.settings_dict.customCommands
 
     @tasks.loop()
     async def command_handler(self):

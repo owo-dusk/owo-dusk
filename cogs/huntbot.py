@@ -76,7 +76,7 @@ class Huntbot(BaseCog):
         }
 
         enabled_traits = (
-            self.bot.settings_dict_temp.commands.huntbot.upgrader.get_enabled_traits()
+            self.bot.settings_dict.commands.huntbot.upgrader.get_enabled_traits()
         )
 
         for trait in enabled_traits:
@@ -84,11 +84,11 @@ class Huntbot(BaseCog):
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.commands.huntbot
+        return self.bot.settings_dict.commands.huntbot
 
     @property
     def cooldowns(self):
-        return self.bot.settings_dict_temp.cooldowns
+        return self.bot.settings_dict.cooldowns
 
     async def cog_load(self):
         if not self.settings.enabled:
@@ -165,7 +165,7 @@ class Huntbot(BaseCog):
                     "huntbot received password, attempting to solve!", "#afaf87"
                 )
                 await self.send_ah(
-                    timeToSleep=self.bot.settings_dict_temp.cooldowns.briefCooldown,
+                    timeToSleep=self.bot.settings_dict.cooldowns.briefCooldown,
                     ans=ans,
                 )
             elif "Please include your password!" in message.content:
@@ -241,7 +241,7 @@ class Huntbot(BaseCog):
                         else:
                             # Can proceed with running huntbot, no current hunting ongoing
                             await self.send_ah(
-                                timeToSleep=self.bot.settings_dict_temp.cooldowns.briefCooldown,
+                                timeToSleep=self.bot.settings_dict.cooldowns.briefCooldown,
                                 no_cash_arg=False,
                             )
                             await self.bot.log(

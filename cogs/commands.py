@@ -31,7 +31,7 @@ class Commands(BaseCog):
 
     @property
     def command_handler_settings(self):
-        return self.bot.settings_dict_temp.cooldowns.commandHandler
+        return self.bot.settings_dict.cooldowns.commandHandler
 
     def sleep_required(self):
         """makes sure three commands are within 5 second limit"""
@@ -117,7 +117,7 @@ class Commands(BaseCog):
                     async with self.bot.lock:
                         self.bot.checks.append(cmd)
 
-            if self.bot.settings_dict_temp.useSlashCommands and cmd.get(
+            if self.bot.settings_dict.useSlashCommands and cmd.get(
                 "slash_cmd_name", False
             ):
                 await self.bot.slashCommandSender(

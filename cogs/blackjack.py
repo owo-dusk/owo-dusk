@@ -78,15 +78,15 @@ class Blackjack(BaseCog):
 
     @property
     def gamble_settings(self):
-        return self.bot.settings_dict_temp.gamble
+        return self.bot.settings_dict.gamble
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.gamble.blackjack
+        return self.bot.settings_dict.gamble.blackjack
 
     @property
     def cooldowns(self):
-        return self.bot.settings_dict_temp.cooldowns
+        return self.bot.settings_dict.cooldowns
 
     async def send_blackjack(self, startup=False):
         goal_system = self.gamble_settings.goals
@@ -206,7 +206,7 @@ class Blackjack(BaseCog):
             await self.send_blackjack()
 
     async def cog_load(self):
-        if not self.bot.settings_dict_temp.gamble.blackjack.enabled:
+        if not self.bot.settings_dict.gamble.blackjack.enabled:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.blackjack"))
             except ExtensionNotLoaded as e:

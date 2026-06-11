@@ -25,7 +25,7 @@ class Boss(BaseCog):
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.boss
+        return self.bot.settings_dict.boss
 
     async def cog_load(self):
         if not self.settings.enabled:

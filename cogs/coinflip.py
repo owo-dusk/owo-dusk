@@ -36,7 +36,7 @@ class Coinflip(BaseCog):
         }
         self.turns_lost = 0
         self.exceeded_max_amount = False
-        self.test = self.bot.settings_dict_temp
+        self.test = self.bot.settings_dict
 
         self.gamble_flags = {
             "goal_reached": False,
@@ -46,15 +46,15 @@ class Coinflip(BaseCog):
 
     @property
     def gamble_settings(self):
-        return self.bot.settings_dict_temp.gamble
+        return self.bot.settings_dict.gamble
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.gamble.coinflip
+        return self.bot.settings_dict.gamble.coinflip
 
     @property
     def cooldowns(self):
-        return self.bot.settings_dict_temp.cooldowns
+        return self.bot.settings_dict.cooldowns
 
     async def cog_load(self):
         if not self.settings.enabled:

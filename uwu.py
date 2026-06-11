@@ -20,8 +20,6 @@ import random
 import signal
 import socket
 import sqlite3
-import subprocess
-import sys
 import threading
 import time
 import traceback
@@ -58,6 +56,7 @@ from utils.system import (
     resource_path,
     is_termux,
 )
+from utils.quest_helper.quest import QuestHandler, LocalQuestHandler
 
 
 """Ctrl+c detect"""
@@ -299,7 +298,7 @@ class MyClient(commands.Bot):
         self.state_event = asyncio.Event()
         self.queue = asyncio.PriorityQueue()
         self.message_dispatcher = MessageDispatcher()
-        self.settings_dict_temp = None
+        self.settings_dict = None
         self.global_settings_dict = global_settings_dict
         self.captcha_settings_dict = captcha_settings_dict
         self.commands_dict = {}
@@ -317,6 +316,35 @@ class MyClient(commands.Bot):
         self.cmd_priorities = {}
         self.captcha_handler = hcaptcha_solver
         self.db = database.Database(self)
+        self.quest_handler = None
+
+        self.quest_help_request = {
+            "cookie": {
+                "till": 0,
+                "enabled": False,
+                "userid": 0,
+                "channel": 0
+            },
+            "pray": {
+                "till": 0,
+                "enabled": False,
+                "userid": 0,
+                "channel": 0
+            },
+            "curse": {
+                "till": 0,
+                "enabled": False,
+                "userid": 0,
+                "channel": 0
+            },
+            "battle": {
+                "till": 0,
+                "enabled": False,
+                "userid": 0,
+                "channel": 0
+            }
+        }
+        self.ongoing_battle_external_quest = False
 
         # For sell/sac to know the rank of animals caught from hunt to dynamically handle them
         # Updated through hunt.py Cog.
@@ -424,7 +452,7 @@ class MyClient(commands.Bot):
 
     @tasks.loop(seconds=1)
     async def random_sleep(self):
-        sleep_obj = self.settings_dict_temp.sleep
+        sleep_obj = self.settings_dict.sleep
         await asyncio.sleep(sleep_obj.get_sleep_time())
         if sleep_obj.should_sleep():
             await self.set_stat(False)
@@ -493,7 +521,7 @@ class MyClient(commands.Bot):
             )
 
             with open(config_path, "r", encoding="utf-8") as config_file:
-                self.settings_dict_temp = config_models.configs.FetchSettings(
+                self.settings_dict = config_models.configs.FetchSettings(
                     json.load(config_file)
                 )
 
@@ -507,9 +535,9 @@ class MyClient(commands.Bot):
             await self.log(f"Error - Failed to unload cog {cog_name}: {e}", "#c25560")
 
     def refresh_commands_dict(self):
-        commands_obj = self.settings_dict_temp.commands
-        reaction_bot_obj = self.settings_dict_temp.cooldowns.reactionBot
-        gamble_obj = self.settings_dict_temp.gamble
+        commands_obj = self.settings_dict.commands
+        reaction_bot_obj = self.settings_dict.cooldowns.reactionBot
+        gamble_obj = self.settings_dict.gamble
 
         # Reaction Bot:
         if (
@@ -542,24 +570,25 @@ class MyClient(commands.Bot):
             "battle": commands_obj.battle.enabled
             and not reaction_bot_obj.huntAndBattle,
             "blackjack": gamble_obj.blackjack.enabled,
-            "boss": self.settings_dict_temp.boss.enabled,
+            "boss": self.settings_dict.boss.enabled,
             "captcha": True,
             "channelswitcher": self.global_settings_dict.channelSwitcher.enabled,
             "chat": True,
             "coinflip": gamble_obj.coinflip.enabled,
             "commands": True,
             "cookie": commands_obj.cookie.enabled,
-            "customcommands": self.settings_dict_temp.customCommands.enabled,
-            "daily": self.settings_dict_temp.daily,
-            "gems": self.settings_dict_temp.autoUse.gems.enabled,
-            "giveaway": self.settings_dict_temp.giveaway.enabled,
+            "customcommands": self.settings_dict.customCommands.enabled,
+            "daily": self.settings_dict.daily,
+            "gems": self.settings_dict.autoUse.gems.enabled,
+            "giveaway": self.settings_dict.giveaway.enabled,
             "hunt": commands_obj.hunt.enabled and not reaction_bot_obj.huntAndBattle,
             "huntbot": commands_obj.huntbot.enabled,
             "looper": should_start_looper,
             "lottery": commands_obj.lottery.enabled,
-            "mail": self.settings_dict_temp.mail,
+            "mail": self.settings_dict.mail,
             "others": True,
             "pupiku": commands_obj.pup.enabled or commands_obj.piku.enabled,
+            "quest": self.settings_dict.autoQuest.enabled,
             "reactionbot": reactionbot,
             "sell": True,
             "shop": commands_obj.shop.enabled,
@@ -590,7 +619,7 @@ class MyClient(commands.Bot):
             self.db.update_cmd_db(id)
 
     def construct_command(self, data, guild_id):
-        prefix = self.settings_dict_temp.prefix if data.get("prefix") else ""
+        prefix = self.settings_dict.prefix if data.get("prefix") else ""
 
         if guild_id and guild_id != self.cm.guild.id:
             # Revert
@@ -840,9 +869,9 @@ class MyClient(commands.Bot):
 
     def calculate_correction_time(self, command):
         command = command.replace(" ", "")  # Remove spaces for accurate timing
-        base_delay = self.random_float(self.settings_dict_temp.misspell.baseDelay)
+        base_delay = self.random_float(self.settings_dict.misspell.baseDelay)
         rectification_time = sum(
-            self.random_float(self.settings_dict_temp.misspell.rectificationTime)
+            self.random_float(self.settings_dict.misspell.rectificationTime)
             for _ in command
         )
         total_time = base_delay + rectification_time
@@ -867,8 +896,8 @@ class MyClient(commands.Bot):
         disable_log = self.misc["console"]["disableCommandSendLog"]
         msg = message
         misspelled = False
-        if self.settings_dict_temp.misspell.enabled:
-            misspelled = self.settings_dict_temp.misspell.should_misspell()
+        if self.settings_dict.misspell.enabled:
+            misspelled = self.settings_dict.misspell.should_misspell()
             msg = misspell_word(message)
             # left off here!
 
@@ -981,10 +1010,10 @@ class MyClient(commands.Bot):
         )
 
     def update_cash(self, amount, override=False, reduce=False, assumed=False):
-        if override and self.settings_dict_temp.cashCheck:
+        if override and self.settings_dict.cashCheck:
             self.user_status["balance"] = amount
         else:
-            if self.settings_dict_temp.cashCheck and not assumed:
+            if self.settings_dict.cashCheck and not assumed:
                 if reduce:
                     self.user_status["balance"] -= amount
                 else:
@@ -1041,6 +1070,9 @@ class MyClient(commands.Bot):
         self.local_headers["Authorization"] = self.token
         if self.session is None:
             self.session = aiohttp.ClientSession()
+
+        self.quest_handler = LocalQuestHandler(global_quest_handler, self.user.id, self.session)
+
         printBox(
             f"-Loaded {self.username}[*].".center(console_width - 2),
             "bold royal_blue1 ",
@@ -1124,10 +1156,10 @@ class MyClient(commands.Bot):
         if self.global_settings_dict.offlineStatus:
             self.presence.start()
 
-        if self.settings_dict_temp.sleep.enabled:
+        if self.settings_dict.sleep.enabled:
             self.random_sleep.start()
 
-        if self.settings_dict_temp.cashCheck:
+        if self.settings_dict.cashCheck:
             asyncio.create_task(self.check_for_cash())
 
 
@@ -1467,6 +1499,7 @@ if __name__ == "__main__":
     console.rule(style="navy_blue")
 
     webhook_handler = webhookSender(global_settings_dict.webhook.webhookUrl)
+    global_quest_handler = QuestHandler(api=global_settings_dict.ocrApi)
     hcaptcha_solver = None
     if (
         captcha_settings_dict["image_solver"]["enabled"]

@@ -49,11 +49,11 @@ class Lottery(BaseCog):
 
     @property
     def cooldown(self):
-        return self.bot.settings_dict_temp.cooldowns
+        return self.bot.settings_dict.cooldowns
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.commands.lottery
+        return self.bot.settings_dict.commands.lottery
 
     @property
     def cmd(self):

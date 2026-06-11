@@ -114,7 +114,7 @@ class Database:
             "piku",
             "army",
         }:
-            # Captcha and cowoncy handled seperately
+            # Captcha and cowoncy handled separately
             raise ValueError("Invalid column name.")
 
         database_handler.update_database(

@@ -112,7 +112,7 @@ class Gems(BaseCog):
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.autoUse.gems
+        return self.bot.settings_dict.autoUse.gems
 
     def should_use_special_gem(self):
         if not self.settings.gemsToUse["specialGem"]:
@@ -288,7 +288,7 @@ class Gems(BaseCog):
 
     async def cog_load(self):
         if (
-            not self.bot.settings_dict_temp.commands.hunt.enabled
+            not self.bot.settings_dict.commands.hunt.enabled
             or not self.settings.enabled
         ):
             try:
@@ -347,7 +347,7 @@ class Gems(BaseCog):
             if self.inventory_check:
                 await self.use_gems(self.available_gems, full=True)
                 await self.bot.sleep_till(
-                    self.bot.settings_dict_temp.cooldowns.briefCooldown
+                    self.bot.settings_dict.cooldowns.briefCooldown
                 )
                 self.inventory_check = False
                 self.cache_gems_in_use = {}

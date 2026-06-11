@@ -62,6 +62,9 @@ class Settings:
         # Auto sell/sac - Animal
         self.animal = Animal(d.get("animal", {}))
 
+        # Auto Quest
+        self.autoQuest = AutoQuest(d.get("autoQuest", {}))
+
 
 GEMS_RARITY = [
     "common",
@@ -96,6 +99,19 @@ def find_least_gap(list_to_check):
 
     return final_result
 
+
+class AutoQuest:
+    def __init__(self, d: dict):
+        self.enabled = d.get("enabled", False)
+        helpChannel = d.get("helpChannel", {})
+        self.useHelpChannel = helpChannel.get("postInHelpChannel", False)
+        self.channelId = helpChannel.get("channelId", 0)
+        self.helpOthers = d.get("helpOthers", False)
+        self.canEnable = d.get("enableCommandsToCompleteQuest", False)
+        self.checkCooldown = d.get("checkCooldown", [])
+
+    def get_cd(self):
+        return GET_CD(self.checkCooldown)
 
 class CustomCommands:
     def __init__(self, d: dict):

@@ -64,7 +64,7 @@ class Hunt(BaseCog):
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.commands.hunt
+        return self.bot.settings_dict.commands.hunt
 
     @property
     def webhook_settings(self):
@@ -132,7 +132,7 @@ class Hunt(BaseCog):
     async def cog_load(self):
         if (
             not self.settings.enabled
-            or self.bot.settings_dict_temp.cooldowns.reactionBot.huntAndBattle
+            or self.bot.settings_dict.cooldowns.reactionBot.huntAndBattle
         ):
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.hunt"))

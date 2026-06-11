@@ -50,15 +50,15 @@ class Slots(BaseCog):
 
     @property
     def gamble_settings(self):
-        return self.bot.settings_dict_temp.gamble
+        return self.bot.settings_dict.gamble
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.gamble.slots
+        return self.bot.settings_dict.gamble.slots
 
     @property
     def cooldowns(self):
-        return self.bot.settings_dict_temp.cooldowns
+        return self.bot.settings_dict.cooldowns
 
     async def cog_load(self):
         if not self.settings.enabled:
