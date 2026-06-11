@@ -205,7 +205,7 @@ class Looper(BaseCog):
             quest_cnf = self.bot.quest_help_request[cmd]
             if quest_cnf["enabled"]:
                 break
-            
+
         quest_help_arg = None
         channel = None
         if quest_cnf["enabled"]:
@@ -213,7 +213,9 @@ class Looper(BaseCog):
             channel = quest_cnf["channel"]
         cmd = {
             "cmd_name": cmd_name,
-            "cmd_arguments": pray_cmd_argument(cnf.user_id, cnf.ping_user) if not quest_help_arg else quest_help_arg,
+            "cmd_arguments": pray_cmd_argument(cnf.user_id, cnf.ping_user)
+            if not quest_help_arg
+            else quest_help_arg,
             "prefix": True,
             "checks": False,
             "id": "pray",  # pray will be utilised as id for curse as well
@@ -222,7 +224,7 @@ class Looper(BaseCog):
             else cnf.custom_channel.channel,
         }
         if channel:
-            cmd["channel"] =  channel
+            cmd["channel"] = channel
 
         if cmd["cmd_arguments"] and getattr(self, f"{cmd_name}_settings").count:
             cmd["cmd_arguments"] += f" {next(self.__dict__[f'{cmd_name}_counter'])}"
@@ -232,23 +234,27 @@ class Looper(BaseCog):
         await self.block_till_send(self.bot.settings_dict.prefix + cmd["cmd_name"])
 
         if quest_cnf["enabled"]:
-            self.bot.quest_help_request[cmd_name]["till"]-=1
+            self.bot.quest_help_request[cmd_name]["till"] -= 1
             current, completed = await self.bot.quest_handler.qh.update_progress(
-                self.bot.user.id, cnf['userid'], "battle_friend"
+                self.bot.user.id, cnf["userid"], "battle_friend"
             )
             if current is not None:
                 await self.bot.quest_handler.sync_progress(cmd_name, current, completed)
 
-            if completed or self.bot.quest_help_request[cmd_name]["till"]<=0:
+            if completed or self.bot.quest_help_request[cmd_name]["till"] <= 0:
                 # reset
                 self.bot.quest_help_request[cmd_name] = {
                     "till": 0,
                     "enabled": False,
                     "userid": 0,
-                    "channel": 0
+                    "channel": 0,
                 }
+
     async def send_level(self):
-        if self.level_settings.useQuote:
+        if (
+            self.level_settings.useQuote
+            and self.bot.danger_settings_dict["allow_quotes"]
+        ):
             msg = await fetch_quotes(self.bot.session)
         else:
             msg = generate_random_string(
@@ -297,6 +303,14 @@ class Looper(BaseCog):
             except ExtensionNotLoaded:
                 pass
         else:
+            if (
+                self.level_settings.useQuote
+                and not self.bot.danger_settings_dict["allow_quotes"]
+            ):
+                await self.bot.log(
+                    "For level grind, quotes are disabled unless manually enabled through `owo-dusk/config/danger.toml` file due to risks. Please give the file a read and enable it after considering those risks",
+                    "#e6e65a",
+                )
             self.initiate_loop.start()
 
     async def cog_unload(self):

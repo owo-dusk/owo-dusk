@@ -37,11 +37,15 @@ class captchaClient:
         try:
             # aiohttp uses total timeout instead of a simple integer
             timeout = aiohttp.ClientTimeout(total=10)
-            
-            async with session.post(url, json={"clientKey": self.api}, timeout=timeout) as response:
+
+            async with session.post(
+                url, json={"clientKey": self.api}, timeout=timeout
+            ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return int(data.get("balance", 0)) if data.get("errorId") == 0 else 0
+                    return (
+                        int(data.get("balance", 0)) if data.get("errorId") == 0 else 0
+                    )
                 return 0
         except Exception:
             return 0

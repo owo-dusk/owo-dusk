@@ -298,7 +298,16 @@
             ]
         }
     },
-    
+    "autoQuest": {
+        "enabled": true,
+        "helpChannel": {
+            "postInHelpChannel": true,
+            "channelId": 1369949456426078330
+        },
+        "enableCommandsToCompleteQuest": true,
+        "helpOthers": true,
+        "checkCooldown": [10, 30]
+    },
     "autoUse": {
         "gems": {
             "enabled": true,

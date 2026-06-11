@@ -68,6 +68,7 @@ animal_ranks = [
 UPDATE ongoing_battle_external_quest FLAG B4 RELEASE!
 """
 
+
 class Quest(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
@@ -77,7 +78,6 @@ class Quest(BaseCog):
             "prefix": True,
             "checks": True,
             "id": "quest",
-
         }
         self.all_quests_done = False
         self.alr_posted = False
@@ -97,7 +97,7 @@ class Quest(BaseCog):
 
         self.repeat_quest_flag = False
 
-    def get_quest_cmd(self, channel = None):
+    def get_quest_cmd(self, channel=None):
         cmd = self.quest_cmd.copy()
         if not channel:
             return cmd
@@ -117,15 +117,31 @@ class Quest(BaseCog):
         return cf or slots or bj
 
     async def cog_load(self):
-        if not self.settings.enabled:
+        # its not smart to use `await`able functions here, double check!
+        if (
+            not self.settings.enabled
+            or not self.bot.danger_settings_dict["allow_quotes"]
+        ):
+            if not self.bot.danger_settings_dict["allow_quotes"]:
+                await self.bot.log(
+                    "Current Auto quests is in a experimental stage. Inorder to avoid issues, we have locked auto quest until user manually alows it from `owo-dusk/config/danger.toml` file. Check the file for more details!",
+                    "#e6e65a",
+                )
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.quest"))
             except ExtensionNotLoaded:
                 pass
         else:
             reaction_bot_settings = self.bot.settings_dict.cooldowns.reactionBot
-            if reaction_bot_settings.huntAndBattle or reaction_bot_settings.owo or reaction_bot_settings.prayAndCurse:
-                await self.bot.log("Currently `helpOthers` doesn't work with reactionbot. There were some issues with reaction bot and quest. This will be doable once `autoQuest` comes out of experimental mode in future updates. You may continue using as is, but it would be better to disable reactionbot while using autoQuest for the best experience!", "#e6e65a")
+            if (
+                reaction_bot_settings.huntAndBattle
+                or reaction_bot_settings.owo
+                or reaction_bot_settings.prayAndCurse
+            ):
+                await self.bot.log(
+                    "Currently `helpOthers` doesn't work with reactionbot. There were some issues with reaction bot and quest. This will be doable once `autoQuest` comes out of experimental mode in future updates. You may continue using as is, but it would be better to disable reactionbot while using autoQuest for the best experience!",
+                    "#e6e65a",
+                )
             self.main_quest_loop.start()
 
     def is_valid_quest(self, components):
@@ -139,10 +155,7 @@ class Quest(BaseCog):
             return False
 
         for comp in section_components:
-            if (
-                comp.content
-                and f"<@{self.bot.user.id}>'s Quest Log" in comp.content
-            ):
+            if comp.content and f"<@{self.bot.user.id}>'s Quest Log" in comp.content:
                 return True
 
         return False
@@ -208,43 +221,63 @@ class Quest(BaseCog):
         # Handle quests
         for quest in quests.copy():
             quest_id = quest["quest_id"]
-            quest_till = self.quest_self_doable[quest_id]['till']
+            quest_till = self.quest_self_doable[quest_id]["till"]
             # Reset values to be safe
             self.catcha_a_rank, self.repeat_quest_flag = "", False
             # 1. hunt
             if not self.get_cmd_cnf("hunt").enabled and self.settings.canEnable:
                 if "find_animal_" in quest_id:
                     self.catcha_a_rank = quest_id.replace("find_animal_", "")
-                    await self.bot.log(f"Attempting to do quest - catch pet of {self.catcha_a_rank} (hunt)", color="#a5c7e3")
+                    await self.bot.log(
+                        f"Attempting to do quest - catch pet of {self.catcha_a_rank} (hunt)",
+                        color="#a5c7e3",
+                    )
                     await self.handle_repeat_quest("hunt")
 
                 elif quest_id == "hunt":
-                    await self.bot.log(f"Attempting to do quest - running hunt x{quest_till}", color="#a5c7e3")
+                    await self.bot.log(
+                        f"Attempting to do quest - running hunt x{quest_till}",
+                        color="#a5c7e3",
+                    )
                     await self.handle_repeat_quest("hunt", quest_till)
             elif not self.get_cmd_cnf("battle").enabled and self.settings.canEnable:
                 if quest_id == "battle_xp":
-                    await self.bot.log(f"Attempting to do quest - gain {quest_till} xp from battle", color="#a5c7e3")
+                    await self.bot.log(
+                        f"Attempting to do quest - gain {quest_till} xp from battle",
+                        color="#a5c7e3",
+                    )
                     await self.handle_repeat_quest("battle")
 
                 elif quest_id == "battle":
-                    await self.bot.log(f"Attempting to do quest - running battle x{quest_till}", color="#a5c7e3")
+                    await self.bot.log(
+                        f"Attempting to do quest - running battle x{quest_till}",
+                        color="#a5c7e3",
+                    )
                     await self.handle_repeat_quest("battle", quest_till)
 
             elif not self.get_cmd_cnf("owo").enabled and self.settings.canEnable:
                 if quest_id == "owo":
-                    await self.bot.log(f"Attempting to do quest - send owo x{quest_till}", color="#a5c7e3")
+                    await self.bot.log(
+                        f"Attempting to do quest - send owo x{quest_till}",
+                        color="#a5c7e3",
+                    )
                     await self.handle_repeat_quest("owo", quest_till)
             elif quest_id == "gamble":
                 if not self.is_gamble_enabled and self.settings.canEnable:
-                    await self.bot.log(f"Attempting to do quest - running gamble commands x{quest_till}", color="#a5c7e3")
+                    await self.bot.log(
+                        f"Attempting to do quest - running gamble commands x{quest_till}",
+                        color="#a5c7e3",
+                    )
                     await self.handle_repeat_quest(
                         self.bot.random.choice(["slots", "coinflip"]), quest_till
                     )
 
             elif quest_id == "action_send":
-                await self.bot.log(f"Attempting to do quest - sending actions x{quest_till}", color="#a5c7e3")
+                await self.bot.log(
+                    f"Attempting to do quest - sending actions x{quest_till}",
+                    color="#a5c7e3",
+                )
                 await self.handle_action_quest(quest_till)
-
 
     async def handle_helpable_quests(self, quests):
         """Quests others can't do themselves, Blocking.."""
@@ -300,35 +333,58 @@ class Quest(BaseCog):
                     await self.handle_action_quest(till=till)
 
                 elif quest_id == "battle_friend":
-                    await self.bot.log(f"Attempting to help {quest['userid']} with {quest_id}", color="#a5c7e3")
-                    if not self.get_cmd_cnf("battle").enabled and self.settings.canEnable:
-                        await self.handle_repeat_quest("battle", till, f"<@{quest['userid']}>")
+                    await self.bot.log(
+                        f"Attempting to help {quest['userid']} with {quest_id}",
+                        color="#a5c7e3",
+                    )
+                    if (
+                        not self.get_cmd_cnf("battle").enabled
+                        and self.settings.canEnable
+                    ):
+                        await self.handle_repeat_quest(
+                            "battle", till, f"<@{quest['userid']}>"
+                        )
                     else:
                         self.bot.quest_help_request["battle"]["channel"] = channel
                         self.bot.quest_help_request["battle"]["till"] = till
-                        self.bot.quest_help_request["battle"]["userid"] = quest['userid']
+                        self.bot.quest_help_request["battle"]["userid"] = quest[
+                            "userid"
+                        ]
                         self.bot.quest_help_request["battle"]["enabled"] = True
-                        
+
                 elif quest_id in {"cookie", "pray", "curse"}:
-                    
                     enabled = False
                     if quest_id != "cookie":
                         # why? since curse and pray cooldown is shared!
-                        enabled = self.get_cmd_cnf("pray").enabled or self.get_cmd_cnf("curse").enabled
+                        enabled = (
+                            self.get_cmd_cnf("pray").enabled
+                            or self.get_cmd_cnf("curse").enabled
+                        )
                     else:
                         cnf = self.get_cmd_cnf(quest_id)
                         enabled = cnf.enabled
-                    await self.bot.log(f"Attempting to help {quest['userid']} with {quest_id}", color="#a5c7e3")
+                    await self.bot.log(
+                        f"Attempting to help {quest['userid']} with {quest_id}",
+                        color="#a5c7e3",
+                    )
                     if not enabled and self.settings.canEnable:
                         # if not chnl, it will be same guild. we may send in our own channel if same guild
-                        
-                        await self.handle_repeat_quest(quest_id, till, f"<@{quest['userid']}>", quest['userid'], quest_id, channel)
+
+                        await self.handle_repeat_quest(
+                            quest_id,
+                            till,
+                            f"<@{quest['userid']}>",
+                            quest["userid"],
+                            quest_id,
+                            channel,
+                        )
                     else:
                         self.bot.quest_help_request[quest_id]["channel"] = channel
                         self.bot.quest_help_request[quest_id]["till"] = till
-                        self.bot.quest_help_request[quest_id]["userid"] = quest['userid']
+                        self.bot.quest_help_request[quest_id]["userid"] = quest[
+                            "userid"
+                        ]
                         self.bot.quest_help_request[quest_id]["enabled"] = True
-
 
     async def handle_action_quest(self, till: int, userid=None, channelid=None):
         actions = ["stare", "kill", "greet", "punch", "wave", "slap"]
@@ -338,7 +394,7 @@ class Quest(BaseCog):
             "prefix": True,
             "checks": True,
             "id": "action",
-            "channel": channelid
+            "channel": channelid,
         }
 
         for _ in range(till):
@@ -352,7 +408,9 @@ class Quest(BaseCog):
                     self.bot.user.id, userid, "action_receive"
                 )
                 if current is not None:
-                    await self.bot.quest_handler.sync_progress("action_receive", current, completed)
+                    await self.bot.quest_handler.sync_progress(
+                        "action_receive", current, completed
+                    )
                 if completed:
                     break
 
@@ -381,7 +439,15 @@ class Quest(BaseCog):
         except asyncio.TimeoutError:
             print("this is bad, check failed miserably!")
 
-    async def handle_repeat_quest(self, cmd_name, till: int = None, arg: str = None, upd_userid: int = None, upd_questid: str = None, chn_to_send: int = None) -> bool:
+    async def handle_repeat_quest(
+        self,
+        cmd_name,
+        till: int = None,
+        arg: str = None,
+        upd_userid: int = None,
+        upd_questid: str = None,
+        chn_to_send: int = None,
+    ) -> bool:
         """
         Repeat quest handles repeated sending of commands
         The end of this loop is either determined by `till` if provided
@@ -400,7 +466,7 @@ class Quest(BaseCog):
                 "prefix": True if cmd_name != "owo" else False,
                 "checks": True,
                 "id": cmd_name if cmd_name != "curse" else "pray",
-                "channel": chn_to_send
+                "channel": chn_to_send,
             }
             cnf = self.get_cmd_cnf(cmd_name)
 
@@ -420,19 +486,22 @@ class Quest(BaseCog):
             if user_till_value:
                 # the rest - battle xp and the hunt rank one, will be updated from on_message
                 await self.block_till_send(cmd_name, chn_to_send, cmd["prefix"])
-                await self.bot.remove_queue(id = cmd_name if cmd_name != "curse" else "pray")
+                await self.bot.remove_queue(
+                    id=cmd_name if cmd_name != "curse" else "pray"
+                )
 
             if upd_questid and upd_userid:
                 current, completed = await self.bot.quest_handler.qh.update_progress(
                     self.bot.user.id, upd_userid, upd_questid
                 )
                 if current is not None:
-                    await self.bot.quest_handler.sync_progress(upd_questid, current, completed)
+                    await self.bot.quest_handler.sync_progress(
+                        upd_questid, current, completed
+                    )
                 if completed:
                     break
 
             await self.bot.sleep(cnf.get_cd())
-
 
         return True
 
@@ -449,7 +518,7 @@ class Quest(BaseCog):
         await asyncio.sleep(self.settings.get_cd())
         # 1. Put queue to quest command
         await self.bot.put_queue(self.quest_cmd)
-        await self.bot.sleep_till([5,10])
+        await self.bot.sleep_till([5, 10])
 
         # 2. if help required, post
         if self.bot.quest_handler.help_required() and self.settings.useHelpChannel:

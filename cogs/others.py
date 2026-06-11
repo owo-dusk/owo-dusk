@@ -128,9 +128,6 @@ class Others(BaseCog):
                 ):
                     await message.components[0].children[0].click()
 
-            
-
-
             if (
                 nick not in message.content
                 and self.bot.user.display_name not in message.content
@@ -235,7 +232,10 @@ class Others(BaseCog):
         if f"<@{self.bot.user.id}" == message.content:
             if message.embeds and message.embeds[0].footer:
                 emb = message.embeds[0]
-                if emb.footer.text.lower() == "this challenge will expire in 10 minutes":
+                if (
+                    emb.footer.text.lower()
+                    == "this challenge will expire in 10 minutes"
+                ):
                     if (
                         message.components[0].children[0]
                         and not message.components[0].children[0].disabled

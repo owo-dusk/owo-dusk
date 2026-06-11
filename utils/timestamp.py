@@ -12,6 +12,7 @@
 
 from datetime import datetime, timezone, timedelta
 
+
 def current_timestamp():
     return datetime.now(timezone.utc)
 

@@ -95,6 +95,9 @@ with open("config/webhookContent.json", "r", encoding="utf-8") as config_file:
 with open("config/captcha.toml", "rb") as f:
     captcha_settings_dict = tomllib.load(f)
 
+with open("config/danger.toml", "rb") as f:
+    danger_settings_dict = tomllib.load(f)
+
 
 console.rule("[bold blue1]:>", style="navy_blue")
 console_width = console.size.width
@@ -122,6 +125,7 @@ def printBox(text, color, title=None):
         console.print(test_panel)
     else:
         console.print(text, style=color)
+
 
 on_mobile = is_termux()
 
@@ -317,32 +321,13 @@ class MyClient(commands.Bot):
         self.captcha_handler = hcaptcha_solver
         self.db = database.Database(self)
         self.quest_handler = None
+        self.danger_settings_dict = danger_settings_dict
 
         self.quest_help_request = {
-            "cookie": {
-                "till": 0,
-                "enabled": False,
-                "userid": 0,
-                "channel": 0
-            },
-            "pray": {
-                "till": 0,
-                "enabled": False,
-                "userid": 0,
-                "channel": 0
-            },
-            "curse": {
-                "till": 0,
-                "enabled": False,
-                "userid": 0,
-                "channel": 0
-            },
-            "battle": {
-                "till": 0,
-                "enabled": False,
-                "userid": 0,
-                "channel": 0
-            }
+            "cookie": {"till": 0, "enabled": False, "userid": 0, "channel": 0},
+            "pray": {"till": 0, "enabled": False, "userid": 0, "channel": 0},
+            "curse": {"till": 0, "enabled": False, "userid": 0, "channel": 0},
+            "battle": {"till": 0, "enabled": False, "userid": 0, "channel": 0},
         }
         self.ongoing_battle_external_quest = False
 
@@ -1071,7 +1056,9 @@ class MyClient(commands.Bot):
         if self.session is None:
             self.session = aiohttp.ClientSession()
 
-        self.quest_handler = LocalQuestHandler(global_quest_handler, self.user.id, self.session)
+        self.quest_handler = LocalQuestHandler(
+            global_quest_handler, self.user.id, self.session
+        )
 
         printBox(
             f"-Loaded {self.username}[*].".center(console_width - 2),
@@ -1356,6 +1343,19 @@ def fetch_json(url, description="data"):
     except requests.RequestException as e:
         printBox(f"Failed to fetch {description}: {e}", "bold red")
         return {}
+
+
+def warnings():
+    if danger_settings_dict["allow_auto_quest"]:
+        console.print(
+            "Be Warned that auto quest is still in experimental mode",
+            style="orange_red1",
+        )
+    if danger_settings_dict["allow_quotes"]:
+        console.print(
+            "Be Warned that quotes are seen as a common sign of selfbots. It isnt that effective either",
+            style="orange_red1",
+        )
 
 
 def run_bots(tokens_and_channels):

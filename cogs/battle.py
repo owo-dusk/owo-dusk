@@ -124,20 +124,28 @@ class Battle(BaseCog):
                         == "this challenge will expire in 10 minutes"
                     ):
                         await self.bot.remove_queue(id="battle")
-                        self.bot.quest_help_request["battle"]["till"]-=1
-                        current, completed = await self.bot.quest_handler.qh.update_progress(
-                            self.bot.user.id, cnf['userid'], "battle_friend"
+                        self.bot.quest_help_request["battle"]["till"] -= 1
+                        (
+                            current,
+                            completed,
+                        ) = await self.bot.quest_handler.qh.update_progress(
+                            self.bot.user.id, cnf["userid"], "battle_friend"
                         )
                         if current is not None:
-                            await self.bot.quest_handler.sync_progress("battle_friend", current, completed)
+                            await self.bot.quest_handler.sync_progress(
+                                "battle_friend", current, completed
+                            )
 
-                        if completed or self.bot.quest_help_request["battle"]["till"]<=0:
+                        if (
+                            completed
+                            or self.bot.quest_help_request["battle"]["till"] <= 0
+                        ):
                             # reset
                             self.bot.quest_help_request["battle"] = {
                                 "till": 0,
                                 "enabled": False,
                                 "userid": 0,
-                                "channel": 0
+                                "channel": 0,
                             }
 
         except Exception as e:

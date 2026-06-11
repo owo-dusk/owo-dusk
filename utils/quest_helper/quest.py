@@ -70,13 +70,15 @@ class QuestHandler:
                 "guild_id": guild_id,
             }
             if quest_id in {"cookie", "pray", "curse"}:
-                self.bulletine.append({
-                    "userid": userid,
-                    "quest_id": quest_id,
-                    "channel_id": channel_id,
-                    "guild_id": guild_id,
-                    "till": quest_detail["total"] - quest_detail["current"]
-                })
+                self.bulletine.append(
+                    {
+                        "userid": userid,
+                        "quest_id": quest_id,
+                        "channel_id": channel_id,
+                        "guild_id": guild_id,
+                        "till": quest_detail["total"] - quest_detail["current"],
+                    }
+                )
 
             self.quests.append(data)
 
@@ -119,7 +121,9 @@ class QuestHandler:
                     return completed, self.quests[idx]["current"]
         return False, None
 
-    async def update_bulletine_progress(self, quest_userid: int, quest_id: str, value: int = 1):
+    async def update_bulletine_progress(
+        self, quest_userid: int, quest_id: str, value: int = 1
+    ):
         # this may not be required, remove after double checking the mess we wrote in this file
         for idx, bul in enumerate(self.bulletine):
             if bul["userid"] == quest_userid and bul["quest_id"] == quest_id:
@@ -127,7 +131,6 @@ class QuestHandler:
                 if self.bulletine[idx]["till"] <= 0:
                     return True
         return False
-
 
     async def remove_quest(self, quest_userid: int, quest_id: str):
         """Remove a completed quest from the global quests list"""
@@ -244,12 +247,13 @@ class LocalQuestHandler:
                     if qs["quest_id"] == quest_id:
                         self.quests[idx]["current"] += quest["current"]
                         self.quests[idx]["total"] += quest["total"]
-                        
+
                         if qs["helpable"]:
                             await self.qh.update_registered_quest_totals(
-                                self.userid, quest_id,
+                                self.userid,
+                                quest_id,
                                 self.quests[idx]["current"],
-                                self.quests[idx]["total"]
+                                self.quests[idx]["total"],
                             )
                         break
 

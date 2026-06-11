@@ -1,0 +1,32 @@
+# Settings that require special attention will need to be allowed through here to raise
+# potential issues to user's attention. Please read the respective warnings carefully
+# before deciding to enable any of these features
+
+# ------ Quests - Experimental -------- #
+
+# Auto Quests are still in experimental mode. In future updates, when its certain that Quests
+# are safe for blind usage, it will no longer require this toggle.
+
+allow_auto_quest = false
+
+
+# ------ Level Grind -------- #
+
+# Quotes are fetched from external api. From the prespective of OwOBot admins and
+# other users, its just unlikely for users manually get quotes and paste them in
+# for the goal of gaining levels. This is also one of the best ways to catch OwO
+# selfbotters since most selfbots for OwO have similar features
+# Also to add to this, its unlikely this will increase your level by much
+# due to shadowbans by owobot
+
+allow_quotes = false
+
+
+# ------ Channel Switcher -------- #
+
+# Hopping channels could break the flow of command handler which may sometimes cause
+# temporary spammy behaviour and issues with captchas
+# We have tried our best to fix any such issues, but it could still break
+# somewhere. Use at your own risk!
+
+allow_custom_channels = false

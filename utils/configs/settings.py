@@ -113,6 +113,7 @@ class AutoQuest:
     def get_cd(self):
         return GET_CD(self.checkCooldown)
 
+
 class CustomCommands:
     def __init__(self, d: dict):
         self.enabled = d.get("enabled", False)

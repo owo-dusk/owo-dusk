@@ -81,9 +81,7 @@ class Army(BaseCog):
             last_ran = await self.bot.db.fetch_cmd_lastran_time("army")
             if not self.bot.should_run(last_ran):
                 await asyncio.sleep(self.bot.calc_time())
-            await self.bot.sleep_till(
-                self.bot.settings_dict.cooldowns.shortCooldown
-            )
+            await self.bot.sleep_till(self.bot.settings_dict.cooldowns.shortCooldown)
         else:
             await self.bot.remove_queue(id="army")
             await self.bot.sleep(self.settings.get_cd())

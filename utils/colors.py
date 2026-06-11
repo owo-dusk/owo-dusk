@@ -10,6 +10,7 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+
 class COLORS:
     RESET = "\033[m"
     BOLD_GREEN = "\033[1;32m"

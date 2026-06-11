@@ -22,7 +22,7 @@ QUEST_IDS = {
         "helpable": False,
     },
     "gamble your cowoncy": {"id": "gamble", "helpable": False},
-    "defeat bosses": {"id": "boss", "helpable": False}, # need to handle
+    "defeat bosses": {"id": "boss", "helpable": False},  # need to handle
     "send an action to a friend": {"id": "action_send", "helpable": False},
     "manually hunt": {"id": "hunt", "helpable": False},
     "battle": {"id": "battle", "helpable": False},
@@ -40,11 +40,12 @@ animal_ranks = [
     "legendary",
     "fabled",
     "distorted",
-    "hidden"
+    "hidden",
 ]
 
 for rank in animal_ranks:
     QUEST_IDS[f"find {rank} animals"] = {"id": f"find_animal_{rank}", "helpable": False}
+
 
 def is_helpable(quest_id: str) -> bool:
     data = QUEST_IDS.get(quest_id, {})

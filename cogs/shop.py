@@ -56,9 +56,7 @@ class Shop(BaseCog):
 
     async def send_buy(self, startup=False):
         if startup:
-            await self.bot.sleep_till(
-                self.bot.settings_dict.cooldowns.shortCooldown
-            )
+            await self.bot.sleep_till(self.bot.settings_dict.cooldowns.shortCooldown)
         else:
             await self.bot.remove_queue(id="shop")
             await self.bot.sleep(self.settings.get_cd())

@@ -97,7 +97,15 @@ class ChannelSwitcher(BaseCog):
         return False, "Failed to switch channel - No active channels found."
 
     async def cog_load(self):
-        if not self.settings.enabled:
+        if (
+            not self.settings.enabled
+            or not self.bot.danger_settings_dict["allow_custom_channels"]
+        ):
+            if not self.bot.danger_settings_dict["allow_custom_channels"]:
+                await self.bot.log(
+                    "Channel switcher has some risks. For that reason, it needs to be manually allowed from `owo-dusk/config/danger.toml` file. Please give that file a read!",
+                    "#e6e65a",
+                )
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.channelSwitcher"))
             except ExtensionNotLoaded:

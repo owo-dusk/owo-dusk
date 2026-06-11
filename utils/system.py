@@ -16,6 +16,7 @@ import subprocess
 
 from utils.colors import COLORS
 
+
 def compare_versions(current_version, latest_version):
     current_version = current_version.lstrip("v")
     latest_version = latest_version.lstrip("v")
@@ -34,13 +35,16 @@ def compare_versions(current_version, latest_version):
 
     return False
 
+
 def clear():
     os.system("cls") if os.name == "nt" else os.system("clear")
+
 
 def resource_path(relative_path):
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
+
 
 def is_termux():
     termux_prefix = os.environ.get("PREFIX")
@@ -55,9 +59,8 @@ def is_termux():
 
 
 def install_package(*args):
-    subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", *args]
-    )
+    subprocess.check_call([sys.executable, "-m", "pip", "install", *args])
+
 
 def install_termux_package(package_name: str, display_name: str | None = None):
     name = display_name or package_name
@@ -66,9 +69,7 @@ def install_termux_package(package_name: str, display_name: str | None = None):
 
     try:
         subprocess.check_call(["pkg", "install", package_name, "-y"])
-        print(
-            f"{COLORS.BOLD_CYAN}[0]Installed {name} successfully!{COLORS.RESET}"
-        )
+        print(f"{COLORS.BOLD_CYAN}[0]Installed {name} successfully!{COLORS.RESET}")
         return True
 
     except Exception as e:

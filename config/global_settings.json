@@ -2,6 +2,7 @@
     "typingIndicator": true,
     "silentMessages": false,
     "offlineStatus": false,
+    "ocrApi": "helloworld",
     "website": {
         "enabled": true,
         "port": 1200,
@@ -29,6 +30,7 @@
         "commandToStartUser": "start",
         "commandToRestartAfterCaptcha": "restart_captcha",
         "commandToSleep": "sleep",
+        "CommandToSwitchChannel": "switch_channel",
         "defaultSleepDuration": 600,
         "allowedUsers": []
     },
