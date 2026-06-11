@@ -30,11 +30,11 @@ class Reactionbot(BaseCog):
 
     @property
     def settings(self):
-        return self.bot.settings_dict_temp.commands
+        return self.bot.settings_dict.commands
 
     @property
     def reaction_bot_settings(self):
-        return self.bot.settings_dict_temp.cooldowns.reactionBot
+        return self.bot.settings_dict.cooldowns.reactionBot
 
     def pray_curse_channels(self):
         channels = []
@@ -45,7 +45,7 @@ class Reactionbot(BaseCog):
         return channels
 
     def fetch_settings(self, cmd):
-        return getattr(self.bot.settings_dict_temp.commands, cmd)
+        return getattr(self.bot.settings_dict.commands, cmd)
 
     def fetch_cmd(self, id):
         hunt_shortform = self.settings.hunt.shortform
@@ -71,7 +71,7 @@ class Reactionbot(BaseCog):
                 else:
                     arg = str(user_id)
                 if settings.count:
-                    arg += f" {next(self.__dict__[f'{cmd_name}_counter'])}"
+                    arg += f" {next(self.__dict__[f'{id}_counter'])}"
 
             channelId = None
             if settings.custom_channel.enabled:
@@ -213,3 +213,4 @@ class Reactionbot(BaseCog):
 
 async def setup(bot):
     await bot.add_cog(Reactionbot(bot))
+
