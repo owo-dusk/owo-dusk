@@ -427,9 +427,11 @@ class Quest(BaseCog):
             and message.content == content
         )
 
-    async def block_till_send(self, content, channel_id=None, prefix=False):
+    async def block_till_send(self, content, channel_id=None, prefix=False, arg=None):
         if prefix:
             content = f"{self.bot.settings_dict.prefix}{content}"
+        if arg:
+            content += f" {arg}"
         try:
             await self.bot.wait_for(
                 "message",
@@ -481,7 +483,9 @@ class Quest(BaseCog):
             await self.bot.put_queue(cmd)
             if user_till_value:
                 # the rest - battle xp and the hunt rank one, will be updated from on_message
-                await self.block_till_send(cmd_name, chn_to_send, cmd["prefix"])
+                await self.block_till_send(
+                    cmd_name, chn_to_send, cmd["prefix"], cmd["cmd_arguments"]
+                )
                 await self.bot.remove_queue(
                     id=cmd_name if cmd_name != "curse" else "pray"
                 )
@@ -638,4 +642,3 @@ class Quest(BaseCog):
 
 async def setup(bot):
     await bot.add_cog(Quest(bot))
-
