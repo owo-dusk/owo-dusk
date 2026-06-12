@@ -81,7 +81,7 @@ class Lottery(BaseCog):
                     json.dump(accounts_dict, f, indent=4)
 
     async def cog_load(self):
-        if not self.bot.settings.enabled:
+        if not self.settings.enabled:
             try:
                 asyncio.create_task(self.bot.unload_cog("cogs.lottery"))
             except ExtensionNotLoaded:
