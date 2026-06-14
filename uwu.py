@@ -74,7 +74,7 @@ lock = threading.Lock()
 clear()
 
 
-def load_accounts_dict(file_path="utils/stats.json"):  # dead code btw
+def load_accounts_dict(file_path="utils/stats.json"):
     with open(file_path, "r", encoding="utf-8") as config_file:
         return json.load(config_file)
 

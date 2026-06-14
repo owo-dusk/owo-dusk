@@ -252,5 +252,5 @@ class ChannelSwitcher:
 
 class User:
     def __init__(self, d: dict):
-        self.userid = d.get("userid")
-        self.channels = d.get("channels", [])
+        self.userid = int(d.get("userid")) # needed fix - convert userid (which is in string in global settings) to int
+        self.channels = [int(ch) for ch in d.get("channels", [])] # not needed - just because ids are stored as int elsewhere for ex in boss battle
