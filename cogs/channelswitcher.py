@@ -56,6 +56,7 @@ class ChannelSwitcher(BaseCog):
             "on_channel_switch",
             new_channel_name=new_channel.name,
             new_channel_id=new_channel.id,
+            new_channel_guild=new_channel.guild, # test
         )
 
     async def change_channel(self):
@@ -119,3 +120,4 @@ class ChannelSwitcher(BaseCog):
 
 async def setup(bot):
     await bot.add_cog(ChannelSwitcher(bot))
+    

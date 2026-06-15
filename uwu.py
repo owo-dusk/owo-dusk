@@ -74,7 +74,7 @@ lock = threading.Lock()
 clear()
 
 
-def load_accounts_dict(file_path="utils/stats.json"):
+def load_accounts_dict(file_path="utils/stats.json"):  # dead code btw
     with open(file_path, "r", encoding="utf-8") as config_file:
         return json.load(config_file)
 
@@ -801,18 +801,7 @@ class MyClient(commands.Bot):
                     username=self.user.name,
                     userid=self.user.id,
                     current_time=datetime.now().strftime("%H:%M:%S"),
-                    # channel switcher specific
-                    new_channel_name=kwargs.get("new_channel_name", None),
-                    new_channel_id=kwargs.get("new_channel_id", None),
-                    # captcha or ban specific
-                    captcha_url=kwargs.get("captcha_url", None),
-                    # hunt specific
-                    hunt_caught_emojis=kwargs.get("hunt_caught_emojis", None),
-                    best_catch=kwargs.get("best_catch", None),
-                    best_rank=kwargs.get("best_rank", None),
-                    animal_image_url=kwargs.get("animal_image_url", None),
-                    # Command specific
-                    command_send=kwargs.get("command_send", None),
+                    **kwargs, # test
                 )
 
         color = data.get("color", None)
