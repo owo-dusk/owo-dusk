@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# 
+#
 #   owo-dusk installer — Linux & Termux
-# 
+#
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -21,13 +21,13 @@ echo -e "${NC}"
 echo -e "${YELLOW}  Installer — Linux & Termux${NC}"
 echo ""
 
-#  Detect environment 
+#  Detect environment
 IS_TERMUX=false
 if [ -n "$TERMUX_VERSION" ] || [ -d "/data/data/com.termux" ]; then
     IS_TERMUX=true
 fi
 
-#  Termux: install dependencies 
+#  Termux: install dependencies
 if [ "$IS_TERMUX" = true ]; then
     echo -e "${CYAN}[*] Termux detected — installing packages...${NC}"
     pkg update -y && pkg upgrade -y
@@ -38,8 +38,8 @@ if [ "$IS_TERMUX" = true ]; then
 
     INSTALL_DIR="$HOME/storage/downloads/owo-dusk"
 else
-    #  Linux: check dependencies 
-    echo -e "${CYAN}[*] Linux detected — checking dependencies...${NC}"
+    #  Linux: check dependencies
+    echo -e "${CYAN}[*] Linux/Macos detected — checking dependencies...${NC}"
 
     if ! command -v git &>/dev/null; then
         echo -e "${RED}[!] git is not installed. Please install it and re-run.${NC}"
@@ -57,6 +57,15 @@ else
         exit 1
     fi
 
+    # Check whether tkinter is available or not (Linux)
+    if ! python3 -c "import tkinter" &>/dev/null && ! python -c "import tkinter" &>/dev/null; then
+	    echo -e "${RED}[!] Tk (tkinter) is not installed.${NC}"
+	    echo "    Ubuntu/Debian:  sudo apt install python3-tk"
+	    echo "    Arch:           sudo pacman -S tk"
+	    echo "    Fedora:         sudo dnf install python3-tkinter"
+	    exit 1
+    fi
+
     INSTALL_DIR="$HOME/owo-dusk"
 fi
 
@@ -66,7 +75,7 @@ if ! command -v python3 &>/dev/null; then
     PYTHON="python"
 fi
 
-#  Clone repo 
+#  Clone repo
 echo ""
 if [ -d "$INSTALL_DIR" ]; then
     echo -e "${YELLOW}[!] Directory '$INSTALL_DIR' already exists.${NC}"
@@ -85,18 +94,39 @@ fi
 
 cd "$INSTALL_DIR" || { echo -e "${RED}[!] Failed to enter install directory.${NC}"; exit 1; }
 
-#  Run setup 
+# Linux: create virtual environment
 echo ""
-echo -e "${CYAN}[*] Running setup.py...${NC}"
+if [ "$IS_TERMUX" = false ]; then
+    echo -e "${CYAN}[*] Creating Python virtual environment...${NC}"
+
+    "$PYTHON" -m venv venv || {
+        echo -e "${RED}[!] Failed to create virtual environment.${NC}"
+        exit 1
+    }
+
+    echo -e "${GREEN}[✓] Virtual environment created.${NC}"
+
+    # Activate the virtual environment
+    . venv/bin/activate || {
+        echo -e "${RED}[!] Failed to activate virtual environment.${NC}"
+        exit 1
+    }
+
+    echo -e "${GREEN}[✓] Virtual environment activated.${NC}"
+    echo ""
+fi
+
+#  run setup
+echo -e "${CYAN}[*] running setup.py...${NC}"
 $PYTHON setup.py
 
-#  Run main script 
+#  Run main script
 echo ""
 echo -e "${GREEN}[✓] Setup complete! Launching owo-dusk...${NC}"
 echo ""
 $PYTHON uwu.py
 
-#  Remind how to re-run 
+#  Remind how to re-run
 echo ""
 echo -e "${YELLOW}${NC}"
 echo -e "${YELLOW}  To run owo-dusk again next time:${NC}"
