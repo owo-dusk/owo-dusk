@@ -245,7 +245,7 @@ class MyClient(commands.Bot):
     @tasks.loop(seconds=1)
     async def random_sleep(self):
         sleep_obj = self.settings_dict.sleep
-        await asyncio.sleep(sleep_obj.get_sleep_time())
+        await asyncio.sleep(sleep_obj.get_check_time())
         if sleep_obj.should_sleep():
             await self.set_stat(False)
             sleep_time = sleep_obj.get_sleep_time()
