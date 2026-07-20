@@ -72,7 +72,17 @@ Best selfbot for owobot currently with alot of cool features like Boss battles, 
 > inspired cogs part and code structure. I also learned Python from this project :>.
 * https://github.com/scriptlabs-cc/slashy
 > inspired website dashboard. A lot of js code was stolen from slashy; before 2.1.0^ script.js was an entire copy of slashy's (with permission ofc).
- 
+
+---
+# DONATE
+---
+Crypto: Solana, USDC, USDT and all SPL tokens :
+```
+5DeBoaojcodJ8cNDAatTJLvajBPg5k9hCGXBFcUPmVCW
+```
+(keep in mind that USDC and USDT must be send via "solana network")
+
+Thanks in advance! DM me on Discord witch transaction id and I'll give a donator role!
 
 ---
 
