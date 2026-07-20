@@ -248,6 +248,18 @@ class Sleep:
         else:
             raise ValueError("No cooldown?")
 
+    def get_check_time(self):
+        if self.checkTime:
+            if self.checkTime[0] > self.checkTime[1]:
+                raise ValueError("Max cooldown must be greater than min.")
+
+            if self.checkTime[0] == self.checkTime[1]:
+                raise ValueError("Both min and max cooldown same..")
+
+            return random.uniform(self.checkTime[0], self.checkTime[1])
+        else:
+            raise ValueError("No valid checktime available")
+
 
 class Giveaway:
     def __init__(self, d: dict):
