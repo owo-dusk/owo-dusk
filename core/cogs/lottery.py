@@ -58,7 +58,7 @@ class Lottery(BaseCog):
 
     @property
     def cmd(self):
-        self._cmd["cmd_argument"] = self.settings.amount
+        self._cmd["cmd_arguments"] = self.settings.amount
         return self._cmd
 
     async def start_lottery(self):
