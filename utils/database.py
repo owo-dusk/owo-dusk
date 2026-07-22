@@ -15,8 +15,8 @@ import sqlite3
 
 from utils.constants import database_version, version
 from utils.errors import suppress_and_log
-from utils.loader import console, misc_dict
-from utils.system.system import compare_versions
+from utils.loader import misc_dict
+from utils.system.system import compare_versions, console
 
 
 @suppress_and_log("Database Initialisation")

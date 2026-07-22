@@ -36,7 +36,6 @@ from utils.constants import owo_dusk_api, version
 from utils.errors import suppress_and_log, suppress_and_log_block
 from utils.loader import (
     captcha_settings_dict,
-    console_width,
     danger_settings_dict,
     global_settings_dict,
     load_accounts_dict,
@@ -538,7 +537,8 @@ class MyClient(commands.Bot):
                         log.write(f"{content_to_print}\n")
         else:
             syst.system.console.print(
-                f"{self.username}| {text}".center(console_width - 2), style=color
+                f"{self.username}| {text}".center(syst.system.console_width - 2),
+                style=color,
             )
         if web_log:
             with lock:
@@ -846,7 +846,7 @@ class MyClient(commands.Bot):
         )
 
         syst.system.print_box(
-            f"-Loaded {self.username}[*].".center(console_width - 2),
+            f"-Loaded {self.username}[*].".center(syst.system.console_width - 2),
             "bold royal_blue1 ",
         )
         list_user_ids.append(self.user.id)

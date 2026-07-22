@@ -30,7 +30,6 @@ from utils.database import create_database
 from utils.errors import suppress_and_log, suppress_and_log_block
 from utils.loader import (
     captcha_settings_dict,
-    console_width,
     global_settings_dict,
     misc_dict,
 )
@@ -83,7 +82,7 @@ def setup_and_start_services():
         ip = syst.system.get_local_ip()
         syst.system.print_box(
             f"Website Dashboard: http://{ip}:{global_settings_dict.website.port}".center(
-                console_width - 2
+                syst.system.console_width - 2
             ),
             "dark_magenta",
         )
@@ -150,7 +149,8 @@ def start_owodusk():
     token_len = len(tokens_and_channels)
 
     syst.system.print_box(
-        f"-Received {token_len} tokens.".center(console_width - 2), "bold magenta"
+        f"-Received {token_len} tokens.".center(syst.system.console_width - 2),
+        "bold magenta",
     )
 
     if misc_dict["news"]:
@@ -159,7 +159,7 @@ def start_owodusk():
             if news_json.get("available"):
                 syst.system.print_box(
                     f"{news_json.get('content', 'no content found..? this is an error! should be safe to ignore')}".center(
-                        console_width - 2
+                        syst.system.console_width - 2
                     ),
                     f"bold {news_json.get('color', 'white')}",
                     title=news_json.get("title", "???"),

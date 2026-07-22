@@ -18,7 +18,9 @@ import threading
 import time
 
 try:
+    from rich.console import Console
     from rich.panel import Panel
+
     NO_RICH = False
 except ImportError:
     NO_RICH = True
@@ -27,11 +29,16 @@ from utils.colors import COLORS
 from utils.errors import suppress_and_log
 
 if not NO_RICH:
-    from utils.loader import console, global_settings_dict, misc_dict
+    from utils.loader import global_settings_dict, misc_dict
+
+    console = Console()
+    console.rule("[bold blue1]:>", style="navy_blue")
+    console_width = console.size.width
 else:
     console = None
     global_settings_dict = None
     misc_dict = None
+    console_width = 300
 
 
 @suppress_and_log("Comparing Version")
@@ -132,7 +139,7 @@ def print_box(text, color, title=None):
     if NO_RICH:
         print("rich is unavailable, please recheck your installation!")
         return
-    
+
     test_panel = Panel(text, style=color, title=title)
     if not misc_dict["console"]["compactMode"]:
         console.print(test_panel)
@@ -144,7 +151,7 @@ def get_local_ip():
     if NO_RICH:
         print("rich is unavailable, please recheck your installation!")
         return None
-        
+
     if not global_settings_dict.website.enableHost:
         return "localhost"
     try:
