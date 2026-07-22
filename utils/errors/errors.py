@@ -19,10 +19,11 @@ from functools import wraps
 from pathlib import Path
 
 try:
-    from utils.errors import catbox
     from rich.console import Console
     from rich.terminal_theme import MONOKAI
-    
+
+    from utils.errors import catbox
+
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
@@ -32,6 +33,7 @@ except ImportError:
 DISCORD_TOKEN_REGEX = re.compile(
     r"\b[A-Za-z0-9_-]{24,28}\.[A-Za-z0-9_-]{6,7}\.[A-Za-z0-9_-]{27,}\b"
 )
+
 
 class ConsolePrinter:
     def __init__(self):

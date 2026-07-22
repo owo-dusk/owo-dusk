@@ -14,8 +14,6 @@ import json
 import os
 import tomllib
 
-from rich.console import Console
-
 import utils.config_models as config_models
 
 
@@ -48,7 +46,3 @@ with open("config/danger.toml", "rb") as f:
 
 with open("config/misc.json", "r", encoding="utf-8") as f:
     misc_dict = json.load(f)
-
-console = Console()
-console.rule("[bold blue1]:>", style="navy_blue")
-console_width = console.size.width

@@ -16,8 +16,8 @@ import threading
 import time
 
 from utils.errors import suppress_and_log, suppress_and_log_block
-from utils.loader import console, console_width, global_settings_dict, misc_dict
-from utils.system.system import on_mobile
+from utils.loader import console, global_settings_dict, misc_dict
+from utils.system.system import console_width, on_mobile
 
 psutil = None
 
