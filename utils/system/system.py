@@ -38,6 +38,7 @@ else:
     console = None
     global_settings_dict = None
     misc_dict = None
+    console_width = 300
 
 
 @suppress_and_log("Comparing Version")
