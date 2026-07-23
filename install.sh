@@ -89,7 +89,7 @@ fi
 
 if [ ! -d "$INSTALL_DIR" ]; then
     echo -e "${CYAN}[*] Cloning owo-dusk...${NC}"
-    git clone https://github.com/echoquill/owo-dusk.git "$INSTALL_DIR"
+    git clone https://github.com/owo-dusk/owo-dusk.git "$INSTALL_DIR"
 fi
 
 cd "$INSTALL_DIR" || { echo -e "${RED}[!] Failed to enter install directory.${NC}"; exit 1; }
