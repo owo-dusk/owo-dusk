@@ -164,9 +164,7 @@ class Boss(BaseCog):
                                         )  # Re-Check Logic
 
                                         await asyncio.sleep(0.5)
-                                        if not self.bot.ch.command_handler_status[
-                                            "captcha"
-                                        ]:
+                                        if not self.bot.ch.command_handler_status.captcha:
                                             click_status = (
                                                 await component.accessory.click(
                                                     self.bot.ws.session_id,
