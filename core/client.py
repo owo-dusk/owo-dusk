@@ -88,7 +88,7 @@ class MyClient(commands.Bot):
         self.channel_id = int(channel_id)
         self.list_channel = [self.channel_id]
         self.session = None
-        
+
         self.message_dispatcher = MessageDispatcher()
         self.settings_dict = None
         self.global_settings_dict = global_settings_dict
@@ -96,7 +96,7 @@ class MyClient(commands.Bot):
         self.commands_dict = {}
         self.cash_check = False
         self.gain_or_lose = 0
-        
+
         self.dm, self.cm = None, None
         self.hunt_disabled = False
         self.username = None
@@ -157,7 +157,6 @@ class MyClient(commands.Bot):
 
         self.alias = self.misc["alias"]
 
-        
     async def on_socket_raw_receive(self, msg):
         """
         Raw socket messages from Discord.py-self comes over here.
@@ -173,8 +172,6 @@ class MyClient(commands.Bot):
             await self.message_dispatcher.dispatch_on_message(message)
         else:
             await self.message_dispatcher.dispatch_on_edit(message)
-
-    
 
     @property
     def active_channel_ids(self):
@@ -386,7 +383,6 @@ class MyClient(commands.Bot):
     async def sleep(self, time):
         # to save imports
         await asyncio.sleep(time)
-    
 
     async def log(
         self,

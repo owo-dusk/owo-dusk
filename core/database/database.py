@@ -30,7 +30,8 @@ class Database:
     async def update_priorities(self):
         # Check if already in db
         res = await database_handler.get_from_db(
-            "SELECT * FROM command_priority WHERE user_id = ?", (str(self.client.user.id),)
+            "SELECT * FROM command_priority WHERE user_id = ?",
+            (str(self.client.user.id),),
         )
         if res:
             for row in res:

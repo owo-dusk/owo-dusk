@@ -181,5 +181,6 @@ class Commands(BaseCog):
         except Exception as e:
             await self.bot.log(f"Error - monitor_checks(): {e}", "#c25560")
 
+
 async def setup(bot):
     await bot.add_cog(Commands(bot))

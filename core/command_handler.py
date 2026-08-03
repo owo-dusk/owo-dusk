@@ -30,8 +30,6 @@ class CommandHandlerStatus:
         # This is toggled for temporary pauses as required by other commands
         self.hold_handler = False
 
-        
-
 
 class CommandHandler:
     def __init__(self, client):
@@ -56,7 +54,6 @@ class CommandHandler:
                 "in_monitor": False,
                 "last_ran": 0,
             }
-
 
         self.command_handler_status = CommandHandlerStatus()
 
@@ -83,7 +80,7 @@ class CommandHandler:
     @property
     def can_send_if_priority(self):
         """
-        Some commands are required to be send quickly. So if its just 
+        Some commands are required to be send quickly. So if its just
         """
         return (
             not self.command_handler_status.sleep

@@ -72,7 +72,9 @@ class Giveaway(BaseCog):
                             and " A New Giveaway Appeared!" in embed.author.name
                             and message.channel.id in self.settings.channels
                         ):
-                            print(f"what do you mean? {embed.author.name} {message.channel.id}")
+                            print(
+                                f"what do you mean? {embed.author.name} {message.channel.id}"
+                            )
                             if not prev_time or (
                                 prev_time
                                 and compare_with_timestamp(
