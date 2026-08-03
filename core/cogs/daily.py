@@ -59,8 +59,8 @@ class Daily(BaseCog):
                 )  # Wait until next 12:00 AM PST
 
             await self.bot.sleep_till(self.cooldowns.briefCooldown)
-            await self.bot.put_queue(cmd, priority=True)
-            await self.bot.set_stat(False)
+            await self.bot.ch.put_queue(cmd, priority=True)
+            await self.bot.ch.set_stat(False)
 
             with lock:
                 load_dict()
@@ -80,7 +80,7 @@ class Daily(BaseCog):
             asyncio.create_task(self.start_daily())
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="daily")
+        await self.bot.ch.remove_queue(id="daily")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -93,8 +93,8 @@ class Daily(BaseCog):
         ):
             if "Here is your daily **<:cowoncy:416043450337853441>" in message.content:
                 """Task: add cash check regex here"""
-                await self.bot.remove_queue(cmd)
-                await self.bot.set_stat(True)
+                await self.bot.ch.remove_queue(cmd)
+                await self.bot.ch.set_stat(True)
                 await asyncio.sleep(self.bot.calc_time())
 
                 self.bot.update_cash(
@@ -109,8 +109,8 @@ class Daily(BaseCog):
                 )
 
                 await self.bot.sleep_till(self.cooldowns.moderateCooldown)
-                await self.bot.put_queue(cmd, priority=True)
-                await self.bot.set_stat(False)
+                await self.bot.ch.put_queue(cmd, priority=True)
+                await self.bot.ch.set_stat(False)
                 with lock:
                     load_dict()
                     accounts_dict[str(self.bot.user.id)]["daily"] = (
@@ -126,12 +126,12 @@ class Daily(BaseCog):
                 "**⏱ |** Nu! **" in message.content
                 and "! You need to wait" in message.content
             ):
-                await self.bot.remove_queue(cmd)
-                await self.bot.set_stat(True)
+                await self.bot.ch.remove_queue(cmd)
+                await self.bot.ch.set_stat(True)
                 await asyncio.sleep(self.bot.calc_time())
                 await self.bot.sleep_till(self.cooldowns.moderateCooldown)
-                await self.bot.put_queue(cmd, priority=True)
-                await self.bot.set_stat(False)
+                await self.bot.ch.put_queue(cmd, priority=True)
+                await self.bot.ch.set_stat(False)
                 with lock:
                     load_dict()
                     accounts_dict[str(self.bot.user.id)]["daily"] = (

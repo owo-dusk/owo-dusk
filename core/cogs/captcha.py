@@ -134,7 +134,7 @@ class Captcha(BaseCog):
 
     async def kill_code(self):
         await asyncio.sleep(590)
-        if self.bot.command_handler_status["captcha"]:
+        if self.bot.ch.command_handler_status.captcha:
             print("captcha not solved within time...")
             os._exit(0)
 
@@ -302,7 +302,7 @@ class Captcha(BaseCog):
                     "#5fd700",
                 )
                 await asyncio.sleep(time_to_sleep)
-                self.bot.command_handler_status["captcha"] = False
+                self.bot.ch.command_handler_status.captcha = False
                 self.bot.db.update_captcha_db()
                 await self.handle_solves()
                 self.captcha_site_opened = False
@@ -349,7 +349,7 @@ class Captcha(BaseCog):
                         )
                     ):
                         return
-                self.bot.command_handler_status["captcha"] = True
+                self.bot.ch.command_handler_status.captcha = True
                 await self.bot.log("Captcha detected!", "#d70000")
                 image_captcha = False
                 if message.attachments:
@@ -418,7 +418,7 @@ class Captcha(BaseCog):
                             )
 
                             if solves_left < 1:
-                                self.bot.command_handler_status["captcha"] = True
+                                self.bot.ch.command_handler_status.captcha = True
                                 await self.bot.log(
                                     f"credits exhausted - balance: {balance}, stopping...",
                                     "#d70000",
@@ -458,7 +458,7 @@ class Captcha(BaseCog):
                 "You have been banned for" in message.content
                 and self.bot.user.name in message.content
             ):
-                self.bot.command_handler_status["captcha"] = True
+                self.bot.ch.command_handler_status.captcha = True
                 await self.bot.log("Ban detected!", "#d70000")
                 self.captcha_handler(message.channel, "Ban")
                 console_handler(self.bot.global_settings_dict.console, captcha=False)

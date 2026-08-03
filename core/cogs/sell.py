@@ -118,7 +118,7 @@ class Sell(BaseCog):
                 cmd_data = self.get_command(cmd)
                 if cmd_data:
                     await self.bot.sleep_till([10, 15])
-                    await self.bot.put_queue(cmd_data)
+                    await self.bot.ch.put_queue(cmd_data)
                     self.__dict__[f"{cmd}_lastran"] = time.monotonic()
 
             # To prevent sell and sac being send right after
@@ -130,8 +130,8 @@ class Sell(BaseCog):
 
     async def cog_unload(self):
         # this shouldn't get removed since its supposed to run.
-        await self.bot.remove_queue(id="sell")
-        await self.bot.remove_queue(id="sac")
+        await self.bot.ch.remove_queue(id="sell")
+        await self.bot.ch.remove_queue(id="sac")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -147,7 +147,7 @@ class Sell(BaseCog):
                 "for a total of **<:cowoncy:416043450337853441>"
                 in message.content.lower()
             ):
-                await self.bot.remove_queue(id="sell")
+                await self.bot.ch.remove_queue(id="sell")
 
                 if self.bot.settings_dict.cashCheck:
                     try:
@@ -170,11 +170,11 @@ class Sell(BaseCog):
                 "sacrificed" in message.content
                 and "for a total of" in message.content.lower()
             ):
-                await self.bot.remove_queue(id="sac")
+                await self.bot.ch.remove_queue(id="sac")
 
             elif "you don't have enough animals! >:c" in message.content.lower():
                 # May want to improve this later..
-                await self.bot.remove_queue(id=self.get_last_ran())
+                await self.bot.ch.remove_queue(id=self.get_last_ran())
 
 
 async def setup(bot):

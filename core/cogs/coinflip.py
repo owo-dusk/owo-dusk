@@ -67,7 +67,7 @@ class Coinflip(BaseCog):
             asyncio.create_task(self.start_cf(startup=True))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="coinflip")
+        await self.bot.ch.remove_queue(id="coinflip")
 
     async def start_cf(self, startup=False):
         goal_system = self.gamble_settings.goals
@@ -75,7 +75,7 @@ class Coinflip(BaseCog):
             if startup:
                 await self.bot.sleep_till(self.cooldowns.briefCooldown)
             else:
-                await self.bot.remove_queue(id="coinflip")
+                await self.bot.ch.remove_queue(id="coinflip")
                 await self.bot.sleep(self.settings.get_cd())
 
             amount_to_gamble = int(
@@ -162,7 +162,7 @@ class Coinflip(BaseCog):
                     option = ""
 
                 self.cmd["cmd_arguments"] += f" {option}".rstrip()
-                await self.bot.put_queue(self.cmd)
+                await self.bot.ch.put_queue(self.cmd)
 
         except Exception as e:
             await self.bot.log(f"Error - {e}, During coinflip start_cf()", "#c25560")

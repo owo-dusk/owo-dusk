@@ -49,7 +49,7 @@ class CustomCommands(BaseCog):
             "removed": False,
         }
 
-        await self.bot.put_queue(cmd)
+        await self.bot.ch.put_queue(cmd)
 
         if tracker_idx is not None:
             self.cmd_tracker[tracker_idx]["last_ran"] = time.monotonic()

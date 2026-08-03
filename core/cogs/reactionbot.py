@@ -114,11 +114,11 @@ class Reactionbot(BaseCog):
     async def send_cmd(self, cmd):
         await self.bot.sleep(self.reaction_bot_settings.get_cd())
 
-        await self.bot.put_queue(self.fetch_cmd(cmd), quick=True, priority=True)
+        await self.bot.ch.put_queue(self.fetch_cmd(cmd), quick=True, priority=True)
         self.cmd_states[cmd if cmd != "curse" else "pray"] = time.time()
 
     async def startup_handler(self):
-        await self.bot.set_stat(False)
+        await self.bot.ch.set_stat(False)
         """Define alias of commands"""
         hunt = self.check_cmd_state("hunt")
         battle = self.check_cmd_state("battle")
@@ -145,7 +145,7 @@ class Reactionbot(BaseCog):
             if curse:
                 cmds.append("curse")
             await self.send_cmd(self.bot.random.choice(cmds))
-        await self.bot.set_stat(True)
+        await self.bot.ch.set_stat(True)
         """Start stuck state checker"""
         self.check_stuck_state.start()
 

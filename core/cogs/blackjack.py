@@ -172,7 +172,7 @@ class Blackjack(BaseCog):
             self.exceeded_max_amount = True
         else:
             self.cmd["cmd_arguments"] = str(amount_to_gamble)
-            await self.bot.put_queue(self.cmd)
+            await self.bot.ch.put_queue(self.cmd)
 
     async def wait_for_bj_edit(self):
         while not self.click_registered:
@@ -236,7 +236,7 @@ class Blackjack(BaseCog):
                             "🎲 ~ resuming previous game",
                         ]
                     ):
-                        await self.bot.remove_queue(id="blackjack")
+                        await self.bot.ch.remove_queue(id="blackjack")
                         # Handle Blackjack.
                         res = fetch_bj_hands(embed)
                         if not res:
@@ -263,7 +263,7 @@ class Blackjack(BaseCog):
                     if embed.footer:
                         if "🎲 ~ game in progress" in embed.footer.text:
                             self.game_event.set()
-                            await self.bot.remove_queue(id="blackjack")
+                            await self.bot.ch.remove_queue(id="blackjack")
                             res = fetch_bj_hands(embed)
                             if not res:
                                 return

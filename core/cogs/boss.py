@@ -164,7 +164,7 @@ class Boss(BaseCog):
                                         )  # Re-Check Logic
 
                                         await asyncio.sleep(0.5)
-                                        if not self.bot.command_handler_status[
+                                        if not self.bot.ch.command_handler_status[
                                             "captcha"
                                         ]:
                                             click_status = (

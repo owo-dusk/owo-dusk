@@ -154,7 +154,7 @@ class Others(BaseCog):
                 )
                 if not self.bot.user_status["checked_cash"]:
                     self.bot.user_status["checked_cash"] = True
-                await self.bot.remove_queue(id="cash")
+                await self.bot.ch.remove_queue(id="cash")
 
             # Lootbox and Crate
             elif (
@@ -162,7 +162,7 @@ class Others(BaseCog):
                 or "You found a **weapon crate**!" in message.content
             ):
                 if self.auto_use.crate:
-                    await self.bot.put_queue(self.crate_cmd)
+                    await self.bot.ch.put_queue(self.crate_cmd)
 
                 if self.webhook_settings.enabled and self.webhook_settings.others.crate:
                     await self.bot.send_webhook("crate")
@@ -178,7 +178,7 @@ class Others(BaseCog):
                     await self.bot.send_webhook("lootbox")
 
                 if self.auto_use.lootbox:
-                    await self.bot.put_queue(self.lootbox_cmd)
+                    await self.bot.ch.put_queue(self.lootbox_cmd)
                     # give time for command to run
                     await asyncio.sleep(2.5)
 
@@ -188,7 +188,7 @@ class Others(BaseCog):
 
             # Add animals to team
             elif "Create one with `owo team add {animal}`" in message.content:
-                await self.bot.set_stat(False)
+                await self.bot.ch.set_stat(False)
                 self.zoo = True
                 team_cmd = {
                     "cmd_name": self.bot.alias["zoo"]["normal"],
@@ -200,7 +200,7 @@ class Others(BaseCog):
                 await self.bot.sleep_till(
                     self.bot.settings_dict.cooldowns.shortCooldown
                 )
-                await self.bot.put_queue(team_cmd, priority=True)
+                await self.bot.ch.put_queue(team_cmd, priority=True)
 
             elif "s zoo! **" in message.content and self.zoo:
                 animals = get_emoji_names(message.content)
@@ -216,11 +216,11 @@ class Others(BaseCog):
                         "retry_count": 0,
                         "id": "team",
                     }
-                    await self.bot.put_queue(zoo_cmd, priority=True)
+                    await self.bot.ch.put_queue(zoo_cmd, priority=True)
                     await asyncio.sleep(self.bot.random.uniform(1.5, 2.3))
 
                 self.zoo = False
-                await self.bot.set_stat(True)
+                await self.bot.ch.set_stat(True)
         if re.search(EVENT_REGEX, message.content):
             # event message detected
             if not self.bot.ongoing_owobot_event:

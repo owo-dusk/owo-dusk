@@ -47,7 +47,7 @@ class Chat(BaseCog):
     async def timed_reverse(self, seconds: float):
         # sleep then reverse the bot state
         await asyncio.sleep(seconds)
-        self.bot.command_handler_status["sleep"] = False
+        self.bot.ch.command_handler_status.sleep = False
         await self.bot.log(
             "Sleep complete — starting owo-dusk.",
             "#87875f",
@@ -69,11 +69,11 @@ class Chat(BaseCog):
                     "stopping owo-dusk.. Please be warned that this sometimes doesn't work as expected. Please don't rely on it much.",
                     "#87875f",
                 )
-                self.bot.command_handler_status["sleep"] = True
+                self.bot.ch.command_handler_status.sleep = True
 
             elif content.startswith(start_cmd):
                 await self.bot.log("starting owo-dusk..", "#87875f")
-                self.bot.command_handler_status["sleep"] = False
+                self.bot.ch.command_handler_status.sleep = False
 
             elif content.startswith(sleep_cmd):
                 after = content.split(sleep_cmd, 1)[1].strip()  # get text after command
@@ -94,7 +94,7 @@ class Chat(BaseCog):
                     f"Sleeping owo-dusk for {seconds} seconds..",
                     "#87875f",
                 )
-                self.bot.command_handler_status["sleep"] = True
+                self.bot.ch.command_handler_status.sleep = True
                 self.timed_task = asyncio.create_task(self.timed_reverse(seconds))
 
         if message.author.id == self.bot.user.id:
@@ -103,7 +103,7 @@ class Chat(BaseCog):
                     "Restarting owo-dusk after captcha..",
                     "#87875f",
                 )
-                self.bot.command_handler_status["captcha"] = False
+                self.bot.ch.command_handler_status.captcha = False
             elif content.startswith(switchchannel_cmd):
                 msg = content.removeprefix(switchchannel_cmd).strip()
                 match = re.search(r"\d+", msg)
