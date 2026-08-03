@@ -30,6 +30,8 @@ class CommandHandlerStatus:
         # This is toggled for temporary pauses as required by other commands
         self.hold_handler = False
 
+        
+
 
 class CommandHandler:
     def __init__(self, client):
@@ -54,6 +56,7 @@ class CommandHandler:
                 "in_monitor": False,
                 "last_ran": 0,
             }
+
 
         self.command_handler_status = CommandHandlerStatus()
 
@@ -80,7 +83,7 @@ class CommandHandler:
     @property
     def can_send_if_priority(self):
         """
-        Some commands are required to be send quickly. So if its just
+        Some commands are required to be send quickly. So if its just 
         """
         return (
             not self.command_handler_status.sleep
@@ -152,7 +155,7 @@ class CommandHandler:
             return False
 
     async def shuffle_queue(self):
-        async with self.lock:
+        async with self._hold_or_create_lock():
             items = []
             while not self.queue.empty():
                 items.append(await self.queue.get())
@@ -163,7 +166,7 @@ class CommandHandler:
                 await self.queue.put(item)
 
     async def upd_cmd_state(self, id, reactionBot=False):
-        async with self.lock:
+        async with self._hold_or_create_lock():
             self.cmds_state["global"]["last_ran"] = time.time()
             self.cmds_state[id]["last_ran"] = time.time()
             if not reactionBot:
