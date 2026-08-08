@@ -11,7 +11,6 @@
 # (at your option) any later version.
 
 import asyncio
-import json
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
@@ -89,7 +88,7 @@ class Cookie(BaseCog):
                     await asyncio.sleep(self.bot.calc_time())
                     await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                     await self.bot.put_queue(self.cmd, priority=True)
-                    
+
                     self.bot.db.update_cmd_lastran_time("cookie")
 
 

@@ -11,7 +11,6 @@
 # (at your option) any later version.
 
 import asyncio
-import json
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
@@ -86,7 +85,7 @@ class Lottery(BaseCog):
                         await asyncio.sleep(self.bot.calc_time())
                         await self.bot.sleep_till(self.cooldown.moderateCooldown)
                         await self.bot.put_queue(self.cmd)
-                        
+
                         self.bot.db.update_cmd_lastran_time("lottery")
 
             if "You can only bet up to 250,000 cowoncy!" in message.content:

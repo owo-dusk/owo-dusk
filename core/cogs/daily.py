@@ -11,7 +11,6 @@
 # (at your option) any later version.
 
 import asyncio
-import json
 import re
 
 from discord.ext import commands
@@ -85,7 +84,7 @@ class Daily(BaseCog):
                 await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 await self.bot.put_queue(cmd, priority=True)
                 await self.bot.set_stat(False)
-                
+
                 self.bot.db.update_cmd_lastran_time("daily")
 
                 if self.bot.global_settings_dict.webhook.enabled:
