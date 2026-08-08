@@ -27,7 +27,6 @@ class Commands(BaseCog):
         self.calc_time = timedelta(0)
         self.command_times = deque(maxlen=3)
         self.updated_between_cd = False
-        self.last_check_time = None
         self.last_msg = 0
 
     @property
