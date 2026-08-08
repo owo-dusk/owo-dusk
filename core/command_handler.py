@@ -109,8 +109,7 @@ class CommandHandler:
                 return
 
         # Get priority
-        # priority_int = cnf[cmd_data["id"]].get("priority") if not quick else 0
-        priority_int = self.cmd_priorities.get(cmd_data["id"])
+        priority_int = self.cmd_priorities.get(cmd_data["id"]) if not quick else 0
 
         if not priority_int and priority_int != 0:
             await self.client.log(
