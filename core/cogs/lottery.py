@@ -12,28 +12,11 @@
 
 import asyncio
 import json
-import threading
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from core.cogs._BASE import BaseCog
-
-
-def load_json_dict(file_path="utils/stats.json"):
-    with open(file_path, "r", encoding="utf-8") as config_file:
-        return json.load(config_file)
-
-
-lock = threading.Lock()
-
-
-def load_dict():
-    global accounts_dict
-    accounts_dict = load_json_dict()
-
-
-load_dict()
 
 
 class Lottery(BaseCog):
@@ -62,24 +45,17 @@ class Lottery(BaseCog):
         return self._cmd
 
     async def start_lottery(self):
-        if str(self.bot.user.id) in accounts_dict:
-            last_lottery_time = accounts_dict[str(self.bot.user.id)].get("lottery", 0)
+        last_lottery_time = await self.bot.db.fetch_cmd_lastran_time("lottery")
 
-            if not self.bot.should_run(last_lottery_time):
-                await asyncio.sleep(
-                    self.bot.calc_time()
-                )  # Wait until next 12:00 AM PST
+        if not self.bot.should_run(last_lottery_time):
+            await asyncio.sleep(
+                self.bot.calc_time()
+            )  # Wait until next 12:00 AM PST
 
-            await self.bot.sleep_till(self.cooldown.shortCooldown)
-            await self.bot.put_queue(self.cmd)
+        await self.bot.sleep_till(self.cooldown.shortCooldown)
+        await self.bot.put_queue(self.cmd)
 
-            with lock:
-                load_dict()
-                accounts_dict[str(self.bot.user.id)]["lottery"] = (
-                    self.bot.time_in_seconds()
-                )
-                with open("utils/stats.json", "w", encoding="utf-8") as f:
-                    json.dump(accounts_dict, f, indent=4)
+        self.bot.db.update_cmd_lastran_time("lottery")
 
     async def cog_load(self):
         if not self.settings.enabled:
@@ -110,26 +86,16 @@ class Lottery(BaseCog):
                         await asyncio.sleep(self.bot.calc_time())
                         await self.bot.sleep_till(self.cooldown.moderateCooldown)
                         await self.bot.put_queue(self.cmd)
-                        with lock:
-                            load_dict()
-                            accounts_dict[str(self.bot.user.id)]["lottery"] = (
-                                self.bot.time_in_seconds()
-                            )
-                            with open("utils/stats.json", "w", encoding="utf-8") as f:
-                                json.dump(accounts_dict, f, indent=4)
+                        
+                        self.bot.db.update_cmd_lastran_time("lottery")
 
             if "You can only bet up to 250,000 cowoncy!" in message.content:
                 await self.bot.remove_queue(id="lottery")
                 await asyncio.sleep(self.bot.calc_time())
                 await self.bot.sleep_till(self.cooldown.moderateCooldown)
                 await self.bot.put_queue(self.cmd)
-                with lock:
-                    load_dict()
-                    accounts_dict[str(self.bot.user.id)]["lottery"] = (
-                        self.bot.time_in_seconds()
-                    )
-                    with open("utils/stats.json", "w", encoding="utf-8") as f:
-                        json.dump(accounts_dict, f, indent=4)
+
+                self.bot.db.update_cmd_lastran_time("lottery")
 
 
 async def setup(bot):
