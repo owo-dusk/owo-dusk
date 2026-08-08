@@ -61,7 +61,7 @@ class Giveaway(BaseCog):
                     f"giveaway channel id -> {chnl} seems to be invalid", "#ff5f00"
                 )
                 continue
-            await self.bot.set_stat(False)
+            await self.bot.ch.set_stat(False)
             async for message in channel.history(
                 limit=self.settings.messageRangeToCheck
             ):
@@ -72,6 +72,9 @@ class Giveaway(BaseCog):
                             and " A New Giveaway Appeared!" in embed.author.name
                             and message.channel.id in self.settings.channels
                         ):
+                            print(
+                                f"what do you mean? {embed.author.name} {message.channel.id}"
+                            )
                             if not prev_time or (
                                 prev_time
                                 and compare_with_timestamp(
@@ -89,7 +92,7 @@ class Giveaway(BaseCog):
                                         "#00d7af",
                                     )
 
-            await self.bot.set_stat(True)
+            await self.bot.ch.set_stat(True)
         # Set prev_time for future use
         self.bot.db.update_giveaway_db(time.time())
 

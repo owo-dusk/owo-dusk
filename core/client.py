@@ -11,14 +11,11 @@
 # (at your option) any later version.
 
 import asyncio
-import itertools
 import json
 import os
 import random
 import threading
-import time
 import traceback
-from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 
 # Third-Party Libraries
@@ -28,6 +25,7 @@ import pytz
 from discord.ext import commands, tasks
 
 # Local
+import core.command_handler as command_handler
 import core.components as components
 import core.database as database
 import utils.config_models as config_models
@@ -89,8 +87,7 @@ class MyClient(commands.Bot):
         self.channel_id = int(channel_id)
         self.list_channel = [self.channel_id]
         self.session = None
-        self.state_event = asyncio.Event()
-        self.queue = asyncio.PriorityQueue()
+
         self.message_dispatcher = MessageDispatcher()
         self.settings_dict = None
         self.global_settings_dict = global_settings_dict
@@ -98,16 +95,13 @@ class MyClient(commands.Bot):
         self.commands_dict = {}
         self.cash_check = False
         self.gain_or_lose = 0
-        self.checks = []
+
         self.dm, self.cm = None, None
         self.hunt_disabled = False
         self.username = None
         self.nick_name = None
-        self.last_cmd_ran = None
         self.reaction_bot_id = 519287796549156864
         self.owo_bot_id = 408785106942164992
-        self.cmd_counter = itertools.count()
-        self.cmd_priorities = {}
         self.captcha_handler = hcaptcha_solver
         self.db = database.Database(self)
         self.quest_handler = None
@@ -153,27 +147,14 @@ class MyClient(commands.Bot):
             "checked_cash": False,
         }
 
-        self.command_handler_status = {
-            "state": True,
-            "captcha": False,
-            "sleep": False,
-            "hold_handler": False,
-        }
-
         self.ongoing_owobot_event = False
 
         with open("config/misc.json", "r", encoding="utf-8") as config_file:
             self.misc = json.load(config_file)
 
-        self.alias = self.misc["alias"]
+        self.ch = command_handler.CommandHandler(self)
 
-        self.cmds_state = {"global": {"last_ran": 0}}
-        for key in self.misc["command_info"]:
-            self.cmds_state[key] = {
-                "in_queue": False,
-                "in_monitor": False,
-                "last_ran": 0,
-            }
+        self.alias = self.misc["alias"]
 
     async def on_socket_raw_receive(self, msg):
         """
@@ -190,16 +171,6 @@ class MyClient(commands.Bot):
             await self.message_dispatcher.dispatch_on_message(message)
         else:
             await self.message_dispatcher.dispatch_on_edit(message)
-
-    async def set_stat(self, value):
-        if value:
-            self.command_handler_status["state"] = True
-            self.state_event.set()
-        else:
-            while not self.command_handler_status["state"]:
-                await self.state_event.wait()
-            self.command_handler_status["state"] = False
-            self.state_event.clear()
 
     @property
     def active_channel_ids(self):
@@ -219,13 +190,13 @@ class MyClient(commands.Bot):
         return ids
 
     async def empty_checks_and_switch(self, channel):
-        self.command_handler_status["hold_handler"] = True
+        self.ch.command_handler_status.hold_handler = True
         await self.sleep_till(
             self.global_settings_dict.channelSwitcher.delayBeforeSwitch
         )
         self.cm = channel
         self.channel_id = self.cm.id
-        self.command_handler_status["hold_handler"] = False
+        self.ch.command_handler_status.hold_handler = False
 
     @tasks.loop(seconds=30)
     async def presence(self):
@@ -245,11 +216,11 @@ class MyClient(commands.Bot):
         sleep_obj = self.settings_dict.sleep
         await asyncio.sleep(sleep_obj.get_check_time())
         if sleep_obj.should_sleep():
-            await self.set_stat(False)
+            await self.ch.set_stat(False)
             sleep_time = sleep_obj.get_sleep_time()
             await self.log(f"sleeping for {sleep_time}", "#87af87")
             await asyncio.sleep(sleep_time)
-            await self.set_stat(True)
+            await self.ch.set_stat(True)
             await self.log("sleeping finished!", "#87af87")
 
     @tasks.loop(seconds=7)
@@ -273,7 +244,7 @@ class MyClient(commands.Bot):
             )
             return
         if syst.system.compare_versions(version, safety_check["version"]):
-            self.command_handler_status["captcha"] = True
+            self.ch.command_handler_status.captcha = True
             await self.log(
                 f"There seems to be something wrong...\nStopping code for reason: {safety_check['reason']}\n(This was triggered by {safety_check['author']})",
                 "#5c0018",
@@ -411,105 +382,6 @@ class MyClient(commands.Bot):
     async def sleep(self, time):
         # to save imports
         await asyncio.sleep(time)
-
-    async def upd_cmd_state(self, id, reactionBot=False):
-        async with self.lock:
-            self.cmds_state["global"]["last_ran"] = time.time()
-            self.cmds_state[id]["last_ran"] = time.time()
-            if not reactionBot:
-                self.cmds_state[id]["in_queue"] = False
-            self.db.update_cmd_db(id)
-
-    def construct_command(self, data, guild_id):
-        prefix = self.settings_dict.prefix if data.get("prefix") else ""
-
-        if guild_id and guild_id != self.cm.guild.id:
-            # Revert
-            prefix = "owo "
-
-        return f"{prefix}{data['cmd_name']} {data.get('cmd_arguments') or ''}".strip()
-
-    @suppress_and_log("Attempting to append queue")
-    async def put_queue(self, cmd_data, priority=False, quick=False):
-        while (
-            not self.command_handler_status["state"]
-            or self.command_handler_status["hold_handler"]
-            or self.command_handler_status["sleep"]
-            or self.command_handler_status["captcha"]
-        ):
-            if priority and (
-                not self.command_handler_status["sleep"]
-                and not self.command_handler_status["hold_handler"]
-                and not self.command_handler_status["captcha"]
-            ):
-                break
-            await asyncio.sleep(self.random.uniform(1.4, 2.9))
-
-        if self.cmds_state[cmd_data["id"]]["in_queue"]:
-            # Add exception for custom commands
-            if cmd_data["id"] != "customcommand":
-                # Ensure command already in queue is not readded to prevent spam
-                await self.log(
-                    f"Error - command with id: {cmd_data['id']} already in queue, being attempted to be added back.",
-                    "#c25560",
-                )
-                return
-
-        # Get priority
-        # priority_int = cnf[cmd_data["id"]].get("priority") if not quick else 0
-        priority_int = self.cmd_priorities.get(cmd_data["id"])
-
-        if not priority_int and priority_int != 0:
-            await self.log(
-                f"Error - command with id: {cmd_data['id']} is missing priority.",
-                "#c25560",
-            )
-            return
-
-        async with self.lock:
-            await self.queue.put(
-                (
-                    priority_int,  # Priority to sort commands with
-                    next(self.cmd_counter),  # A counter to serve as a tie-breaker
-                    deepcopy(cmd_data),  # actual data
-                )
-            )
-            self.cmds_state[cmd_data["id"]]["in_queue"] = True
-
-    @suppress_and_log("Remove Queue")
-    async def remove_queue(self, cmd_data=None, id=None):
-        if not cmd_data and not id:
-            await self.log(
-                "Error: No id or command data provided for removing item from queue.",
-                "#c25560",
-            )
-            return
-        async with self.lock:
-            for index, command in enumerate(self.checks):
-                if cmd_data:
-                    if command == cmd_data:
-                        self.checks.pop(index)
-                else:
-                    if command.get("id", None) == id:
-                        self.checks.pop(index)
-
-    async def search_checks(self, id):
-        async with self.lock:
-            for command in self.checks:
-                if command.get("id", None) == id:
-                    return True
-            return False
-
-    async def shuffle_queue(self):
-        async with self.lock:
-            items = []
-            while not self.queue.empty():
-                items.append(await self.queue.get())
-
-            self.random.shuffle(items)
-
-            for item in items:
-                await self.queue.put(item)
 
     async def log(
         self,
@@ -676,7 +548,7 @@ class MyClient(commands.Bot):
         TASK: remove repetition here
         """
         await self.wait_until_ready()
-        if not self.command_handler_status["captcha"] or bypass:
+        if not self.ch.command_handler_status.captcha or bypass:
             if typingIndicator:
                 async with channel.typing():
                     await channel.send(msg, silent=silent)
@@ -694,7 +566,7 @@ class MyClient(commands.Bot):
                     filename=filename,
                 )
             if misspelled:
-                await self.set_stat(False)
+                await self.ch.set_stat(False)
                 time = self.calculate_correction_time(message)
                 await self.log(
                     f"correcting: {msg} -> {message} in {time}s",
@@ -708,7 +580,7 @@ class MyClient(commands.Bot):
                         await channel.send(message, silent=silent)
                 else:
                     await channel.send(message, silent=silent)
-                await self.set_stat(True)
+                await self.ch.set_stat(True)
 
     @suppress_and_log("Sending Slash Command")
     async def slashCommandSender(self, msg, color, channel, **kwargs):
@@ -745,6 +617,7 @@ class MyClient(commands.Bot):
         # 12am = 00:00, I might need this the next time I take a look here.
         return total_seconds
 
+    # TBR
     def should_run(self, last_timestamp):
         # gets timezone
         pst = pytz.timezone("US/Pacific")
@@ -754,6 +627,7 @@ class MyClient(commands.Bot):
 
         return now_pst.date() != last_pst.date()
 
+    # TBR
     def time_in_seconds(self):
         """
         timestamp is basically seconds passed after 1970 jan 1st
@@ -761,6 +635,7 @@ class MyClient(commands.Bot):
         time_now = datetime.now(timezone.utc).astimezone(pytz.timezone("US/Pacific"))
         return time_now.timestamp()
 
+    # TBR
     def pst_midnight_timestamp(self):
         now = datetime.now(timezone.utc).astimezone(pytz.timezone("US/Pacific"))
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -768,7 +643,7 @@ class MyClient(commands.Bot):
 
     async def check_for_cash(self):
         await asyncio.sleep(self.random.uniform(4.5, 34.4))
-        await self.put_queue(
+        await self.ch.put_queue(
             {
                 "cmd_name": self.alias["cash"]["normal"],
                 "prefix": True,

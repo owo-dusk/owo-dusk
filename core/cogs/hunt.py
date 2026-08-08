@@ -146,10 +146,10 @@ class Hunt(BaseCog):
                 if self.settings.shortform
                 else self.bot.alias["hunt"]["normal"]
             )
-            asyncio.create_task(self.bot.put_queue(self.cmd))
+            asyncio.create_task(self.bot.ch.put_queue(self.cmd))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="hunt")
+        await self.bot.ch.remove_queue(id="hunt")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -160,7 +160,7 @@ class Hunt(BaseCog):
         if self.bot.hunt_disabled:
             # Ensure hunt is currently not in queue
             if not self.was_recently_disabled:
-                await self.bot.remove_queue(id="hunt")
+                await self.bot.ch.remove_queue(id="hunt")
                 self.was_recently_disabled = True
             return
         elif self.was_recently_disabled:
@@ -170,7 +170,7 @@ class Hunt(BaseCog):
                 if self.settings.shortform
                 else self.bot.alias["hunt"]["normal"]
             )
-            await self.bot.put_queue(self.cmd)
+            await self.bot.ch.put_queue(self.cmd)
 
         if (
             message.channel.id == self.bot.cm.id
@@ -180,7 +180,7 @@ class Hunt(BaseCog):
                 "you found:" in message.content.lower()
                 or "caught" in message.content.lower()
             ):
-                await self.bot.remove_queue(id="hunt")
+                await self.bot.ch.remove_queue(id="hunt")
 
                 msg_lines = message.content.splitlines()
                 msg_line = (
@@ -239,7 +239,7 @@ class Hunt(BaseCog):
                     if self.settings.shortform
                     else self.bot.alias["hunt"]["normal"]
                 )
-                await self.bot.put_queue(self.cmd)
+                await self.bot.ch.put_queue(self.cmd)
 
 
 async def setup(bot):

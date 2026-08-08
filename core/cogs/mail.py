@@ -17,7 +17,7 @@ from discord.ext.commands import ExtensionNotLoaded
 from core.cogs._BASE import BaseCog
 
 """
-TASK: recheck set_stat
+TASK: recheck ch.set_stat
 improve logging in here.
 """
 
@@ -105,7 +105,7 @@ class Mail(BaseCog):
                         == f"📫 **| {self.bot.user.display_name}**, you have **2** unread mail!"
                     ):
                         # Unread mail detected!
-                        await self.bot.set_stat(False)
+                        await self.bot.ch.set_stat(False)
                         await self.bot.log(
                             "Mail(s) detected! Attempting to claim..", "#4c9d9e"
                         )
@@ -129,7 +129,7 @@ class Mail(BaseCog):
                     if not self.data:
                         # We release the lock on commands here, no pages left.
                         # And we reset message_id
-                        await self.bot.set_stat(True)
+                        await self.bot.ch.set_stat(True)
                         self.message_id = 0
 
                     await self.data[0]["button"].click(
@@ -170,7 +170,7 @@ class Mail(BaseCog):
                     else:
                         # We release the lock on commands here, no pages left.
                         # And we reset message_id
-                        await self.bot.set_stat(True)
+                        await self.bot.ch.set_stat(True)
                         self.message_id = 0
                     break
 
@@ -211,7 +211,7 @@ class Mail(BaseCog):
 
                     # If neither we reset states. This isn't supposed to trigger.
                     # Task: Log error here.
-                    await self.bot.set_stat(True)
+                    await self.bot.ch.set_stat(True)
                     self.message_id = 0
 
 

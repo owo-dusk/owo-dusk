@@ -51,7 +51,7 @@ class Cookie(BaseCog):
             if self.settings.ping_user
             else f"{self.settings.user_id}"
         )
-        await self.bot.put_queue(self.cmd, priority=True)
+        await self.bot.ch.put_queue(self.cmd, priority=True)
         
         self.bot.db.update_cmd_lastran_time("cookie")
 
@@ -65,7 +65,7 @@ class Cookie(BaseCog):
             asyncio.create_task(self.start_cookie())
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="cookie")
+        await self.bot.ch.remove_queue(id="cookie")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -83,11 +83,11 @@ class Cookie(BaseCog):
                     'Nu! You need to wait' will get triggered unlike slow down one
                     as the actual command slowdown is different from this.
                     """
-                    await self.bot.remove_queue(id="cookie")
+                    await self.bot.ch.remove_queue(id="cookie")
 
                     await asyncio.sleep(self.bot.calc_time())
                     await self.bot.sleep_till(self.cooldowns.moderateCooldown)
-                    await self.bot.put_queue(self.cmd, priority=True)
+                    await self.bot.ch.put_queue(self.cmd, priority=True)
 
                     self.bot.db.update_cmd_lastran_time("cookie")
 

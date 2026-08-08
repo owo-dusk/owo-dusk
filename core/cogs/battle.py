@@ -51,10 +51,10 @@ class Battle(BaseCog):
                 if self.settings.shortform
                 else self.bot.alias["battle"]["normal"]
             )
-            asyncio.create_task(self.bot.put_queue(self.cmd))
+            asyncio.create_task(self.bot.ch.put_queue(self.cmd))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="battle")
+        await self.bot.ch.remove_queue(id="battle")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -92,14 +92,14 @@ class Battle(BaseCog):
                                 # Return from battle embed reply
                                 return
 
-                        await self.bot.remove_queue(id="battle")
+                        await self.bot.ch.remove_queue(id="battle")
                         await self.bot.sleep(self.settings.get_cd())
                         self.cmd["cmd_name"] = (
                             self.bot.alias["battle"]["shortform"]
                             if self.settings.shortform
                             else self.bot.alias["battle"]["normal"]
                         )
-                        await self.bot.put_queue(self.cmd)
+                        await self.bot.ch.put_queue(self.cmd)
 
         cnf = self.bot.quest_help_request["battle"]
         if not cnf["enabled"]:
@@ -117,7 +117,7 @@ class Battle(BaseCog):
                     emb.footer.text.lower()
                     == "this challenge will expire in 10 minutes"
                 ):
-                    await self.bot.remove_queue(id="battle")
+                    await self.bot.ch.remove_queue(id="battle")
                     self.bot.quest_help_request["battle"]["till"] -= 1
                     (
                         current,

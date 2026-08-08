@@ -52,7 +52,7 @@ class Lottery(BaseCog):
             )  # Wait until next 12:00 AM PST
 
         await self.bot.sleep_till(self.cooldown.shortCooldown)
-        await self.bot.put_queue(self.cmd)
+        await self.bot.ch.put_queue(self.cmd)
 
         self.bot.db.update_cmd_lastran_time("lottery")
 
@@ -66,7 +66,7 @@ class Lottery(BaseCog):
             asyncio.create_task(self.start_lottery())
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="lottery")
+        await self.bot.ch.remove_queue(id="lottery")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -81,18 +81,18 @@ class Lottery(BaseCog):
                         embed.author.name is not None
                         and f"{nick}'s Lottery Submission" in embed.author.name
                     ):
-                        await self.bot.remove_queue(id="lottery")
+                        await self.bot.ch.remove_queue(id="lottery")
                         await asyncio.sleep(self.bot.calc_time())
                         await self.bot.sleep_till(self.cooldown.moderateCooldown)
-                        await self.bot.put_queue(self.cmd)
+                        await self.bot.ch.put_queue(self.cmd)
 
                         self.bot.db.update_cmd_lastran_time("lottery")
 
             if "You can only bet up to 250,000 cowoncy!" in message.content:
-                await self.bot.remove_queue(id="lottery")
+                await self.bot.ch.remove_queue(id="lottery")
                 await asyncio.sleep(self.bot.calc_time())
                 await self.bot.sleep_till(self.cooldown.moderateCooldown)
-                await self.bot.put_queue(self.cmd)
+                await self.bot.ch.put_queue(self.cmd)
 
                 self.bot.db.update_cmd_lastran_time("lottery")
 
