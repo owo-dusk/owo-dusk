@@ -100,7 +100,7 @@ class Huntbot(BaseCog):
             asyncio.create_task(self.send_ah(startup=True))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="huntbot")
+        await self.bot.ch.remove_queue(id="huntbot")
 
     async def send_ah(
         self, startup=False, no_cash_arg=True, timeToSleep=None, ans=None
@@ -108,7 +108,7 @@ class Huntbot(BaseCog):
         if startup:
             await self.bot.sleep_till(self.cooldowns.briefCooldown)
         else:
-            await self.bot.remove_queue(id="huntbot")
+            await self.bot.ch.remove_queue(id="huntbot")
             if isinstance(timeToSleep, list):
                 await self.bot.sleep_till(timeToSleep)
             else:
@@ -124,7 +124,7 @@ class Huntbot(BaseCog):
         if ans:
             self.cmd["cmd_arguments"] = f"{self.settings.cashToSpend} {ans}"
 
-        await self.bot.put_queue(self.cmd)
+        await self.bot.ch.put_queue(self.cmd)
 
     async def upgrade_confirmation(self):
         try:
@@ -158,11 +158,11 @@ class Huntbot(BaseCog):
         if nick in message.content:
             if "You successfully upgraded" in message.content:
                 self.upgrade_event.set()
-                await self.bot.remove_queue(id="upgrade")
+                await self.bot.ch.remove_queue(id="upgrade")
             elif "Here is your password!" in message.content:
                 # When running multiple ids, answer will take longer
                 # To be recieved. We don't want retrier to mess up within that time.
-                await self.bot.remove_queue(id="huntbot")
+                await self.bot.ch.remove_queue(id="huntbot")
                 ans = await solve_hb_captcha(
                     message.attachments[0].url, self.bot.session
                 )
@@ -201,8 +201,8 @@ class Huntbot(BaseCog):
             for embed in message.embeds:
                 if embed.author and f"{nick}'s HuntBot" in embed.author.name:
                     # Upgrade huntbot
-                    await self.bot.remove_queue(id="huntbot")
-                    await self.bot.set_stat(False)
+                    await self.bot.ch.remove_queue(id="huntbot")
+                    await self.bot.ch.set_stat(False)
                     if embed.fields:
                         self.get_experience(embed)
                         data = allocate_essence(
@@ -216,12 +216,12 @@ class Huntbot(BaseCog):
                             )
                             if essence_alloc > 0:
                                 # print(self.upgrade_cmd["cmd_arguments"])
-                                await self.bot.put_queue(
+                                await self.bot.ch.put_queue(
                                     self.upgrade_cmd, priority=True
                                 )
                                 await self.upgrade_confirmation()
                                 # print(self.upgrade_details)
-                        await self.bot.set_stat(True)
+                        await self.bot.ch.set_stat(True)
 
                         # Running/handling huntbot
                         if len(embed.fields) > 8:

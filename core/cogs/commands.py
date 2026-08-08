@@ -23,11 +23,10 @@ from core.cogs._BASE import BaseCog
 class Commands(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
-        self.bot.checks = []
+        self.bot.ch.checks = []
         self.calc_time = timedelta(0)
         self.command_times = deque(maxlen=3)
         self.updated_between_cd = False
-
         self.last_msg = 0
 
     @property
@@ -60,11 +59,20 @@ class Commands(BaseCog):
                 )
                 self.updated_between_cd = True
 
+    def construct_command(self, data, guild_id):
+        prefix = self.bot.settings_dict.prefix if data.get("prefix") else ""
+
+        if guild_id and guild_id != self.bot.cm.guild.id:
+            # Revert
+            prefix = "owo "
+
+        return f"{prefix}{data['cmd_name']} {data.get('cmd_arguments') or ''}".strip()
+
     async def start_commands(self):
         await self.bot.sleep_till(
             self.bot.global_settings_dict.account.commandsHandlerStart
         )
-        await self.bot.shuffle_queue()
+        await self.bot.ch.shuffle_queue()
         await self.bot.wait_until_ready()
         self.send_commands.start()
         self.monitor_checks.start()
@@ -79,7 +87,7 @@ class Commands(BaseCog):
     async def send_commands(self):
         try:
             cnf = self.command_handler_settings
-            priority, _, cmd = await self.bot.queue.get()
+            priority, _, cmd = await self.bot.ch.queue.get()
             cmd_id = cmd.get("id")
             custom_channel_id = cmd.get("channel")
             channel = None
@@ -95,7 +103,7 @@ class Commands(BaseCog):
 
             if priority != 0:
                 while (
-                    time.time() - self.bot.cmds_state["global"]["last_ran"]
+                    time.time() - self.bot.ch.cmds_state["global"]["last_ran"]
                 ) < cnf.betweenCommands[0]:
                     await self.sleep_between_commands(cnf.betweenCommands)
 
@@ -109,14 +117,14 @@ class Commands(BaseCog):
                 self.command_times.clear()
 
             """Update Command state"""
-            await self.bot.upd_cmd_state(cmd_id)
+            await self.bot.ch.upd_cmd_state(cmd_id)
 
             """Append to checks"""
             if cmd.get("checks") and cmd_id:
-                in_queue = await self.bot.search_checks(id=cmd_id)
+                in_queue = await self.bot.ch.search_checks(id=cmd_id)
                 if not in_queue:
-                    async with self.bot.lock:
-                        self.bot.checks.append(cmd)
+                    async with self.bot.ch._hold_or_create_lock:
+                        self.bot.ch.checks.append(cmd)
 
             if self.bot.settings_dict.useSlashCommands and cmd.get(
                 "slash_cmd_name", False
@@ -128,7 +136,7 @@ class Commands(BaseCog):
                 )
             else:
                 await self.bot.send(
-                    self.bot.construct_command(
+                    self.construct_command(
                         cmd, guild_id=channel.guild.id if channel else None
                     ),
                     self.bot.misc["command_info"][cmd_id]["log_color"],
@@ -151,30 +159,26 @@ class Commands(BaseCog):
             delay = self.command_handler_settings.readdingToQueue
             current_time = datetime.now(timezone.utc)
             if (
-                not self.bot.command_handler_status["state"]
-                or self.bot.command_handler_status["sleep"]
-                or self.bot.command_handler_status["captcha"]
-                or self.bot.command_handler_status["hold_handler"]
+                not self.bot.ch.command_handler_status.state
+                or self.bot.ch.command_handler_status.sleep
+                or self.bot.ch.command_handler_status.captcha
+                or self.bot.ch.command_handler_status.hold_handler
             ):
                 self.calc_time += current_time - getattr(
                     self, "last_check_time", current_time
                 )
             else:
-                for command in self.bot.checks[:]:
-                    cnf = self.bot.cmds_state[command["id"]]
+                for command in self.bot.ch.checks[:]:
+                    cnf = self.bot.ch.cmds_state[command["id"]]
                     if (time.time() - cnf["last_ran"] > delay) and not cnf["in_queue"]:
-                        async with self.bot.lock:
-                            self.bot.checks.remove(command)
-                        await self.bot.put_queue(command)
+                        async with self.bot.ch._hold_or_create_lock():
+                            self.bot.ch.checks.remove(command)
+                        await self.bot.ch.put_queue(command)
 
                 self.calc_time = timedelta(0)
             self.last_check_time = current_time
         except Exception as e:
             await self.bot.log(f"Error - monitor_checks(): {e}", "#c25560")
-
-    """@commands.Cog.listener()
-    async def on_message(self, message):
-        self.last_msg = time.time()"""
 
 
 async def setup(bot):

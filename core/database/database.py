@@ -23,25 +23,26 @@ database_handler = worker.databaseWorker()
 
 
 class Database:
-    def __init__(self, bot):
+    def __init__(self, client):
         # We pass a "reference" here
-        self.bot = bot
+        self.client = client
 
     async def update_priorities(self):
         # Check if already in db
         res = await database_handler.get_from_db(
-            "SELECT * FROM command_priority WHERE user_id = ?", (str(self.bot.user.id),)
+            "SELECT * FROM command_priority WHERE user_id = ?",
+            (str(self.client.user.id),),
         )
         if res:
             for row in res:
                 # 0 -> user_id
                 # 1 -> command_name
                 # 2 -> priority
-                self.bot.cmd_priorities[row[1]] = int(row[2])
+                self.client.ch.cmd_priorities[row[1]] = int(row[2])
         else:
             # Group items using tiers
             tiers_map = {}
-            for key, value in self.bot.misc["command_info"].items():
+            for key, value in self.client.misc["command_info"].items():
                 tiers_map[value["priority"]] = tiers_map.get(value["priority"], []) + [
                     key
                 ]
@@ -50,18 +51,18 @@ class Database:
             base_priority = 0
             for tier in sorted(tiers_map):
                 temp_list = tiers_map[tier]
-                self.bot.random.shuffle(temp_list)
+                self.client.random.shuffle(temp_list)
                 for item in temp_list:
                     # This way base_priority will remain above 0, ensuring it doesn't hit quick send.
                     base_priority += 1
-                    self.bot.cmd_priorities[item] = base_priority
+                    self.client.ch.cmd_priorities[item] = base_priority
                     database_handler.update_database(
                         """INSERT OR REPLACE INTO command_priority (user_id, command_name, priority)
                         VALUES (?, ?, ?)""",
-                        (str(self.bot.user.id), item, base_priority),
+                        (str(self.client.user.id), item, base_priority),
                     )
 
-        # print(self.bot.user.name, "->", self.bot.cmd_priorities)
+        # print(self.client.user.name, "->", self.client.ch.cmd_priorities)
 
     def update_cash_db(self):
         hr = utils.get_hour()
@@ -70,29 +71,29 @@ class Database:
             """UPDATE cowoncy_earnings
             SET earnings = ?
             WHERE user_id = ? AND hour = ?""",
-            (self.bot.user_status["net_earnings"], self.bot.user.id, hr),
+            (self.client.user_status["net_earnings"], self.client.user.id, hr),
         )
 
         database_handler.update_database(
             "UPDATE user_stats SET cowoncy = ? WHERE user_id = ?",
-            (self.bot.user_status["balance"], self.bot.user.id),
+            (self.client.user_status["balance"], self.client.user.id),
         )
 
     def update_captcha_db(self):
         database_handler.update_database(
             "UPDATE user_stats SET captchas = captchas + 1 WHERE user_id = ?",
-            (self.bot.user.id,),
+            (self.client.user.id,),
         )
 
     def update_giveaway_db(self, last_ran):
         database_handler.update_database(
             "UPDATE user_stats SET giveaways = ? WHERE user_id = ?",
-            (last_ran, self.bot.user.id),
+            (last_ran, self.client.user.id),
         )
 
     async def fetch_giveaway_db(self):
         results = await database_handler.get_from_db(
-            "SELECT giveaways FROM user_stats WHERE user_id = ?", (self.bot.user.id,)
+            "SELECT giveaways FROM user_stats WHERE user_id = ?", (self.client.user.id,)
         )
         if results:
             return results[0]["giveaways"]
@@ -101,7 +102,7 @@ class Database:
     def populate_stats_db(self):
         database_handler.update_database(
             "INSERT OR IGNORE INTO user_stats (user_id, daily, lottery, cookie, giveaways, captchas, cowoncy, boss, boss_ticket, pup, piku, army) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (self.bot.user.id, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0),
+            (self.client.user.id, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0),
         )
 
     def update_stats_db(self, column_name, value):
@@ -120,30 +121,30 @@ class Database:
 
         database_handler.update_database(
             f"UPDATE user_stats SET {column_name} = ? WHERE user_id = ?",
-            (value, self.bot.user.id),
+            (value, self.client.user.id),
         )
 
     def consume_boss_ticket(self, revert=False):
         if not revert:
             database_handler.update_database(
                 "UPDATE user_stats SET boss_ticket = boss_ticket - 1 WHERE user_id = ? and boss_ticket > 0",
-                (self.bot.user.id,),
+                (self.client.user.id,),
             )
         else:
             database_handler.update_database(
                 "UPDATE user_stats SET boss_ticket = boss_ticket + 1 WHERE user_id = ? and boss_ticket < 3",
-                (self.bot.user.id,),
+                (self.client.user.id,),
             )
 
     async def fetch_boss_stats(self):
         results = await database_handler.get_from_db(
             "SELECT boss, boss_ticket FROM user_stats WHERE user_id = ?",
-            (self.bot.user.id,),
+            (self.client.user.id,),
         )
         if results:
             return results[0]["boss"], results[0]["boss_ticket"]
         print(
-            f"seems like user_stats have not been properly initialised -> {self.bot.user.name}"
+            f"seems like user_stats have not been properly initialised -> {self.client.user.name}"
         )
         return 0, 3
 
@@ -152,12 +153,12 @@ class Database:
             # We have a total of 3 tickets per day.
             database_handler.update_database(
                 "UPDATE user_stats SET boss_ticket = ? WHERE user_id = ?",
-                (3, self.bot.user.id),
+                (3, self.client.user.id),
             )
         else:
             database_handler.update_database(
                 "UPDATE user_stats SET boss_ticket = ? WHERE user_id = ?",
-                (0, self.bot.user.id),
+                (0, self.client.user.id),
             )
 
     async def populate_cowoncy_earnings(self, update=False):
@@ -167,7 +168,7 @@ class Database:
             if not update:
                 database_handler.update_database(
                     "INSERT OR IGNORE INTO cowoncy_earnings (user_id, hour, earnings) VALUES (?, ?, ?)",
-                    (self.bot.user.id, i, 0),
+                    (self.client.user.id, i, 0),
                 )
 
         rows = await database_handler.get_from_db(
@@ -184,7 +185,7 @@ class Database:
             for hr in range(cur_hr + 1):
                 hr_row = await database_handler.get_from_db(
                     "SELECT earnings FROM cowoncy_earnings WHERE user_id = ? AND hour = ?",
-                    (self.bot.user.id, hr),
+                    (self.client.user.id, hr),
                 )
                 # Note: negative values are allowed.
                 if hr_row and hr_row[0]["earnings"] != 0:
@@ -192,7 +193,7 @@ class Database:
                 elif last_cash != 0:
                     database_handler.update_database(
                         "UPDATE cowoncy_earnings SET earnings = ? WHERE hour = ? AND user_id = ?",
-                        (last_cash, hr, self.bot.user.id),
+                        (last_cash, hr, self.client.user.id),
                     )
             # Return once done as we don't want reset.
             return
@@ -200,7 +201,7 @@ class Database:
         for i in range(24):
             database_handler.update_database(
                 "UPDATE cowoncy_earnings SET earnings = 0 WHERE user_id = ? AND hour = ?",
-                (self.bot.user.id, i),
+                (self.client.user.id, i),
             )
 
         database_handler.update_database(
@@ -209,17 +210,17 @@ class Database:
         )
 
     async def fetch_net_earnings(self):
-        self.bot.user_status["net_earnings"] = 0
+        self.client.user_status["net_earnings"] = 0
         rows = await database_handler.get_from_db(
             "SELECT earnings FROM cowoncy_earnings WHERE user_id = ? ORDER BY hour",
-            (self.bot.user.id,),
+            (self.client.user.id,),
         )
 
         cowoncy_list = [row["earnings"] for row in rows]
 
         for item in reversed(cowoncy_list):
             if item != 0:
-                self.bot.user_status["net_earnings"] = item
+                self.client.user_status["net_earnings"] = item
                 break
 
     async def reset_gamble_wins_or_losses(self):
@@ -268,13 +269,13 @@ class Database:
 
         results = await database_handler.get_from_db(
             f"SELECT {cmd} FROM user_stats WHERE user_id = ?",
-            (self.bot.user.id,),
+            (self.client.user.id,),
         )
 
         if results:
             return results[0][cmd]
         print(
-            f"seems like user_stats have not been properly initialised -> {self.bot.user.name}"
+            f"seems like user_stats have not been properly initialised -> {self.client.user.name}"
         )
         return 0
 
@@ -285,7 +286,7 @@ class Database:
 
         database_handler.update_database(
             f"UPDATE user_stats SET {cmd} = ? WHERE user_id = ?",
-            (self.bot.time_in_seconds(), self.bot.user.id),
+            (self.client.time_in_seconds(), self.client.user.id),
         )
 
     def update_event_timestamp(self, timestamp):

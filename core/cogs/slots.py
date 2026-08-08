@@ -69,7 +69,7 @@ class Slots(BaseCog):
             asyncio.create_task(self.start_slots(startup=True))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="slots")
+        await self.bot.ch.remove_queue(id="slots")
 
     async def start_slots(self, startup=False):
         goal_settings = self.gamble_settings.goals
@@ -77,7 +77,7 @@ class Slots(BaseCog):
             if startup:
                 await self.bot.sleep_till(self.cooldowns.briefCooldown)
             else:
-                await self.bot.remove_queue(id="slots")
+                await self.bot.ch.remove_queue(id="slots")
                 await self.bot.sleep(self.settings.get_cd())
 
             amount_to_gamble = int(
@@ -158,7 +158,7 @@ class Slots(BaseCog):
                 self.exceeded_max_amount = True
             else:
                 self.cmd["cmd_arguments"] = str(amount_to_gamble)
-                await self.bot.put_queue(self.cmd)
+                await self.bot.ch.put_queue(self.cmd)
 
         except Exception as e:
             await self.bot.log(f"Error - {e}, During slots start_slots()", "#c25560")

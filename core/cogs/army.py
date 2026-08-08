@@ -45,7 +45,7 @@ class Army(BaseCog):
             asyncio.create_task(self.send_army(startup=True))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="army")
+        await self.bot.ch.remove_queue(id="army")
 
     @property
     def settings(self):
@@ -84,7 +84,7 @@ class Army(BaseCog):
                 await asyncio.sleep(self.bot.calc_time())
             await self.bot.sleep_till(self.bot.settings_dict.cooldowns.shortCooldown)
         else:
-            await self.bot.remove_queue(id="army")
+            await self.bot.ch.remove_queue(id="army")
             await self.bot.sleep(self.settings.get_cd())
 
         if finished:
@@ -94,7 +94,7 @@ class Army(BaseCog):
 
         # I know we do update from on_message but for safety
         self.set_send_time()
-        await self.bot.put_queue(self.cmd)
+        await self.bot.ch.put_queue(self.cmd)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -127,7 +127,7 @@ class Army(BaseCog):
                 in message.content
             ):
                 # remove command from queue
-                await self.bot.remove_queue(id="army")
+                await self.bot.ch.remove_queue(id="army")
                 # update, sleep
                 self.bot.db.update_cmd_lastran_time("army")
                 await asyncio.sleep(self.bot.calc_time())

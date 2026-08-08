@@ -82,8 +82,8 @@ class Pupiku(BaseCog):
             asyncio.create_task(self.send_pupiku(startup=True))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="pup")
-        await self.bot.remove_queue(id="piku")
+        await self.bot.ch.remove_queue(id="pup")
+        await self.bot.ch.remove_queue(id="piku")
 
     async def send_pupiku(self, startup=False, cmd=None, final=False):
         if startup:
@@ -95,20 +95,20 @@ class Pupiku(BaseCog):
                 choice = self.bot.random.choice(cmds)
                 cmds.remove(choice)
 
-                await self.bot.put_queue(self.get_cmd(choice))
+                await self.bot.ch.put_queue(self.get_cmd(choice))
                 await self.bot.sleep_till([1, 3])
-                await self.bot.put_queue(self.get_cmd(cmds[0]))
+                await self.bot.ch.put_queue(self.get_cmd(cmds[0]))
                 # Incase of failure during initial start
                 # once one command is successful, this isn't an issue.
                 await self.bot.sleep(60)
         else:
-            await self.bot.remove_queue(id=cmd)
+            await self.bot.ch.remove_queue(id=cmd)
             cd = getattr(self, f"{cmd}_settings").get_cd()
             if final:
                 cd += self.bot.calc_time()
             await self.bot.sleep(cd)
             self.set_send_time(cmd)
-            await self.bot.put_queue(self.get_cmd(cmd))
+            await self.bot.ch.put_queue(self.get_cmd(cmd))
 
     @commands.Cog.listener()
     async def on_message(self, message):
