@@ -185,7 +185,7 @@ if not exist "%PYTHON_INSTALLER%" (
     if errorlevel 1 ( exit /b 1 )
 )
 echo     Installing Python %PYTHON_VERSION% silently (per-user)...
-"%PYTHON_INSTALLER%" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0 Include_doc=0 Include_launcher=0 Shortcuts=0 AssociateFiles=0 InstallDir="%PYTHON_INSTALL_DIR%"
+"%PYTHON_INSTALLER%" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0 Include_doc=0 Include_launcher=1 Shortcuts=0 AssociateFiles=0 TargetDir="%PYTHON_INSTALL_DIR%"
 if errorlevel 1 ( exit /b 1 )
 if not exist "%PYTHON_INSTALL_DIR%\python.exe" ( exit /b 1 )
 :: make python available to this session (and to the app) immediately
