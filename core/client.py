@@ -36,7 +36,6 @@ from utils.loader import (
     captcha_settings_dict,
     danger_settings_dict,
     global_settings_dict,
-    load_accounts_dict,
     webhook_data_dict,
 )
 from utils.misspell import misspell_word
@@ -763,24 +762,6 @@ class MyClient(commands.Bot):
         self.slash_commands = {}
 
         await self.fetch_slash_commands(self.cm)
-
-        # Add account to stats.json
-        self.default_config = {
-            self.user.id: {
-                "daily": 0,
-                "lottery": 0,
-                "cookie": 0,
-                "banned": [],
-                "giveaways": 0,
-            }
-        }
-
-        with lock:
-            accounts_dict = load_accounts_dict()
-            if str(self.user.id) not in accounts_dict:
-                accounts_dict.update(self.default_config)
-                with open("utils/stats.json", "w", encoding="utf-8") as f:
-                    json.dump(accounts_dict, f, indent=4)
 
         # Charts
         self.db.populate_stats_db()

@@ -11,32 +11,14 @@
 # (at your option) any later version.
 
 import asyncio
-import json
 import re
-import threading
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from core.cogs._BASE import BaseCog
 
-
-def load_json_dict(file_path="utils/stats.json"):
-    with open(file_path, "r", encoding="utf-8") as config_file:
-        return json.load(config_file)
-
-
 cmd = {"cmd_name": "daily", "prefix": True, "checks": True, "id": "daily"}
-
-lock = threading.Lock()
-
-
-def load_dict():
-    global accounts_dict
-    accounts_dict = load_json_dict()
-
-
-load_dict()
 
 
 class Daily(BaseCog):
@@ -48,27 +30,18 @@ class Daily(BaseCog):
         return self.bot.settings_dict.cooldowns
 
     async def start_daily(self):
-        if str(self.bot.user.id) in accounts_dict:
-            last_daily_time = accounts_dict[str(self.bot.user.id)].get("daily", 0)
+        last_daily_time = await self.bot.db.fetch_cmd_lastran_time("daily")
 
-            if not self.bot.should_run(
-                last_daily_time
-            ):  # 86400 = seconds till a day(24hrs).
-                await asyncio.sleep(
-                    self.bot.calc_time()
-                )  # Wait until next 12:00 AM PST
+        if not self.bot.should_run(
+            last_daily_time
+        ):  # 86400 = seconds till a day(24hrs).
+            await asyncio.sleep(self.bot.calc_time())  # Wait until next 12:00 AM PST
 
-            await self.bot.sleep_till(self.cooldowns.briefCooldown)
-            await self.bot.ch.put_queue(cmd, priority=True)
-            await self.bot.ch.set_stat(False)
+        await self.bot.sleep_till(self.cooldowns.briefCooldown)
+        await self.bot.ch.put_queue(cmd, priority=True)
+        await self.bot.set_stat(False)
 
-            with lock:
-                load_dict()
-                accounts_dict[str(self.bot.user.id)]["daily"] = (
-                    self.bot.time_in_seconds()
-                )
-                with open("utils/stats.json", "w", encoding="utf-8") as f:
-                    json.dump(accounts_dict, f, indent=4)
+        self.bot.db.update_cmd_lastran_time("daily")
 
     async def cog_load(self):
         if not self.bot.settings_dict.daily:
@@ -110,14 +83,9 @@ class Daily(BaseCog):
 
                 await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 await self.bot.ch.put_queue(cmd, priority=True)
-                await self.bot.ch.set_stat(False)
-                with lock:
-                    load_dict()
-                    accounts_dict[str(self.bot.user.id)]["daily"] = (
-                        self.bot.time_in_seconds()
-                    )
-                    with open("utils/stats.json", "w", encoding="utf-8") as f:
-                        json.dump(accounts_dict, f, indent=4)
+                await self.bot.set_stat(False)
+
+                self.bot.db.update_cmd_lastran_time("daily")
 
                 if self.bot.global_settings_dict.webhook.enabled:
                     await self.bot.send_webhook("daily_claim")
@@ -131,14 +99,9 @@ class Daily(BaseCog):
                 await asyncio.sleep(self.bot.calc_time())
                 await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 await self.bot.ch.put_queue(cmd, priority=True)
-                await self.bot.ch.set_stat(False)
-                with lock:
-                    load_dict()
-                    accounts_dict[str(self.bot.user.id)]["daily"] = (
-                        self.bot.time_in_seconds()
-                    )
-                    with open("utils/stats.json", "w", encoding="utf-8") as f:
-                        json.dump(accounts_dict, f, indent=4)
+                await self.bot.set_stat(False)
+
+                self.bot.db.update_cmd_lastran_time("daily")
 
 
 async def setup(bot):

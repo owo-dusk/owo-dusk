@@ -264,7 +264,7 @@ class Database:
 
     async def fetch_cmd_lastran_time(self, cmd):
         # For Pupiku and Army.
-        if cmd not in {"pup", "piku", "army"}:
+        if cmd not in {"pup", "piku", "army", "daily", "lottery", "cookie"}:
             raise ValueError("Invalid column name.")
 
         results = await database_handler.get_from_db(
@@ -281,7 +281,7 @@ class Database:
 
     def update_cmd_lastran_time(self, cmd):
         # For Pupiku and Army.
-        if cmd not in {"pup", "piku", "army"}:
+        if cmd not in {"pup", "piku", "army", "daily", "lottery", "cookie"}:
             raise ValueError("Invalid column name.")
 
         database_handler.update_database(
