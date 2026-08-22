@@ -123,7 +123,7 @@ class Commands(BaseCog):
             if cmd.get("checks") and cmd_id:
                 in_queue = await self.bot.ch.search_checks(id=cmd_id)
                 if not in_queue:
-                    async with self.bot.ch._hold_or_create_lock:
+                    async with self.bot.ch._hold_or_create_lock():
                         self.bot.ch.checks.append(cmd)
 
             if self.bot.settings_dict.useSlashCommands and cmd.get(
