@@ -10,6 +10,8 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+from functools import wraps
+
 import utils.timestamp as utils
 
 from . import worker
@@ -18,8 +20,13 @@ from . import worker
 database_handler = worker.databaseWorker()
 
 
-# NOTE: Just a note for myself, keep in mind that updation which is in relation to time takes place through update_stats_db
-# also we need to move daily, lottery and cookie to DB before properly rewriting this mess
+def log_stats_if_required(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if self.client.global_settings_dict.database.logStatistics:
+            return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class Database:
@@ -56,7 +63,7 @@ class Database:
                     # This way base_priority will remain above 0, ensuring it doesn't hit quick send.
                     base_priority += 1
                     self.client.ch.cmd_priorities[item] = base_priority
-                    database_handler.update_database(
+                    await database_handler.update_database_async(
                         """INSERT OR REPLACE INTO command_priority (user_id, command_name, priority)
                         VALUES (?, ?, ?)""",
                         (str(self.client.user.id), item, base_priority),
@@ -79,6 +86,7 @@ class Database:
             (self.client.user_status["balance"], self.client.user.id),
         )
 
+    @log_stats_if_required
     def update_captcha_db(self):
         database_handler.update_database(
             "UPDATE user_stats SET captchas = captchas + 1 WHERE user_id = ?",
@@ -99,8 +107,8 @@ class Database:
             return results[0]["giveaways"]
         return None
 
-    def populate_stats_db(self):
-        database_handler.update_database(
+    async def populate_stats_db(self):
+        await database_handler.update_database_async(
             "INSERT OR IGNORE INTO user_stats (user_id, daily, lottery, cookie, giveaways, captchas, cowoncy, boss, boss_ticket, pup, piku, army) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (self.client.user.id, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0),
         )
@@ -166,7 +174,7 @@ class Database:
 
         for i in range(24):
             if not update:
-                database_handler.update_database(
+                await database_handler.update_database_async(
                     "INSERT OR IGNORE INTO cowoncy_earnings (user_id, hour, earnings) VALUES (?, ?, ?)",
                     (self.client.user.id, i, 0),
                 )
@@ -191,7 +199,7 @@ class Database:
                 if hr_row and hr_row[0]["earnings"] != 0:
                     last_cash = hr_row[0]["earnings"]
                 elif last_cash != 0:
-                    database_handler.update_database(
+                    await database_handler.update_database_async(
                         "UPDATE cowoncy_earnings SET earnings = ? WHERE hour = ? AND user_id = ?",
                         (last_cash, hr, self.client.user.id),
                     )
@@ -199,12 +207,12 @@ class Database:
             return
 
         for i in range(24):
-            database_handler.update_database(
+            await database_handler.update_database_async(
                 "UPDATE cowoncy_earnings SET earnings = 0 WHERE user_id = ? AND hour = ?",
                 (self.client.user.id, i),
             )
 
-        database_handler.update_database(
+        await database_handler.update_database_async(
             "UPDATE meta_data SET value = ? WHERE key = ?",
             (today_str, "cowoncy_earnings_last_checked"),
         )
@@ -247,11 +255,13 @@ class Database:
             (today_str, "gamble_winrate_last_checked"),
         )
 
+    @log_stats_if_required
     def update_cmd_db(self, cmd):
         database_handler.update_database(
             "UPDATE commands SET count = count + 1 WHERE name = ?", (cmd,)
         )
 
+    @log_stats_if_required
     def update_gamble_db(self, item="wins"):
         hr = utils.get_hour()
 

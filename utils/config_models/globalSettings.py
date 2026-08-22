@@ -37,6 +37,9 @@ class GlobalSettings:
         # Website Dashboard
         self.website = Website(expected_fetch(d, "website", dict))
 
+        # Database
+        self.database = Database(expected_fetch(d, "database", dict))
+
         # Account Delays
         self.account = Account(expected_fetch(d, "account", dict))
 
@@ -68,6 +71,11 @@ class Website:
         self.refreshInterval = expected_fetch(d, "refreshInterval", int)
         self.password = expected_fetch(d, "password", str)
         self.enableHost = expected_fetch(d, "enableHost", bool)
+
+
+class Database:
+    def __init__(self, d: dict):
+        self.logStatistics = expected_fetch(d, "logStatistics", bool)
 
 
 class Account:
