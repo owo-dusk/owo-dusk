@@ -39,7 +39,7 @@ class Daily(BaseCog):
 
         await self.bot.sleep_till(self.cooldowns.briefCooldown)
         await self.bot.ch.put_queue(cmd, priority=True)
-        await self.bot.set_stat(False)
+        await self.bot.ch.set_stat(False)
 
         self.bot.db.update_cmd_lastran_time("daily")
 
@@ -83,7 +83,7 @@ class Daily(BaseCog):
 
                 await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 await self.bot.ch.put_queue(cmd, priority=True)
-                await self.bot.set_stat(False)
+                await self.bot.ch.set_stat(False)
 
                 self.bot.db.update_cmd_lastran_time("daily")
 
@@ -99,7 +99,7 @@ class Daily(BaseCog):
                 await asyncio.sleep(self.bot.calc_time())
                 await self.bot.sleep_till(self.cooldowns.moderateCooldown)
                 await self.bot.ch.put_queue(cmd, priority=True)
-                await self.bot.set_stat(False)
+                await self.bot.ch.set_stat(False)
 
                 self.bot.db.update_cmd_lastran_time("daily")
 
