@@ -1,30 +1,30 @@
 @echo off
-setlocal EnableDelayedExpansion
+setlocal EnableExtensions EnableDelayedExpansion
 
-title owo-dusk Installer
+title OwO-Dusk Installer
 
 echo.
-echo  owo-dusk Installer - Windows
+echo  OwO-Dusk Installer - Windows
 echo  ==============================
 echo.
 
 set "OWO_REPO_URL=https://github.com/owo-dusk/owo-dusk.git"
 set "INSTALL_DIR=%USERPROFILE%\Desktop\owo-dusk"
 
-set "GIT_VERSION=2.55.0.windows.3"
-set "GIT_PORTABLE_ASSET=PortableGit-2.55.0.3-64-bit.7z.exe"
+set "GIT_VERSION=2.55.0.windows.5"
+set "GIT_PORTABLE_ASSET=PortableGit-2.55.0.5-64-bit.7z.exe"
 set "GIT_INSTALL_DIR=%LocalAppData%\Programs\Git"
 set "GIT_CMD="
+set "GIT_SHA256=5aa8a20f6e9abb2c755f0e73c91c687701a46b309ad84a0ca6509380fa4ae290"
 
-set "PYTHON_VERSION=3.12.8"
-set "PYTHON_INSTALL_DIR=%LocalAppData%\Programs\Python\Python312"
+set "PYTHON_VERSION=3.13.15"
+set "MIN_PYTHON_VERSION=3.12"
+set "PYTHON_INSTALL_DIR=%LocalAppData%\Programs\Python\Python313"
+set "PYTHON_SHA256=edec09c4853aeae9ac36efb8c9f95b6b8e2fee65eee56d9767a8b7c69c574403"
+:: Will be set later
 set "PY_CMD="
 
-:: ---------------------------------------------------------------
-:: 1) Make sure Git is available. An existing install is reused;
-::    otherwise a portable Git is downloaded and extracted silently
-::    (per-user, no admin rights required).
-:: ---------------------------------------------------------------
+
 echo [*] Checking for Git...
 call :find_git
 if errorlevel 1 (
@@ -47,15 +47,10 @@ if errorlevel 1 (
 echo [*] Using Git: "%GIT_CMD%"
 echo.
 
-:: ---------------------------------------------------------------
-:: 2) Make sure Python 3.12 is available. An existing 3.12.x is
-::    reused; otherwise Python %PYTHON_VERSION% is downloaded and
-::    installed silently (per-user, no admin rights required).
-:: ---------------------------------------------------------------
-echo [*] Checking for Python %PYTHON_VERSION%...
+echo [*] Checking for Python %MIN_PYTHON_VERSION%+...
 call :find_python
 if errorlevel 1 (
-    echo [^!] Python %PYTHON_VERSION% not found. Installing it silently...
+    echo [^!] Python %MIN_PYTHON_VERSION%+ not found. Installing Python %PYTHON_VERSION% silently...
     call :install_python
     if errorlevel 1 (
         echo [x] Failed to install Python automatically.
@@ -75,13 +70,18 @@ echo [*] Using Python: "%PY_CMD%"
 "%PY_CMD%" --version
 echo.
 
-:: ---------------------------------------------------------------
-:: 3) Clone (or reuse) the repository
-:: ---------------------------------------------------------------
+:: Clone OwO-Dusk repo.
 if exist "%INSTALL_DIR%" (
     echo [^!] Folder "%INSTALL_DIR%" already exists.
     set /p CONFIRM="    Re-clone and overwrite? [y/N]: "
     if /i "!CONFIRM!"=="y" (
+        echo "%INSTALL_DIR%" | findstr /i "\owo-dusk" >nul 2>&1
+        if errorlevel 1 (
+            echo [x] Safety check failed - install path doesn't look right. Aborting.
+            pause
+            exit /b 1
+        )
+        echo     If owo-dusk is currently running, please close it first.
         rmdir /s /q "%INSTALL_DIR%"
     ) else (
         echo [*] Skipping clone - using existing directory.
@@ -122,15 +122,11 @@ if defined OWO_INSTALLER_SKIP_LAUNCH (
 echo.
 echo -------------------------------------------------------
 echo  To run owo-dusk again next time, open CMD and run:
-echo    cd "%INSTALL_DIR%" ^&^& python uwu.py
+echo    cd "%INSTALL_DIR%" ^&^& "%PY_CMD%" uwu.py
 echo -------------------------------------------------------
 echo.
 pause
 exit /b 0
-
-:: ================================================================
-:: Subroutines
-:: ================================================================
 
 :: Try to locate an existing Git install; sets GIT_CMD on success.
 :find_git
@@ -141,56 +137,153 @@ if exist "%ProgramFiles%\Git\cmd\git.exe" ( set "GIT_CMD=%ProgramFiles%\Git\cmd\
 if exist "%GIT_INSTALL_DIR%\cmd\git.exe" ( set "GIT_CMD=%GIT_INSTALL_DIR%\cmd\git.exe" & set "PATH=%GIT_INSTALL_DIR%\cmd;%PATH%" & exit /b 0 )
 exit /b 1
 
-:: Download and extract a portable Git (no admin rights required).
+:: Install Git if not installed
 :install_git
 set "GIT_INSTALLER=%TEMP%\%GIT_PORTABLE_ASSET%"
-if not exist "%GIT_INSTALLER%" (
+set "GIT_HAVE_GOOD_INSTALLER=0"
+
+if exist "%GIT_INSTALLER%" (
+    call :verify_sha256 "%GIT_INSTALLER%" "%GIT_SHA256%"
+    if not errorlevel 1 set "GIT_HAVE_GOOD_INSTALLER=1"
+)
+
+if "%GIT_HAVE_GOOD_INSTALLER%"=="0" (
     echo     Downloading %GIT_PORTABLE_ASSET%...
     call :download "https://github.com/git-for-windows/git/releases/download/v%GIT_VERSION%/%GIT_PORTABLE_ASSET%" "%GIT_INSTALLER%"
     if errorlevel 1 ( exit /b 1 )
+    call :verify_sha256 "%GIT_INSTALLER%" "%GIT_SHA256%"
+    if errorlevel 1 (
+        echo     Downloaded file failed checksum verification - aborting.
+        del /f /q "%GIT_INSTALLER%" >nul 2>&1
+        exit /b 1
+    )
 )
+
 echo     Extracting to "%GIT_INSTALL_DIR%"...
 if not exist "%GIT_INSTALL_DIR%" mkdir "%GIT_INSTALL_DIR%"
 "%GIT_INSTALLER%" -o"%GIT_INSTALL_DIR%" -y >nul 2>&1
 if errorlevel 1 ( exit /b 1 )
 if not exist "%GIT_INSTALL_DIR%\cmd\git.exe" ( exit /b 1 )
-:: make git available to this session (and to pip subprocesses) immediately
+
+:: Update current session PATH
 set "PATH=%GIT_INSTALL_DIR%\cmd;%PATH%"
+
+:: Permanently update User PATH in Windows Registry
+powershell.exe -NoProfile -NonInteractive -Command "$p = [Environment]::GetEnvironmentVariable('PATH', 'User'); if ($p -notlike '*%GIT_INSTALL_DIR%\cmd*') { [Environment]::SetEnvironmentVariable('PATH', '%GIT_INSTALL_DIR%\cmd;' + $p, 'User') }"
+
 exit /b 0
 
-:: Try to locate a usable Python 3.12.x; sets PY_CMD on success.
+:: Attempts to find any python version installed
 :find_python
 set "PY_CMD="
-:: 1) the py launcher, if a 3.12 is registered
-for /f "delims=" %%P in ('py -3.12 -c "import sys;print(sys.executable)" 2^>nul') do set "PY_CMD=%%P"
-if defined PY_CMD ( exit /b 0 )
-:: 2) a bare `python` that is already a 3.12.x
-set "PY_VER="
-for /f "tokens=2 delims= " %%v in ('python --version 2^>^&1') do set "PY_VER=%%v"
-if defined PY_VER (
-    echo !PY_VER! | findstr /b "3.12." >nul 2>&1
-    if not errorlevel 1 ( set "PY_CMD=python" & exit /b 0 )
+
+:: 1) Standard `py` launcher (locates any registered Python, even if off PATH)
+for /f "delims=" %%P in ('py -3 -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%P"
+if defined PY_CMD goto :prompt_add_path
+
+:: 2) Check `python` on PATH (skipping WindowsApps Store execution alias)
+set "PY_WHERE="
+for /f "delims=" %%W in ('where python 2^>nul') do if not defined PY_WHERE set "PY_WHERE=%%W"
+if defined PY_WHERE (
+    echo !PY_WHERE! | findstr /i "WindowsApps" >nul 2>&1
+    if errorlevel 1 (
+        for /f "delims=" %%P in ('python -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=python"
+        if defined PY_CMD exit /b 0
+    )
 )
-:: 3) common install locations
-if exist "%PYTHON_INSTALL_DIR%\python.exe" ( set "PY_CMD=%PYTHON_INSTALL_DIR%\python.exe" & set "PATH=%PYTHON_INSTALL_DIR%;%PATH%" & exit /b 0 )
-if exist "%ProgramFiles%\Python312\python.exe" ( set "PY_CMD=%ProgramFiles%\Python312\python.exe" & set "PATH=%ProgramFiles%\Python312;%PATH%" & exit /b 0 )
+
+:: 3) Check Windows Registry (finds official installs not added to PATH)
+for /f "tokens=2*" %%A in ('reg query "HKCU\Software\Python\PythonCore" /s /v InstallPath 2^>nul ^| findstr /i "REG_SZ"') do (
+    if exist "%%Bpython.exe" (
+        for /f "delims=" %%P in ('"%%Bpython.exe" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%Bpython.exe"
+        if defined PY_CMD goto :prompt_add_path
+    )
+)
+for /f "tokens=2*" %%A in ('reg query "HKLM\Software\Python\PythonCore" /s /v InstallPath 2^>nul ^| findstr /i "REG_SZ"') do (
+    if exist "%%Bpython.exe" (
+        for /f "delims=" %%P in ('"%%Bpython.exe" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%Bpython.exe"
+        if defined PY_CMD goto :prompt_add_path
+    )
+)
+
+:: 4) Fallback: Search standard install folders off PATH
+:: Per-user installation directory (default installer location when non-admin)
+for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python*") do (
+    if exist "%%D\python.exe" (
+        for /f "delims=" %%P in ('"%%D\python.exe" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%D\python.exe"
+        if defined PY_CMD goto :prompt_add_path
+    )
+)
+:: System-wide installation directories
+for /d %%D in ("%ProgramFiles%\Python*") do (
+    if exist "%%D\python.exe" (
+        for /f "delims=" %%P in ('"%%D\python.exe" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%D\python.exe"
+        if defined PY_CMD goto :prompt_add_path
+    )
+)
+for /d %%D in ("%ProgramFiles(x86)%\Python*") do (
+    if exist "%%D\python.exe" (
+        for /f "delims=" %%P in ('"%%D\python.exe" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%D\python.exe"
+        if defined PY_CMD goto :prompt_add_path
+    )
+)
+
 exit /b 1
 
-:: Download and silently install Python %PYTHON_VERSION% per-user (no admin).
+:prompt_add_path
+for %%I in ("!PY_CMD!") do set "PY_DIR=%%~dpI"
+set "PY_DIR=!PY_DIR:~0,-1!"
+echo !PATH! | findstr /i /c:"!PY_DIR!" >nul 2>&1
+if errorlevel 1 (
+    echo [^!] Found Python at "!PY_CMD!", but its directory is not in PATH.
+    set /p ADD_PATH_CHOICE="    Add "!PY_DIR!" to current session PATH? [y/N]: "
+    if /i "!ADD_PATH_CHOICE!"=="y" (
+        set "PATH=!PY_DIR!;!PATH!"
+        echo [*] Added Python directory to session PATH.
+    )
+)
+exit /b 0
+
+:: Install Python v3.13.15
 :install_python
 set "PYTHON_INSTALLER=%TEMP%\python-%PYTHON_VERSION%-amd64.exe"
-if not exist "%PYTHON_INSTALLER%" (
+set "PY_HAVE_GOOD_INSTALLER=0"
+
+if exist "%PYTHON_INSTALLER%" (
+    call :verify_sha256 "%PYTHON_INSTALLER%" "%PYTHON_SHA256%"
+    if not errorlevel 1 set "PY_HAVE_GOOD_INSTALLER=1"
+)
+
+if "%PY_HAVE_GOOD_INSTALLER%"=="0" (
     echo     Downloading Python %PYTHON_VERSION%...
+    :: https://www.python.org/ftp/python/3.13.15/python-3.13.15-amd64.exe
     call :download "https://www.python.org/ftp/python/%PYTHON_VERSION%/python-%PYTHON_VERSION%-amd64.exe" "%PYTHON_INSTALLER%"
     if errorlevel 1 ( exit /b 1 )
+    call :verify_sha256 "%PYTHON_INSTALLER%" "%PYTHON_SHA256%"
+    if errorlevel 1 (
+        echo     Downloaded file failed checksum verification - aborting.
+        del /f /q "%PYTHON_INSTALLER%" >nul 2>&1
+        exit /b 1
+    )
 )
+
 echo     Installing Python %PYTHON_VERSION% silently (per-user)...
-"%PYTHON_INSTALLER%" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0 Include_doc=0 Include_launcher=1 Shortcuts=0 AssociateFiles=0 TargetDir="%PYTHON_INSTALL_DIR%"
+"%PYTHON_INSTALLER%" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0 Include_doc=0 Include_launcher=0 Shortcuts=0 AssociateFiles=0 InstallDir="%PYTHON_INSTALL_DIR%"
 if errorlevel 1 ( exit /b 1 )
 if not exist "%PYTHON_INSTALL_DIR%\python.exe" ( exit /b 1 )
-:: make python available to this session (and to the app) immediately
 set "PATH=%PYTHON_INSTALL_DIR%;%PATH%"
 exit /b 0
+
+:: Verify a downloaded files SHA256 against an expected value.
+:verify_sha256
+set "VERIFY_FILE=%~1"
+set "VERIFY_EXPECTED=%~2"
+if not exist "%VERIFY_FILE%" ( exit /b 1 )
+set "VERIFY_ACTUAL="
+for /f "delims=" %%H in ('powershell -NoProfile -NonInteractive -Command "(Get-FileHash -LiteralPath '%VERIFY_FILE%' -Algorithm SHA256).Hash" 2^>nul') do set "VERIFY_ACTUAL=%%H"
+if not defined VERIFY_ACTUAL ( exit /b 1 )
+if /i "%VERIFY_ACTUAL%"=="%VERIFY_EXPECTED%" ( exit /b 0 )
+exit /b 1
 
 :: Download helper - tries curl (bundled with Win10+), falls back to PowerShell.
 :download
