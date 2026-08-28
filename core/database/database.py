@@ -10,10 +10,10 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import pytz
-
-from functools import wraps
 from datetime import datetime, timezone
+from functools import wraps
+
+import pytz
 
 import utils.timestamp as utils
 
@@ -319,7 +319,7 @@ class Database:
         if cmd not in allowed_cmds:
             raise ValueError("Invalid command for pupiku update")
 
-        # Insert, on conflict update 
+        # Insert, on conflict update
         database_handler.update_database(
             """
             INSERT INTO pupiku (user_id, cmd, times_to_run, last_ran)
@@ -345,7 +345,7 @@ class Database:
         )
 
         if not results:
-            # If we haven't run 
+            # If we haven't run
             return 0
 
         times_to_run, last_timestamp = results[0][0], results[0][1]
@@ -360,7 +360,7 @@ class Database:
         if day_diff == 1:
             # Exactly the next day would mean that we can run just one more than what was already ran
 
-            #self.update_pupiku_times_to_run(cmd, times_to_run+1)
+            # self.update_pupiku_times_to_run(cmd, times_to_run+1)
             return times_to_run
         else:
             # We do not know how many times we have to run. User may have done the missing day's.

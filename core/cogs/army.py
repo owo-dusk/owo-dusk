@@ -119,7 +119,6 @@ class Army(BaseCog):
                     if not value > 0:
                         await self.send_army(finished=True)
                     else:
-                        print(value)
                         await self.send_army()
 
             if (

@@ -11,6 +11,7 @@
 # (at your option) any later version.
 
 import asyncio
+import re
 import time
 
 from discord.ext import commands
@@ -18,9 +19,11 @@ from discord.ext.commands import ExtensionNotLoaded
 
 from core.cogs._BASE import BaseCog
 
+
 def done_running(times_ran, times_to_run):
     # if times_to_run is 0, that means we run indefinitely till failure message to determine next day's count
     return (times_ran >= times_to_run) and not times_to_run == 0
+
 
 class Pupiku(BaseCog):
     def __init__(self, bot):
@@ -28,9 +31,27 @@ class Pupiku(BaseCog):
 
         self.startupFinished = False
         self.command_status = {
-            "pup": {"command_send_time": 0, "command_resp_time": 0, "times_ran": 0, "force_break": False, "should_run": 0},
-            "piku": {"command_send_time": 0, "command_resp_time": 0, "times_ran": 0, "force_break": False, "should_run": 0},
-            "run": {"command_send_time": 0, "command_resp_time": 0, "times_ran": 0, "force_break": False, "should_run": 0},
+            "pup": {
+                "command_send_time": 0,
+                "command_resp_time": 0,
+                "times_ran": 0,
+                "force_break": False,
+                "should_run": 0,
+            },
+            "piku": {
+                "command_send_time": 0,
+                "command_resp_time": 0,
+                "times_ran": 0,
+                "force_break": False,
+                "should_run": 0,
+            },
+            "run": {
+                "command_send_time": 0,
+                "command_resp_time": 0,
+                "times_ran": 0,
+                "force_break": False,
+                "should_run": 0,
+            },
         }
 
     def get_cmd(self, cmd_name: str):
@@ -81,7 +102,11 @@ class Pupiku(BaseCog):
         self.command_status[cmd_name]["command_send_time"] = time.monotonic()
 
     async def cog_load(self):
-        if not (self.pup_settings.enabled or self.piku_settings.enabled or self.run_settings.enabled):
+        if not (
+            self.pup_settings.enabled
+            or self.piku_settings.enabled
+            or self.run_settings.enabled
+        ):
             try:
                 asyncio.create_task(self.bot.unload_cog("core.cogs.pupiku"))
             except ExtensionNotLoaded:
@@ -112,8 +137,10 @@ class Pupiku(BaseCog):
                         continue
 
                     # Set `should_run`
-                    self.command_status[cmd]["should_run"] = await self.bot.db.check_next_amt_to_run(cmd)
-                    
+                    self.command_status[cmd][
+                        "should_run"
+                    ] = await self.bot.db.check_next_amt_to_run(cmd)
+
                     await self.bot.ch.put_queue(self.get_cmd(cmd))
                     await self.bot.sleep_till([1, 3])
 
@@ -133,10 +160,10 @@ class Pupiku(BaseCog):
                     times_ran = self.command_status[cmd]["times_ran"]
                     if not self.command_status[cmd]["force_break"]:
                         # Command was not stopped from final message.
-                        times_ran+=1
+                        times_ran += 1
 
                     self.bot.db.update_pupiku_times_to_run(cmd, times_ran)
-                    
+
                     # Reset previous states:
                     self.command_status[cmd]["times_ran"] = 0
                     self.command_status[cmd]["should_run"] = 0
@@ -170,8 +197,11 @@ class Pupiku(BaseCog):
             cmd = "run"
 
         if cmd and self.set_and_validate_resp_time(cmd):
-            self.command_status[cmd]["times_ran"]+=1
-            if done_running(self.command_status[cmd]["times_ran"], self.command_status[cmd]["should_run"]):
+            self.command_status[cmd]["times_ran"] += 1
+            if done_running(
+                self.command_status[cmd]["times_ran"],
+                self.command_status[cmd]["should_run"],
+            ):
                 final = True
             print(f"{self.bot.user.name} - re-queued {cmd}")
             self.startupFinished = True
@@ -190,10 +220,14 @@ class Pupiku(BaseCog):
             cmd = "run"
 
         if cmd and self.set_and_validate_resp_time(cmd):
+            match = re.search(r"(\d+)(?: \w+)? tomorrow!", message.content)
             # command may have been ran and done in previous session
             self.startupFinished = True
             final = True
-            self.command_status[cmd]["times_ran"]+=1
+
+            if match:
+                self.command_status[cmd]["times_ran"] = int(match.group(1))
+
             self.command_status[cmd]["force_break"] = True
             print(f"{self.bot.user.name} - done with {cmd}")
             await self.send_pupiku(cmd=cmd, final=final)
