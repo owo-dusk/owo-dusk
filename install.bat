@@ -98,7 +98,11 @@ if errorlevel 1 (
 )
 
 :run_setup
-cd /d "%INSTALL_DIR%"
+cd /d "%INSTALL_DIR%" || (
+    echo [x] Failed to enter "%INSTALL_DIR%".
+    pause
+    exit /b 1
+)
 echo.
 echo [*] Running setup.py...
 "%PY_CMD%" setup.py
