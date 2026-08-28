@@ -131,6 +131,7 @@ echo    cd "%INSTALL_DIR%" ^&^& "%PY_CMD%" uwu.py
 echo -------------------------------------------------------
 echo.
 pause
+endlocal & set "PATH=%PATH%"
 exit /b 0
 
 :: Try to locate an existing Git install; sets GIT_CMD on success.
@@ -202,14 +203,14 @@ if defined PY_CMD exit /b 0
 
 :: 3) Check Windows Registry (finds official installs not added to PATH)
 for /f "tokens=2*" %%A in ('reg query "HKCU\Software\Python\PythonCore" /s /v InstallPath 2^>nul ^| findstr /i "REG_SZ"') do (
-    if exist "%%Bpython.exe" (
-        for /f "delims=" %%P in ('"%%Bpython.exe" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%Bpython.exe"
+    if exist "%%B\python.exe" (
+        for /f "delims=" %%P in ('"%%B\python.exe" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%B\python.exe"
         if defined PY_CMD goto :prompt_add_path
     )
 )
 for /f "tokens=2*" %%A in ('reg query "HKLM\Software\Python\PythonCore" /s /v InstallPath 2^>nul ^| findstr /i "REG_SZ"') do (
-    if exist "%%Bpython.exe" (
-        for /f "delims=" %%P in ('"%%Bpython.exe" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%Bpython.exe"
+    if exist "%%B\python.exe" (
+        for /f "delims=" %%P in ('"%%B\python.exe" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=%%B\python.exe"
         if defined PY_CMD goto :prompt_add_path
     )
 )
