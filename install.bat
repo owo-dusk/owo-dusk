@@ -268,7 +268,7 @@ if "%PY_HAVE_GOOD_INSTALLER%"=="0" (
 )
 
 echo     Installing Python %PYTHON_VERSION% silently (per-user)...
-"%PYTHON_INSTALLER%" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0 Include_doc=0 Include_launcher=1 Shortcuts=0 AssociateFiles=0 TargetDir="%PYTHON_INSTALL_DIR%"
+"%PYTHON_INSTALLER%" /quiet InstallAllUsers=0 InstallLauncherAllUsers=0 PrependPath=1 Include_test=0 Include_doc=0 Include_launcher=1 Shortcuts=0 AssociateFiles=0 TargetDir="%PYTHON_INSTALL_DIR%"
 if errorlevel 1 ( exit /b 1 )
 if not exist "%PYTHON_INSTALL_DIR%\python.exe" ( exit /b 1 )
 set "PATH=%PYTHON_INSTALL_DIR%;%PATH%"
