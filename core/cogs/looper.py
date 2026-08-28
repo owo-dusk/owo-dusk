@@ -198,7 +198,7 @@ class Looper(BaseCog):
         }
 
         # We are using quick for OwO for faster leaderboard progression and accuracy
-        await self.bot.put_queue(cmd, quick=self.owo_settings.prioritise)
+        await self.bot.ch.put_queue(cmd, quick=self.owo_settings.prioritise)
         await self.block_till_send(cmd["cmd_name"])
 
     async def send_pray_curse(self, cmd_name):
@@ -231,7 +231,7 @@ class Looper(BaseCog):
         if cmd["cmd_arguments"] and getattr(self, f"{cmd_name}_settings").count:
             cmd["cmd_arguments"] += f" {next(self.__dict__[f'{cmd_name}_counter'])}"
 
-        await self.bot.put_queue(cmd)
+        await self.bot.ch.put_queue(cmd)
         self.startup = False
         full_content = self.bot.settings_dict.prefix + cmd["cmd_name"]
         if cmd["cmd_arguments"]:
@@ -273,7 +273,7 @@ class Looper(BaseCog):
             "id": "level",
         }
 
-        await self.bot.put_queue(cmd)
+        await self.bot.ch.put_queue(cmd)
         await self.block_till_send(cmd["cmd_name"])
 
     @tasks.loop()

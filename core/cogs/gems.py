@@ -147,7 +147,7 @@ class Gems(BaseCog):
             self.gem_cmd["cmd_arguments"] = ""
             for item in result:
                 self.gem_cmd["cmd_arguments"] += f"{item[1:]} "
-            await self.bot.put_queue(self.gem_cmd, priority=True)
+            await self.bot.ch.put_queue(self.gem_cmd, priority=True)
             self.reduce_used_gems(result)
             if self.bot.hunt_disabled:
                 self.bot.hunt_disabled = False
@@ -160,7 +160,7 @@ class Gems(BaseCog):
                 self.already_checked = True
             else:
                 await self.bot.log("Warn: No gems to use.", "#924444")
-                self.bot.user_status["no_gems"] = True
+                self.bot.stats.no_gem = True
                 if not self.bot.hunt_disabled and self.settings.disableHuntIfNoGems:
                     await self.bot.log(
                         "Disabling hunt since there is no gems to be used.", "#C51818"
@@ -297,7 +297,7 @@ class Gems(BaseCog):
                 pass
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="gems")
+        await self.bot.ch.remove_queue(id="gems")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -311,14 +311,14 @@ class Gems(BaseCog):
             return
 
         if "caught" in message.content:
-            if self.bot.user_status["no_gems"]:
+            if self.bot.stats.no_gem:
                 return
-            await self.bot.set_stat(False)
+            await self.bot.ch.set_stat(False)
             self.inventory_check = True
-            await self.bot.put_queue(self.inv_cmd, priority=True)
+            await self.bot.ch.put_queue(self.inv_cmd, priority=True)
 
         if "hunt is empowered by" in message.content:
-            if self.bot.user_status["no_gems"]:
+            if self.bot.stats.no_gem:
                 return
             if self.already_checked:
                 count = len_gems_in_use(message.content)
@@ -336,12 +336,12 @@ class Gems(BaseCog):
                 if self.available_gems:
                     await self.use_gems(self.available_gems, result)
                 else:
-                    await self.bot.set_stat(False)
-                    await self.bot.put_queue(self.inv_cmd, priority=True)
+                    await self.bot.ch.set_stat(False)
+                    await self.bot.ch.put_queue(self.inv_cmd, priority=True)
                     self.cache_gems_in_use = result
 
         elif "'s Inventory ======**" in message.content:
-            await self.bot.remove_queue(id="inv")
+            await self.bot.ch.remove_queue(id="inv")
             self.available_gems = find_gems_available(message.content)
             self.already_checked = False
             if self.inventory_check:
@@ -356,7 +356,7 @@ class Gems(BaseCog):
                 self.cache_gems_in_use = {}
 
             # Task 4: make commands trigger stat instead of manual to avoid such issues and also avoids permanent stop incase of fails
-            await self.bot.set_stat(True)
+            await self.bot.ch.set_stat(True)
 
         elif "you already have an active Special gem" in message.content:
             if self.is_special_gem_failure():

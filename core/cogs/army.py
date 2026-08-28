@@ -45,7 +45,7 @@ class Army(BaseCog):
             asyncio.create_task(self.send_army(startup=True))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="army")
+        await self.bot.ch.remove_queue(id="army")
 
     @property
     def settings(self):
@@ -79,22 +79,22 @@ class Army(BaseCog):
     async def send_army(self, startup=False, finished=False):
         if startup:
             # Check existing time:
-            last_ran = await self.bot.db.fetch_cmd_lastran_time("army")
+            last_ran = await self.bot.db.fetch_pupiku_lastran_time("army")
             if not self.bot.should_run(last_ran):
                 await asyncio.sleep(self.bot.calc_time())
             await self.bot.sleep_till(self.bot.settings_dict.cooldowns.shortCooldown)
         else:
-            await self.bot.remove_queue(id="army")
+            await self.bot.ch.remove_queue(id="army")
             await self.bot.sleep(self.settings.get_cd())
 
         if finished:
             # set time to today's
-            self.bot.db.update_cmd_lastran_time("army")
+            self.bot.db.update_pupiku_lastran_time("army")
             await asyncio.sleep(self.bot.calc_time())
 
         # I know we do update from on_message but for safety
         self.set_send_time()
-        await self.bot.put_queue(self.cmd)
+        await self.bot.ch.put_queue(self.cmd)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -119,7 +119,6 @@ class Army(BaseCog):
                     if not value > 0:
                         await self.send_army(finished=True)
                     else:
-                        print(value)
                         await self.send_army()
 
             if (
@@ -127,9 +126,9 @@ class Army(BaseCog):
                 in message.content
             ):
                 # remove command from queue
-                await self.bot.remove_queue(id="army")
+                await self.bot.ch.remove_queue(id="army")
                 # update, sleep
-                self.bot.db.update_cmd_lastran_time("army")
+                self.bot.db.update_pupiku_lastran_time("army")
                 await asyncio.sleep(self.bot.calc_time())
                 # re run
                 await self.send_army()

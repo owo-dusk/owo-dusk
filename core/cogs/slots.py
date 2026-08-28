@@ -69,7 +69,7 @@ class Slots(BaseCog):
             asyncio.create_task(self.start_slots(startup=True))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="slots")
+        await self.bot.ch.remove_queue(id="slots")
 
     async def start_slots(self, startup=False):
         goal_settings = self.gamble_settings.goals
@@ -77,7 +77,7 @@ class Slots(BaseCog):
             if startup:
                 await self.bot.sleep_till(self.cooldowns.briefCooldown)
             else:
-                await self.bot.remove_queue(id="slots")
+                await self.bot.ch.remove_queue(id="slots")
                 await self.bot.sleep(self.settings.get_cd())
 
             amount_to_gamble = int(
@@ -85,15 +85,18 @@ class Slots(BaseCog):
             )
 
             # Goal system check
-            if goal_settings.enabled and self.bot.gain_or_lose > goal_settings.amount:
+            if (
+                goal_settings.enabled
+                and self.bot.stats.gain_or_lose > goal_settings.amount
+            ):
                 if not self.gamble_flags["goal_reached"]:
                     self.gamble_flags["goal_reached"] = True
                     await self.bot.log(
-                        f"goal reached - {self.bot.gain_or_lose}/{goal_settings.amount}, stopping slots!",
+                        f"goal reached - {self.bot.stats.gain_or_lose}/{goal_settings.amount}, stopping slots!",
                         "#4a270c",
                     )
                     notify(
-                        f"goal reached - {self.bot.gain_or_lose}/{goal_settings.amount}, stopping slots!",
+                        f"goal reached - {self.bot.stats.gain_or_lose}/{goal_settings.amount}, stopping slots!",
                         "Slots - Goal reached",
                     )
 
@@ -104,17 +107,17 @@ class Slots(BaseCog):
 
             # Balance check
             if (
-                amount_to_gamble > self.bot.user_status["balance"]
-                and self.bot.user_status["checked_cash"]
+                amount_to_gamble > self.bot.stats.balance
+                and self.bot.stats.has_updated_balance
             ):
                 if not self.gamble_flags["no_balance"]:
                     self.gamble_flags["no_balance"] = True
                     await self.bot.log(
-                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping slots!",
+                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.stats.balance}), stopping slots!",
                         "#4a270c",
                     )
                     notify(
-                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping slots!",
+                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.stats.balance}), stopping slots!",
                         "Slots - Insufficient balance",
                     )
 
@@ -122,14 +125,14 @@ class Slots(BaseCog):
                 return await self.start_slots()
             elif self.gamble_flags["no_balance"]:
                 await self.bot.log(
-                    f"Balance regained! ({self.bot.user_status['balance']}) - restarting slots!",
+                    f"Balance regained! ({self.bot.stats.balance}) - restarting slots!",
                     "#4a270c",
                 )
                 self.gamble_flags["no_balance"] = False
 
             allottedAmount = self.gamble_settings.allottedAmount
             # Allotted value check
-            if self.bot.gain_or_lose + (allottedAmount - amount_to_gamble) <= 0:
+            if self.bot.stats.gain_or_lose + (allottedAmount - amount_to_gamble) <= 0:
                 if not self.gamble_flags["amount_exceeded"]:
                     self.gamble_flags["amount_exceeded"] = True
                     await self.bot.log(
@@ -158,7 +161,7 @@ class Slots(BaseCog):
                 self.exceeded_max_amount = True
             else:
                 self.cmd["cmd_arguments"] = str(amount_to_gamble)
-                await self.bot.put_queue(self.cmd)
+                await self.bot.ch.put_queue(self.cmd)
 
         except Exception as e:
             await self.bot.log(f"Error - {e}, During slots start_slots()", "#c25560")
@@ -184,11 +187,11 @@ class Slots(BaseCog):
                 )
 
                 self.bot.update_cash(match, reduce=True)
-                self.bot.gain_or_lose -= match
+                self.bot.stats.gain_or_lose -= match
 
                 self.turns_lost += 1
                 await self.bot.log(
-                    f"lost {match} in slots, net profit - {self.bot.gain_or_lose}",
+                    f"lost {match} in slots, net profit - {self.bot.stats.gain_or_lose}",
                     "#993f3f",
                 )
                 await self.start_slots()
@@ -213,11 +216,11 @@ class Slots(BaseCog):
                     profit = won_match - lose_match
 
                     self.bot.update_cash(profit)
-                    self.bot.gain_or_lose += profit
+                    self.bot.stats.gain_or_lose += profit
 
                     self.turns_lost = 0
                     await self.bot.log(
-                        f"won {won_match} in slots, net profit - {self.bot.gain_or_lose}",
+                        f"won {won_match} in slots, net profit - {self.bot.stats.gain_or_lose}",
                         "#536448",
                     )
                     await self.start_slots()

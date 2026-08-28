@@ -39,6 +39,7 @@
         "army": {"priority": 10, "basecd": 60, "log_color": "#a86b32"},
         "piku": {"priority": 10, "basecd": 60, "log_color": "#a86b32"},
         "pup": {"priority": 10, "basecd": 60, "log_color": "#a86b32"},
+        "run": {"priority": 10, "basecd": 60, "log_color": "#a86b32"},
         "action": {"priority": 10, "basecd": 5, "log_color": "#e3c5db"},
         "customcommand": {"priority": 11, "basecd": 1, "log_color": "#c9a4bc"}
     },
@@ -119,3 +120,4 @@
         }
     }
 }
+

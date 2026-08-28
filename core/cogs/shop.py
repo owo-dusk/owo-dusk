@@ -53,25 +53,29 @@ class Shop(BaseCog):
             asyncio.create_task(self.send_buy(startup=True))
 
     async def cog_unload(self):
-        await self.bot.remove_queue(id="shop")
+        await self.bot.ch.remove_queue(id="shop")
 
     async def send_buy(self, startup=False):
         if startup:
             await self.bot.sleep_till(self.bot.settings_dict.cooldowns.shortCooldown)
         else:
-            await self.bot.remove_queue(id="shop")
+            await self.bot.ch.remove_queue(id="shop")
             await self.bot.sleep(self.settings.get_cd())
 
         items_to_buy = self.settings.get_items_to_buy(
-            cur_cash=self.bot.user_status["balance"],
-            cash_check=self.bot.settings_dict.cashCheck,
+            cur_cash=self.bot.stats.balance,
+            cash_check=(
+                self.bot.settings_dict.cashCheck and self.bot.stats.has_updated_balance
+            ),
         )
 
-        item = self.bot.random.choice(items_to_buy)
+        item = None
+        if items_to_buy:
+            item = self.bot.random.choice(items_to_buy)
 
         if item:
             self.cmd["cmd_arguments"] = item
-            await self.bot.put_queue(self.cmd)
+            await self.bot.ch.put_queue(self.cmd)
         else:
             await self.send_buy()
 

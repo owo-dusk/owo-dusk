@@ -100,15 +100,15 @@ class Blackjack(BaseCog):
             self.settings.startValue * (self.settings.multiplier**self.turns_lost)
         )
 
-        if goal_system.enabled and self.bot.gain_or_lose > goal_system.amount:
+        if goal_system.enabled and self.bot.stats.gain_or_lose > goal_system.amount:
             if not self.gamble_flags["goal_reached"]:
                 self.gamble_flags["goal_reached"] = True
                 await self.bot.log(
-                    f"goal reached - {self.bot.gain_or_lose}/{goal_system.amount}, stopping blackjack!",
+                    f"goal reached - {self.bot.stats.gain_or_lose}/{goal_system.amount}, stopping blackjack!",
                     "#4a270c",
                 )
                 notify(
-                    f"goal reached - {self.bot.gain_or_lose}/{goal_system.amount}, stopping blackjack!",
+                    f"goal reached - {self.bot.stats.gain_or_lose}/{goal_system.amount}, stopping blackjack!",
                     "blackjack - Goal reached",
                 )
 
@@ -119,17 +119,17 @@ class Blackjack(BaseCog):
 
         # Balance check
         if (
-            amount_to_gamble > self.bot.user_status["balance"]
-            and self.bot.user_status["checked_cash"]
+            amount_to_gamble > self.bot.stats.balance
+            and self.bot.stats.has_updated_balance
         ):
             if not self.gamble_flags["no_balance"]:
                 self.gamble_flags["no_balance"] = True
                 await self.bot.log(
-                    f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping blackjack!",
+                    f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.stats.balance}), stopping blackjack!",
                     "#4a270c",
                 )
                 notify(
-                    f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping blackjack!",
+                    f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.stats.balance}), stopping blackjack!",
                     "blackjack - Insufficient balance",
                 )
 
@@ -137,13 +137,13 @@ class Blackjack(BaseCog):
             return await self.send_blackjack()
         elif self.gamble_flags["no_balance"]:
             await self.bot.log(
-                f"Balance regained! ({self.bot.user_status['balance']}) - restarting blackjack!",
+                f"Balance regained! ({self.bot.stats.balance}) - restarting blackjack!",
                 "#4a270c",
             )
             self.gamble_flags["no_balance"] = False
 
         allottedAmount = self.gamble_settings.allottedAmount
-        if self.bot.gain_or_lose + (allottedAmount - amount_to_gamble) <= 0:
+        if self.bot.stats.gain_or_lose + (allottedAmount - amount_to_gamble) <= 0:
             if not self.gamble_flags["amount_exceeded"]:
                 self.gamble_flags["amount_exceeded"] = True
                 await self.bot.log(
@@ -172,7 +172,7 @@ class Blackjack(BaseCog):
             self.exceeded_max_amount = True
         else:
             self.cmd["cmd_arguments"] = str(amount_to_gamble)
-            await self.bot.put_queue(self.cmd)
+            await self.bot.ch.put_queue(self.cmd)
 
     async def wait_for_bj_edit(self):
         while not self.click_registered:
@@ -236,7 +236,7 @@ class Blackjack(BaseCog):
                             "🎲 ~ resuming previous game",
                         ]
                     ):
-                        await self.bot.remove_queue(id="blackjack")
+                        await self.bot.ch.remove_queue(id="blackjack")
                         # Handle Blackjack.
                         res = fetch_bj_hands(embed)
                         if not res:
@@ -263,7 +263,7 @@ class Blackjack(BaseCog):
                     if embed.footer:
                         if "🎲 ~ game in progress" in embed.footer.text:
                             self.game_event.set()
-                            await self.bot.remove_queue(id="blackjack")
+                            await self.bot.ch.remove_queue(id="blackjack")
                             res = fetch_bj_hands(embed)
                             if not res:
                                 return
@@ -283,11 +283,11 @@ class Blackjack(BaseCog):
                             )
 
                             self.bot.update_cash(lost_amt, reduce=True)
-                            self.bot.gain_or_lose -= lost_amt
+                            self.bot.stats.gain_or_lose -= lost_amt
                             self.turns_lost += 1
 
                             await self.bot.log(
-                                f"lost {lost_amt} in bj, net profit - {self.bot.gain_or_lose}",
+                                f"lost {lost_amt} in bj, net profit - {self.bot.stats.gain_or_lose}",
                                 "#993f3f",
                             )
                             await self.send_blackjack()
@@ -303,10 +303,10 @@ class Blackjack(BaseCog):
                             )
 
                             self.bot.update_cash(win_amt)
-                            self.bot.gain_or_lose += win_amt
+                            self.bot.stats.gain_or_lose += win_amt
 
                             await self.bot.log(
-                                f"won {win_amt} in bj, net profit - {self.bot.gain_or_lose}",
+                                f"won {win_amt} in bj, net profit - {self.bot.stats.gain_or_lose}",
                                 "#536448",
                             )
                             await self.send_blackjack()

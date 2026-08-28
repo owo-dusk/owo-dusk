@@ -412,7 +412,7 @@ class Quest(BaseCog):
         for _ in range(till):
             action = self.bot.random.choice(actions)
             action_cmd["cmd_name"] = action
-            await self.bot.put_queue(action_cmd)
+            await self.bot.ch.put_queue(action_cmd)
             await self.bot.sleep_till([4, 6])
             if userid:
                 # update quest progress
@@ -492,13 +492,13 @@ class Quest(BaseCog):
                     self.repeat_quest_flag = False
                     break
 
-            await self.bot.put_queue(cmd)
+            await self.bot.ch.put_queue(cmd)
             if user_till_value:
                 # the rest - battle xp and the hunt rank one, will be updated from on_message
                 await self.block_till_send(
                     cmd_name, chn_to_send, cmd["prefix"], cmd["cmd_arguments"]
                 )
-                await self.bot.remove_queue(
+                await self.bot.ch.remove_queue(
                     id=cmd_name if cmd_name != "curse" else "pray"
                 )
 
@@ -534,13 +534,13 @@ class Quest(BaseCog):
         """
         await asyncio.sleep(self.settings.get_cd())
         # 1. Put queue to quest command
-        await self.bot.put_queue(self.quest_cmd)
+        await self.bot.ch.put_queue(self.quest_cmd)
         await self.bot.sleep_till([5, 10])
 
         # 2. if help required, post
         if self.bot.quest_handler.help_required() and self.settings.useHelpChannel:
             if not self.alr_posted:
-                await self.bot.put_queue(self.get_quest_cmd(self.settings.channelId))
+                await self.bot.ch.put_queue(self.get_quest_cmd(self.settings.channelId))
                 self.alr_posted = True
 
         # 3. If self doable quests, then do them!
@@ -569,7 +569,7 @@ class Quest(BaseCog):
         components, buttons = message.components, message.buttons
         if self.is_valid_quest(components):
             # Remove quest command that was queued
-            await self.bot.remove_queue(id="quest")
+            await self.bot.ch.remove_queue(id="quest")
             # Fetch quest details
             quest_details = self.get_available_quest_details(
                 components=components, buttons=buttons
