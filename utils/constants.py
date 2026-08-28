@@ -25,4 +25,4 @@ owo_panel = Panel(Align.center(owo_art), style="purple ", highlight=False)
 version = "2.6.7"
 # Database version won't be changed unless there is an actual
 # need to remake database files
-database_version = "2.5.0"
+database_version = "2.6.8"

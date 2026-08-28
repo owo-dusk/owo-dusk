@@ -350,6 +350,7 @@ class Commands:
             "army",
             "pup",
             "piku",
+            "run",
         ]
         for cmd in cmd_list:
             setattr(self, cmd, Command(expected_fetch(d, cmd, dict)))

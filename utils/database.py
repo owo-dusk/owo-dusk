@@ -13,7 +13,7 @@
 import os
 import sqlite3
 
-from utils.constants import database_version, version
+from utils.constants import database_version
 from utils.errors import suppress_and_log
 from utils.loader import misc_dict
 from utils.system.system import compare_versions, console
@@ -55,13 +55,16 @@ def create_database(db_path="utils/data/db.sqlite"):
         "CREATE TABLE IF NOT EXISTS gamble_winrate (hour INTEGER PRIMARY KEY, wins INTEGER, losses INTEGER, net INTEGER)"
     )
     c.execute(
-        "CREATE TABLE IF NOT EXISTS user_stats (user_id TEXT PRIMARY KEY, daily REAL, lottery REAL, cookie REAL, giveaways REAL, captchas INTEGER, cowoncy INTEGER, boss REAL, boss_ticket INTEGER, pup INTEGER, piku INTEGER, army INTEGER)"
+        "CREATE TABLE IF NOT EXISTS user_stats (user_id TEXT PRIMARY KEY, daily REAL, lottery REAL, cookie REAL, giveaways REAL, captchas INTEGER, cowoncy INTEGER, boss REAL, boss_ticket INTEGER)"
     )
     c.execute(
         "CREATE TABLE IF NOT EXISTS meta_data (key TEXT PRIMARY KEY, value INTEGER)"
     )
     c.execute(
         "CREATE TABLE IF NOT EXISTS command_priority (user_id TEXT, command_name TEXT, priority INTEGER, PRIMARY KEY (user_id, command_name))"
+    )
+    c.execute(
+        "CREATE TABLE IF NOT EXISTS pupiku (user_id TEXT, cmd TEXT, times_to_run INTEGER, last_ran REAL, PRIMARY KEY (user_id, cmd))"
     )
     # Switch to WAL mode.
     c.execute("PRAGMA journal_mode=WAL;")

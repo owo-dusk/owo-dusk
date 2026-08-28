@@ -135,6 +135,13 @@
                 70
             ]
         },
+        "run": {
+            "enabled": false,
+            "cooldown": [
+                61,
+                70
+            ]
+        },
         "army": {
             "enabled": false,
             "cooldown": [
