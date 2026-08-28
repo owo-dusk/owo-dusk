@@ -150,10 +150,8 @@ class Others(BaseCog):
                     override=True,
                 )
                 await self.bot.log(
-                    f"Has {self.bot.user_status['balance']} cowoncy!", "#d787d7"
+                    f"Has {self.bot.stats.balance} cowoncy!", "#d787d7"
                 )
-                if not self.bot.user_status["checked_cash"]:
-                    self.bot.user_status["checked_cash"] = True
                 await self.bot.ch.remove_queue(id="cash")
 
             # Lootbox and Crate
@@ -184,7 +182,11 @@ class Others(BaseCog):
 
             elif "<a:boxopen:427019823747301377> **|** and finds" in message.content:
                 # Lootbox opened
-                self.bot.user_status["no_gems"] = False
+                """
+                Task:
+                    Make it check if required gems are in the lootbox opened
+                """
+                self.bot.stats.no_gem = False
 
             # Add animals to team
             elif "Create one with `owo team add {animal}`" in message.content:

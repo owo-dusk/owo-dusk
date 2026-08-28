@@ -160,7 +160,7 @@ class Gems(BaseCog):
                 self.already_checked = True
             else:
                 await self.bot.log("Warn: No gems to use.", "#924444")
-                self.bot.user_status["no_gems"] = True
+                self.bot.stats.no_gem = True
                 if not self.bot.hunt_disabled and self.settings.disableHuntIfNoGems:
                     await self.bot.log(
                         "Disabling hunt since there is no gems to be used.", "#C51818"
@@ -311,14 +311,14 @@ class Gems(BaseCog):
             return
 
         if "caught" in message.content:
-            if self.bot.user_status["no_gems"]:
+            if self.bot.stats.no_gem:
                 return
             await self.bot.ch.set_stat(False)
             self.inventory_check = True
             await self.bot.ch.put_queue(self.inv_cmd, priority=True)
 
         if "hunt is empowered by" in message.content:
-            if self.bot.user_status["no_gems"]:
+            if self.bot.stats.no_gem:
                 return
             if self.already_checked:
                 count = len_gems_in_use(message.content)

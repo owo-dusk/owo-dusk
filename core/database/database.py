@@ -78,12 +78,12 @@ class Database:
             """UPDATE cowoncy_earnings
             SET earnings = ?
             WHERE user_id = ? AND hour = ?""",
-            (self.client.user_status["net_earnings"], self.client.user.id, hr),
+            (self.client.stats.net_earnings, self.client.user.id, hr),
         )
 
         database_handler.update_database(
             "UPDATE user_stats SET cowoncy = ? WHERE user_id = ?",
-            (self.client.user_status["balance"], self.client.user.id),
+            (self.client.stats.balance, self.client.user.id),
         )
 
     @log_stats_if_required
@@ -218,7 +218,7 @@ class Database:
         )
 
     async def fetch_net_earnings(self):
-        self.client.user_status["net_earnings"] = 0
+        self.client.stats.net_earnings = 0
         rows = await database_handler.get_from_db(
             "SELECT earnings FROM cowoncy_earnings WHERE user_id = ? ORDER BY hour",
             (self.client.user.id,),
@@ -228,7 +228,7 @@ class Database:
 
         for item in reversed(cowoncy_list):
             if item != 0:
-                self.client.user_status["net_earnings"] = item
+                self.client.stats.net_earnings = item
                 break
 
     async def reset_gamble_wins_or_losses(self):

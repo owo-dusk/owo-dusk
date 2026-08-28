@@ -63,11 +63,15 @@ class Shop(BaseCog):
             await self.bot.sleep(self.settings.get_cd())
 
         items_to_buy = self.settings.get_items_to_buy(
-            cur_cash=self.bot.user_status["balance"],
-            cash_check=self.bot.settings_dict.cashCheck,
+            cur_cash=self.bot.stats.balance,
+            cash_check=(
+                self.bot.settings_dict.cashCheck and self.bot.stats.has_updated_balance
+            ),
         )
 
-        item = self.bot.random.choice(items_to_buy)
+        item = None
+        if items_to_buy:
+            item = self.bot.random.choice(items_to_buy)
 
         if item:
             self.cmd["cmd_arguments"] = item

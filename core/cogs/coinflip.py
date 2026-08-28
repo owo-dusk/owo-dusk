@@ -83,15 +83,15 @@ class Coinflip(BaseCog):
             )
 
             # Goal system check
-            if goal_system.enabled and self.bot.gain_or_lose > goal_system.amount:
+            if goal_system.enabled and self.bot.stats.gain_or_lose > goal_system.amount:
                 if not self.gamble_flags["goal_reached"]:
                     self.gamble_flags["goal_reached"] = True
                     await self.bot.log(
-                        f"goal reached - {self.bot.gain_or_lose}/{goal_system.amount}, stopping coinflip!",
+                        f"goal reached - {self.bot.stats.gain_or_lose}/{goal_system.amount}, stopping coinflip!",
                         "#4a270c",
                     )
                     notify(
-                        f"goal reached - {self.bot.gain_or_lose}/{goal_system.amount}, stopping coinflip!",
+                        f"goal reached - {self.bot.stats.gain_or_lose}/{goal_system.amount}, stopping coinflip!",
                         "Coinflip - Goal reached",
                     )
 
@@ -102,17 +102,17 @@ class Coinflip(BaseCog):
 
             # Balance check
             if (
-                amount_to_gamble > self.bot.user_status["balance"]
-                and self.bot.user_status["checked_cash"]
+                amount_to_gamble > self.bot.stats.balance
+                and self.bot.stats.has_updated_balance
             ):
                 if not self.gamble_flags["no_balance"]:
                     self.gamble_flags["no_balance"] = True
                     await self.bot.log(
-                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping coinflip!",
+                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.stats.balance}), stopping coinflip!",
                         "#4a270c",
                     )
                     notify(
-                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.user_status['balance']}), stopping coinflip!",
+                        f"Amount to gamble next ({amount_to_gamble}) exceeds bot balance ({self.bot.stats.balance}), stopping coinflip!",
                         "Coinflip - Insufficient balance",
                     )
 
@@ -120,14 +120,14 @@ class Coinflip(BaseCog):
                 return await self.start_cf()
             elif self.gamble_flags["no_balance"]:
                 await self.bot.log(
-                    f"Balance regained! ({self.bot.user_status['balance']}) - restarting coinflip!",
+                    f"Balance regained! ({self.bot.stats.balance}) - restarting coinflip!",
                     "#4a270c",
                 )
                 self.gamble_flags["no_balance"] = False
 
             # Allotted value check
             allottedAmount = self.gamble_settings.allottedAmount
-            if self.bot.gain_or_lose + (allottedAmount - amount_to_gamble) <= 0:
+            if self.bot.stats.gain_or_lose + (allottedAmount - amount_to_gamble) <= 0:
                 if not self.gamble_flags["amount_exceeded"]:
                     self.gamble_flags["amount_exceeded"] = True
                     await self.bot.log(
@@ -190,10 +190,10 @@ class Coinflip(BaseCog):
                     )
 
                     self.bot.update_cash(match, reduce=True)
-                    self.bot.gain_or_lose -= match
+                    self.bot.stats.gain_or_lose -= match
 
                     await self.bot.log(
-                        f"lost {match} in cf, net profit - {self.bot.gain_or_lose}",
+                        f"lost {match} in cf, net profit - {self.bot.stats.gain_or_lose}",
                         "#993f3f",
                     )
                     await self.start_cf()
@@ -209,10 +209,10 @@ class Coinflip(BaseCog):
                     profit = won_match - lose_match
 
                     self.bot.update_cash(profit)
-                    self.bot.gain_or_lose += profit
+                    self.bot.stats.gain_or_lose += profit
 
                     await self.bot.log(
-                        f"won {won_match} in cf, net profit - {self.bot.gain_or_lose}",
+                        f"won {won_match} in cf, net profit - {self.bot.stats.gain_or_lose}",
                         "#536448",
                     )
                     await self.start_cf()

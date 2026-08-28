@@ -73,6 +73,20 @@ class MessageDispatcher:
         for func in self._edit_handlers:
             await func(message)
 
+class Stats:
+    """
+    This tracks certain required statistics like cowoncy
+    """
+
+    def __init__(self):
+        # Cowoncy Tracker
+        self.balance = 0 # current cowoncy
+        self.net_earnings = 0 # loss/gain of cowoncy
+        self.has_updated_balance = False
+        # Gambling Tracker
+        self.gain_or_lose = 0
+        # Gems
+        self.no_gem = False
 
 class MyClient(commands.Bot):
     def __init__(
@@ -87,15 +101,11 @@ class MyClient(commands.Bot):
         self.channel_id = int(channel_id)
         self.list_channel = [self.channel_id]
         self.session = None
-
         self.message_dispatcher = MessageDispatcher()
         self.settings_dict = None
         self.global_settings_dict = global_settings_dict
         self.captcha_settings_dict = captcha_settings_dict
         self.commands_dict = {}
-        self.cash_check = False
-        self.gain_or_lose = 0
-
         self.dm, self.cm = None, None
         self.hunt_disabled = False
         self.username = None
@@ -106,6 +116,7 @@ class MyClient(commands.Bot):
         self.db = database.Database(self)
         self.quest_handler = None
         self.danger_settings_dict = danger_settings_dict
+        self.stats = Stats()
         if not syst.system.on_mobile:
             self.add_popup_queue = syst.popup.add_popup_queue
         else:
@@ -138,14 +149,6 @@ class MyClient(commands.Bot):
 
         # discord.py-self's module sets global random to fixed seed. reset that, locally.
         self.random = random.Random()
-        # Task: Update code to have checks using status instead of individual variables
-        self.user_status = {
-            "no_gems": False,
-            "no_cash": False,
-            "balance": 0,
-            "net_earnings": 0,
-            "checked_cash": False,
-        }
 
         self.ongoing_owobot_event = False
 
@@ -655,18 +658,19 @@ class MyClient(commands.Bot):
 
     def update_cash(self, amount, override=False, reduce=False, assumed=False):
         if override and self.settings_dict.cashCheck:
-            self.user_status["balance"] = amount
+            self.stats.balance = amount
+            self.stats.has_updated_balance = True
         else:
             if self.settings_dict.cashCheck and not assumed:
                 if reduce:
-                    self.user_status["balance"] -= amount
+                    self.stats.balance -= amount
                 else:
-                    self.user_status["balance"] += amount
+                    self.stats.balance += amount
 
             if reduce:
-                self.user_status["net_earnings"] -= amount
+                self.stats.net_earnings -= amount
             else:
-                self.user_status["net_earnings"] += amount
+                self.stats.net_earnings += amount
         self.db.update_cash_db()
 
     def get_nick(self, msg):
