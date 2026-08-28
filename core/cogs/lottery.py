@@ -47,9 +47,7 @@ class Lottery(BaseCog):
         last_lottery_time = await self.bot.db.fetch_cmd_lastran_time("lottery")
 
         if not self.bot.should_run(last_lottery_time):
-            await asyncio.sleep(
-                self.bot.calc_time()
-            )  # Wait until next 12:00 AM PST
+            await asyncio.sleep(self.bot.calc_time())  # Wait until next 12:00 AM PST
 
         await self.bot.sleep_till(self.cooldown.shortCooldown)
         await self.bot.ch.put_queue(self.cmd)

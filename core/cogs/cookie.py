@@ -41,9 +41,7 @@ class Cookie(BaseCog):
         last_cookie_time = await self.bot.db.fetch_cmd_lastran_time("cookie")
 
         if not self.bot.should_run(last_cookie_time):
-            await asyncio.sleep(
-                self.bot.calc_time()
-            )  # Wait until next 12:00 AM PST
+            await asyncio.sleep(self.bot.calc_time())  # Wait until next 12:00 AM PST
 
         await self.bot.sleep_till(self.cooldowns.moderateCooldown)
         self.cmd["cmd_arguments"] = (
@@ -52,7 +50,7 @@ class Cookie(BaseCog):
             else f"{self.settings.user_id}"
         )
         await self.bot.ch.put_queue(self.cmd, priority=True)
-        
+
         self.bot.db.update_cmd_lastran_time("cookie")
 
     async def cog_load(self):

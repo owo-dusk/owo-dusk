@@ -764,7 +764,7 @@ class MyClient(commands.Bot):
         await self.fetch_slash_commands(self.cm)
 
         # Charts
-        self.db.populate_stats_db()
+        await self.db.populate_stats_db()
 
         await self.db.populate_cowoncy_earnings()
         await self.db.reset_gamble_wins_or_losses()

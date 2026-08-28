@@ -10,6 +10,9 @@
         "password": "areallylongandsecretpassword",
         "enableHost": false
     },
+    "database": {
+        "logStatistics": true
+    },
     "account": {
         "startupDelay": [
             1.5,
