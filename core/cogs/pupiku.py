@@ -93,7 +93,7 @@ class Pupiku(BaseCog):
         for cmd in {"pup", "piku", "run"}:
             await self.bot.ch.remove_queue(id=cmd)
 
-    async def send_pupiku(self, startup=False, cmd=None, final=False):
+    async def send_pupiku(self, cmd=None, startup=False, final=False):
         if startup and not final:
             while not self.startupFinished:
                 await self.bot.sleep_till(
@@ -108,7 +108,7 @@ class Pupiku(BaseCog):
                     # Ensure command not ran for the day
                     last_ran = await self.bot.db.fetch_pupiku_lastran_time(cmd)
                     if not self.bot.should_run(last_ran):
-                        await self.send_pupiku(cmd, startup=True, final=True)
+                        await self.send_pupiku(cmd=cmd, startup=True, final=True)
                         continue
 
                     # Set `should_run`
