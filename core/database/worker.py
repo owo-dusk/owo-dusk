@@ -66,21 +66,22 @@ class databaseWorker:
                 succeeded = []
                 try:
                     for s, p, f in batch:
+                        # here `save` is a savepoint. We rollback if any error with next execution.
+                        await db.execute("SAVEPOINT save;")
                         try:
                             await db.execute(s, p or ())
+                            await db.execute("RELEASE SAVEPOINT save;")
                             succeeded.append(f)
                         except Exception as e:
                             print(f"Database Error (statement): {e}")
+                            await db.execute("ROLLBACK TO SAVEPOINT save;")
                             if f is not None:
                                 f.set_exception(e)
 
-                    # Only commit once, this way it doesn't take up much cpu while avoiding unnecessary restrictions.
+                    # Only commit once at the very end
                     await db.commit()
 
                     for f in succeeded:
-                        """
-                        `f` here is the future. When await is required, Future is passed alongside the queue. Once done
-                        """
                         if f is not None:
                             f.set_result(True)
                 except Exception as e:
