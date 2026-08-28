@@ -73,6 +73,7 @@ echo.
 :: Clone OwO-Dusk repo.
 if exist "%INSTALL_DIR%" (
     echo [^!] Folder "%INSTALL_DIR%" already exists.
+    set "CONFIRM="
     set /p CONFIRM="    Re-clone and overwrite? [y/N]: "
     if /i "!CONFIRM!"=="y" (
         echo "%INSTALL_DIR%" | findstr /i "\owo-dusk" >nul 2>&1
@@ -173,7 +174,7 @@ if not exist "%GIT_INSTALL_DIR%\cmd\git.exe" ( exit /b 1 )
 set "PATH=%GIT_INSTALL_DIR%\cmd;%PATH%"
 
 :: Permanently update User PATH in Windows Registry
-powershell.exe -NoProfile -NonInteractive -Command "$p = [Environment]::GetEnvironmentVariable('PATH', 'User'); if ($p -notlike '*%GIT_INSTALL_DIR%\cmd*') { [Environment]::SetEnvironmentVariable('PATH', '%GIT_INSTALL_DIR%\cmd;' + $p, 'User') }"
+powershell.exe -NoProfile -NonInteractive -Command "$p = [Environment]::GetEnvironmentVariable('PATH', 'User'); if ($p -notlike '*' + $env:GIT_INSTALL_DIR + '\cmd*') { [Environment]::SetEnvironmentVariable('PATH', $env:GIT_INSTALL_DIR + '\cmd;' + $p, 'User') }"
 
 exit /b 0
 
@@ -243,6 +244,7 @@ set "PY_DIR=!PY_DIR:~0,-1!"
 echo !PATH! | findstr /i /c:"!PY_DIR!" >nul 2>&1
 if errorlevel 1 (
     echo [^!] Found Python at "!PY_CMD!", but its directory is not in PATH.
+    set "ADD_PATH_CHOICE="
     set /p ADD_PATH_CHOICE="    Add "!PY_DIR!" to current session PATH? [y/N]: "
     if /i "!ADD_PATH_CHOICE!"=="y" (
         set "PATH=!PY_DIR!;!PATH!"
@@ -263,7 +265,6 @@ if exist "%PYTHON_INSTALLER%" (
 
 if "%PY_HAVE_GOOD_INSTALLER%"=="0" (
     echo     Downloading Python %PYTHON_VERSION%...
-    :: https://www.python.org/ftp/python/3.13.15/python-3.13.15-amd64.exe
     call :download "https://www.python.org/ftp/python/%PYTHON_VERSION%/python-%PYTHON_VERSION%-amd64.exe" "%PYTHON_INSTALLER%"
     if errorlevel 1 ( exit /b 1 )
     call :verify_sha256 "%PYTHON_INSTALLER%" "%PYTHON_SHA256%"
@@ -281,23 +282,21 @@ if not exist "%PYTHON_INSTALL_DIR%\python.exe" ( exit /b 1 )
 set "PATH=%PYTHON_INSTALL_DIR%;%PATH%"
 exit /b 0
 
-:: Verify a downloaded files SHA256 against an expected value.
+:: Verify a downloaded file's SHA256 against an expected value.
 :verify_sha256
 set "VERIFY_FILE=%~1"
-set "VERIFY_EXPECTED=%~2"
+set "EXPECTED_HASH=%~2"
 if not exist "%VERIFY_FILE%" ( exit /b 1 )
-set "VERIFY_ACTUAL="
-for /f "delims=" %%H in ('powershell -NoProfile -NonInteractive -Command "(Get-FileHash -LiteralPath '%VERIFY_FILE%' -Algorithm SHA256).Hash" 2^>nul') do set "VERIFY_ACTUAL=%%H"
-if not defined VERIFY_ACTUAL ( exit /b 1 )
-if /i "%VERIFY_ACTUAL%"=="%VERIFY_EXPECTED%" ( exit /b 0 )
-exit /b 1
+powershell.exe -NoProfile -NonInteractive -Command "if ((Get-FileHash -LiteralPath $env:VERIFY_FILE -Algorithm SHA256).Hash.ToLower() -ne $env:EXPECTED_HASH.ToLower()) { exit 1 }" 2>nul
+if errorlevel 1 ( exit /b 1 )
+exit /b 0
 
 :: Download helper - tries curl (bundled with Win10+), falls back to PowerShell.
 :download
 set "DL_URL=%~1"
 set "DL_OUT=%~2"
-curl.exe -fSL --retry 3 -o "%DL_OUT%" "%DL_URL%" >nul 2>&1
+curl.exe -fSL --max-time 300 --retry 3 -o "%DL_OUT%" "%DL_URL%" >nul 2>&1
 if not errorlevel 1 ( exit /b 0 )
-powershell.exe -NoProfile -NonInteractive -Command "Invoke-WebRequest -UseBasicParsing -Uri '%DL_URL%' -OutFile '%DL_OUT%'" >nul 2>&1
+powershell.exe -NoProfile -NonInteractive -Command "Invoke-WebRequest -UseBasicParsing -TimeoutSec 300 -Uri $env:DL_URL -OutFile $env:DL_OUT" >nul 2>&1
 if not errorlevel 1 ( exit /b 0 )
 exit /b 1
