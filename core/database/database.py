@@ -10,7 +10,10 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+from datetime import datetime, timezone
 from functools import wraps
+
+import pytz
 
 import utils.timestamp as utils
 
@@ -109,8 +112,8 @@ class Database:
 
     async def populate_stats_db(self):
         await database_handler.update_database_async(
-            "INSERT OR IGNORE INTO user_stats (user_id, daily, lottery, cookie, giveaways, captchas, cowoncy, boss, boss_ticket, pup, piku, army) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (self.client.user.id, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0),
+            "INSERT OR IGNORE INTO user_stats (user_id, daily, lottery, cookie, giveaways, captchas, cowoncy, boss, boss_ticket) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (self.client.user.id, 0, 0, 0, 0, 0, 0, 0, 3),
         )
 
     def update_stats_db(self, column_name, value):
@@ -120,9 +123,6 @@ class Database:
             "cookie",
             "giveaways",
             "boss",
-            "pup",
-            "piku",
-            "army",
         }:
             # Captcha and cowoncy handled separately
             raise ValueError("Invalid column name.")
@@ -273,8 +273,7 @@ class Database:
         )
 
     async def fetch_cmd_lastran_time(self, cmd):
-        # For Pupiku and Army.
-        if cmd not in {"pup", "piku", "army", "daily", "lottery", "cookie"}:
+        if cmd not in {"daily", "lottery", "cookie"}:
             raise ValueError("Invalid column name.")
 
         results = await database_handler.get_from_db(
@@ -290,13 +289,102 @@ class Database:
         return 0
 
     def update_cmd_lastran_time(self, cmd):
-        # For Pupiku and Army.
-        if cmd not in {"pup", "piku", "army", "daily", "lottery", "cookie"}:
+        if cmd not in {"daily", "lottery", "cookie"}:
             raise ValueError("Invalid column name.")
 
         database_handler.update_database(
             f"UPDATE user_stats SET {cmd} = ? WHERE user_id = ?",
             (self.client.time_in_seconds(), self.client.user.id),
+        )
+
+    # I am a genius when it comes to naming. `pupiku`... Just Woah!
+    # I mean I can name it `pupikrunmy`, but `pupiku` sounds better.
+    async def fetch_pupiku_lastran_time(self, cmd: str) -> float:
+        allowed_cmds = {"pup", "piku", "army", "run"}
+        if cmd not in allowed_cmds:
+            raise ValueError("Invalid command for fetching pupiku lastran")
+
+        results = await database_handler.get_from_db(
+            "SELECT last_ran FROM pupiku WHERE user_id = ? AND cmd = ?",
+            (self.client.user.id, cmd),
+        )
+
+        if results:
+            return results[0][0]
+
+        return 0.0
+
+    def update_pupiku_lastran_time(self, cmd: str) -> None:
+        allowed_cmds = {"pup", "piku", "army", "run"}
+        if cmd not in allowed_cmds:
+            raise ValueError("Invalid command for pupiku update")
+
+        # Insert, on conflict update
+        database_handler.update_database(
+            """
+            INSERT INTO pupiku (user_id, cmd, times_to_run, last_ran)
+            VALUES (?, ?, 1, ?)
+            ON CONFLICT(user_id, cmd) DO UPDATE SET last_ran = excluded.last_ran
+            """,
+            (self.client.user.id, cmd, self.client.time_in_seconds()),
+        )
+
+    async def check_next_amt_to_run(self, cmd: str) -> int:
+        """
+        Returns how many times the command can be send. If 0 is returned, that means run until we have an initial value
+
+        Not required for `army` since we already have a solid way to identify if command was ran succesfully.
+        """
+        allowed_cmds = {"pup", "piku", "run"}
+        if cmd not in allowed_cmds:
+            raise ValueError("Invalid command for pupiku amount check")
+
+        results = await database_handler.get_from_db(
+            "SELECT times_to_run, last_ran FROM pupiku WHERE user_id = ? AND cmd = ?",
+            (self.client.user.id, cmd),
+        )
+
+        if not results:
+            # If we haven't run
+            return 0
+
+        times_to_run, last_timestamp = results[0][0], results[0][1]
+
+        pst = pytz.timezone("US/Pacific")
+        now_pst = datetime.now(timezone.utc).astimezone(pst)
+        last_pst = datetime.fromtimestamp(last_timestamp, timezone.utc).astimezone(pst)
+
+        # Calculate difference in days based purely on the calendar date
+        day_diff = (now_pst.date() - last_pst.date()).days
+
+        if day_diff == 1:
+            # Exactly the next day would mean that we can run just one more than what was already ran
+
+            # self.update_pupiku_times_to_run(cmd, times_to_run+1)
+            return times_to_run
+        else:
+            # We do not know how many times we have to run. User may have done the missing day's.
+            return 0
+
+    def update_pupiku_times_to_run(self, cmd: str, amt: int) -> None:
+        """
+        Sets the times_to_run column for a given command.
+
+        Not required for `army` since we already have a solid way to identify if command was ran succesfully.
+        """
+        allowed_cmds = {"pup", "piku", "run"}
+        if cmd not in allowed_cmds:
+            raise ValueError("Invalid command for pupiku times_to_run update")
+
+        # Uses 0.0 as default for last_ran if the row doesn't exist yet.
+        # On conflict, it ONLY updates times_to_run and leaves last_ran untouched.
+        database_handler.update_database(
+            """
+            INSERT INTO pupiku (user_id, cmd, times_to_run, last_ran)
+            VALUES (?, ?, ?, 0.0)
+            ON CONFLICT(user_id, cmd) DO UPDATE SET times_to_run = excluded.times_to_run
+            """,
+            (self.client.user.id, cmd, amt),
         )
 
     def update_event_timestamp(self, timestamp):

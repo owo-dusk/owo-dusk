@@ -85,7 +85,10 @@ class Slots(BaseCog):
             )
 
             # Goal system check
-            if goal_settings.enabled and self.bot.stats.gain_or_lose > goal_settings.amount:
+            if (
+                goal_settings.enabled
+                and self.bot.stats.gain_or_lose > goal_settings.amount
+            ):
                 if not self.gamble_flags["goal_reached"]:
                     self.gamble_flags["goal_reached"] = True
                     await self.bot.log(
