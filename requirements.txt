@@ -8,7 +8,7 @@ click==8.5.0
 discord.py-self @ git+https://github.com/dolfies/discord.py-self@20ae80b398ec83fa272f0a96812140e14868c88f
 Flask==3.1.3
 frozenlist==1.8.0
-idna==3.18
+idna==3.19
 itsdangerous==2.2.0
 Jinja2==3.1.6
 markdown-it-py==4.2.0
