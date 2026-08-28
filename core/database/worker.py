@@ -75,19 +75,19 @@ class databaseWorker:
                         except Exception as e:
                             print(f"Database Error (statement): {e}")
                             await db.execute("ROLLBACK TO SAVEPOINT save;")
-                            if f is not None:
+                            if f is not None and not f.cancelled():
                                 f.set_exception(e)
 
                     # Only commit once at the very end
                     await db.commit()
 
                     for f in succeeded:
-                        if f is not None:
+                        if f is not None and not f.cancelled():
                             f.set_result(True)
                 except Exception as e:
                     print(f"Database Error (commit): {e}")
                     for f in succeeded:
-                        if f is not None:
+                        if f is not None and not f.cancelled():
                             f.set_exception(e)
                 finally:
                     for _ in batch:
