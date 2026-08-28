@@ -88,7 +88,7 @@ def create_database(db_path="utils/data/db.sqlite"):
     # `INSERT OR UPDATE` is not used since we will be comparing old value (if any) ------ (check!!)
     c.execute(
         "INSERT OR IGNORE INTO meta_data (key, value) VALUES (?, ?)",
-        ("version", version),
+        ("version", database_version),
     )
 
     c.execute(
