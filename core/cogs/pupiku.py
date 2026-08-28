@@ -129,6 +129,8 @@ class Pupiku(BaseCog):
 
                 for cmd in cmds:
                     # Initial setup:
+                    if not getattr(self, f"{cmd}_settings").enabled:
+                        continue
 
                     # Ensure command not ran for the day
                     last_ran = await self.bot.db.fetch_pupiku_lastran_time(cmd)
@@ -141,6 +143,7 @@ class Pupiku(BaseCog):
                         "should_run"
                     ] = await self.bot.db.check_next_amt_to_run(cmd)
 
+                    self.set_send_time(cmd)
                     await self.bot.ch.put_queue(self.get_cmd(cmd))
                     await self.bot.sleep_till([1, 3])
 
