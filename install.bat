@@ -186,15 +186,18 @@ for /f "delims=" %%P in ('py -3 -c "import sys; sys.version_info >= (%MIN_PYTHON
 if defined PY_CMD goto :prompt_add_path
 
 :: 2) Check `python` on PATH (skipping WindowsApps Store execution alias)
-set "PY_WHERE="
-for /f "delims=" %%W in ('where python 2^>nul') do if not defined PY_WHERE set "PY_WHERE=%%W"
-if defined PY_WHERE (
-    echo !PY_WHERE! | findstr /i "WindowsApps" >nul 2>&1
-    if errorlevel 1 (
-        for /f "delims=" %%P in ('python -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do set "PY_CMD=python"
-        if defined PY_CMD exit /b 0
+set "PY_CMD="
+for /f "delims=" %%W in ('where python 2^>nul') do (
+    if not defined PY_CMD (
+        echo %%W | findstr /i "WindowsApps" >nul 2>&1
+        if errorlevel 1 (
+            for /f "delims=" %%P in ('"%%W" -c "import sys; sys.version_info >= (%MIN_PYTHON_VERSION:.=, %) and print(sys.executable)" 2^>nul') do (
+                set "PY_CMD=%%W"
+            )
+        )
     )
 )
+if defined PY_CMD exit /b 0
 
 :: 3) Check Windows Registry (finds official installs not added to PATH)
 for /f "tokens=2*" %%A in ('reg query "HKCU\Software\Python\PythonCore" /s /v InstallPath 2^>nul ^| findstr /i "REG_SZ"') do (
