@@ -84,6 +84,12 @@ if exist "%INSTALL_DIR%" (
         )
         echo     If owo-dusk is currently running, please close it first.
         rmdir /s /q "%INSTALL_DIR%"
+        if exist "%INSTALL_DIR%" (
+            :: Windows prevents deletion of files that are active
+            echo [x] Failed to delete existing directory. Close any open files/terminals and try again.
+            pause
+            exit /b 1
+        )
     ) else (
         echo [*] Skipping clone - using existing directory.
         goto :run_setup
