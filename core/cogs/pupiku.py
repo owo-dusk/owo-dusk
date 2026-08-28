@@ -186,6 +186,8 @@ class Pupiku(BaseCog):
                 self.set_send_time("pup")
             if f"{self.bot.settings_dict.prefix}piku" in message.content:
                 self.set_send_time("piku")
+            if f"{self.bot.settings_dict.prefix}run" in message.content:
+                self.set_send_time("run")
 
         if message.author.id != self.bot.owo_bot_id:
             return
