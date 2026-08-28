@@ -73,7 +73,6 @@ class MessageDispatcher:
         for func in self._edit_handlers:
             await func(message)
 
-
 class Stats:
     """
     This tracks certain required statistics like cowoncy
@@ -81,14 +80,13 @@ class Stats:
 
     def __init__(self):
         # Cowoncy Tracker
-        self.balance = 0  # current cowoncy
-        self.net_earnings = 0  # loss/gain of cowoncy
+        self.balance = 0 # current cowoncy
+        self.net_earnings = 0 # loss/gain of cowoncy
         self.has_updated_balance = False
         # Gambling Tracker
         self.gain_or_lose = 0
         # Gems
         self.no_gem = False
-
 
 class MyClient(commands.Bot):
     def __init__(
@@ -365,9 +363,7 @@ class MyClient(commands.Bot):
             "lottery": commands_obj.lottery.enabled,
             "mail": self.settings_dict.mail,
             "others": True,
-            "pupiku": commands_obj.pup.enabled
-            or commands_obj.piku.enabled
-            or commands_obj.run.enabled,
+            "pupiku": commands_obj.pup.enabled or commands_obj.piku.enabled or commands_obj.run.enabled,
             "quest": self.settings_dict.autoQuest.enabled,
             "reactionbot": reactionbot,
             "sell": True,

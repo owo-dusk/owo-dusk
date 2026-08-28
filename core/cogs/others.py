@@ -149,7 +149,9 @@ class Others(BaseCog):
                     ),
                     override=True,
                 )
-                await self.bot.log(f"Has {self.bot.stats.balance} cowoncy!", "#d787d7")
+                await self.bot.log(
+                    f"Has {self.bot.stats.balance} cowoncy!", "#d787d7"
+                )
                 await self.bot.ch.remove_queue(id="cash")
 
             # Lootbox and Crate
