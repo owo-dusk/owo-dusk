@@ -17,7 +17,7 @@ mdurl==0.1.2
 pytz==2026.3.post1
 multidict==6.7.1
 protobuf==7.36.0
-Pygments==2.20.0
+Pygments==2.21.0
 requests==2.34.2
 rich==15.0.0
 tzlocal==5.4.4
