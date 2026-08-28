@@ -3,7 +3,7 @@ aiosignal==1.4.0
 attrs==26.1.0
 blinker==1.9.0
 certifi==2026.7.22
-charset-normalizer==3.4.9
+charset-normalizer==3.5.1
 click==8.5.0
 discord.py-self @ git+https://github.com/dolfies/discord.py-self@20ae80b398ec83fa272f0a96812140e14868c88f
 Flask==3.1.3
