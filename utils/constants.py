@@ -22,7 +22,7 @@ owo_art = r"""
  \__/ (_/\_) \__/     (____/\____/(____/(__\_)
 """
 owo_panel = Panel(Align.center(owo_art), style="purple ", highlight=False)
-version = "2.6.8"
+version = "2.6.9"
 # Database version won't be changed unless there is an actual
 # need to remake database files
 database_version = "2.6.8"
