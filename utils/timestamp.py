@@ -29,7 +29,7 @@ def discord_timestamp_to_datetime(unix_timestamp: int) -> datetime:
 
 
 def calc_time_till_event(initial_timestamp: datetime) -> datetime:
-    return datetime + timedelta(days=7)
+    return initial_timestamp + timedelta(days=7)
 
 
 def get_weekday():
@@ -57,3 +57,4 @@ def validate_snowflake(snowflake: str):
 
 def calc_time_till_timestamp(timestamp: datetime):
     return (timestamp - datetime.now(tz=timezone.utc)).total_seconds()
+

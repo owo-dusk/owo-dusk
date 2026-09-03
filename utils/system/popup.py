@@ -41,7 +41,7 @@ def popup_main_loop():
         popup.title("OwO-dusk - Notifs")
 
         try:
-            icon_path = "static/imgs/logo.png"
+            icon_path = "website/static/imgs/logo.png"
             icon = tk.PhotoImage(file=icon_path)
             popup.iconphoto(True, icon)
         except Exception as e:
