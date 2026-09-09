@@ -238,6 +238,8 @@ class captchaClient:
                 },
             ) as verify_resp:
                 if verify_resp.status == 200:
+                    # deduct 30 incase fallback re-assigns self.balance
+                    self.balance-=30
                     await self.update_balance()
                     return True
                 else:
