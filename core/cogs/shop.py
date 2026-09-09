@@ -77,9 +77,7 @@ class Shop(BaseCog):
             self.cmd["cmd_arguments"] = item
             await self.bot.ch.put_queue(self.cmd)
         else:
-            await self.bot.sleep_till(
-                self.bot.settings_dict.cooldowns.briefCooldown
-            )
+            await self.bot.sleep_till(self.bot.settings_dict.cooldowns.briefCooldown)
             await self.send_buy()
 
     @commands.Cog.listener()
