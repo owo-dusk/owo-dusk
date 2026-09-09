@@ -16,7 +16,7 @@ MarkupSafe==3.0.3
 mdurl==0.1.2
 pytz==2026.3.post1
 multidict==6.7.1
-protobuf==7.36.0
+protobuf==7.36.1
 Pygments==2.21.0
 requests==2.34.2
 rich==15.0.0
