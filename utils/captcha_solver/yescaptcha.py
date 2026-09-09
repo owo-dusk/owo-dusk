@@ -37,6 +37,9 @@ class captchaClient:
     # We aren't supposed to use sync copies for this.. There must be a better solution
     # Double check - for the time being it works!
     def get_yescaptcha_balance_sync(self):
+        # At startup its fine to use 0 as fall back.
+        # Even if an error causes it to be 0, code would immeidately stop
+        # preventing further issues.
         url = "https://api.yescaptcha.com/getBalance"
         try:
             response = requests.post(url, json={"clientKey": self.api}, timeout=10)
@@ -47,21 +50,43 @@ class captchaClient:
 
     async def get_yescaptcha_balance(self, session: aiohttp.ClientSession) -> int:
         url = "https://api.yescaptcha.com/getBalance"
-        try:
-            # aiohttp uses total timeout instead of a simple integer
-            timeout = aiohttp.ClientTimeout(total=10)
+        timeout = aiohttp.ClientTimeout(total=10)
 
+        try:
             async with session.post(
                 url, json={"clientKey": self.api}, timeout=timeout
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return (
-                        int(data.get("balance", 0)) if data.get("errorId") == 0 else 0
+                    error_id = data.get("errorId")
+
+                    if error_id == 0:
+                        balance = int(data.get("balance", 0))
+                        self.balance = balance
+                        return balance
+
+                    # Otherwise error_id would be 0 (error)
+                    error_code = data.get(
+                        "errorCode", "Error field (errorCode) missing"
                     )
-                return 0
-        except Exception:
-            return 0
+                    error_desc = data.get(
+                        "errorDescription", "Error field (errorDescription) missing"
+                    )
+                    print(
+                        f"[YesCaptcha Error] API returned error (Code: {error_code}): {error_desc}"
+                    )
+                else:
+                    print(
+                        f"[YesCaptcha Error] HTTP request failed with status {response.status}"
+                    )
+
+        except aiohttp.ClientError as e:
+            print(f"[YesCaptcha Error] Network connection issue: {e}")
+        except Exception as e:
+            print(f"[YesCaptcha Error] Unexpected error occurred: {e}")
+
+        # fallback
+        return self.balance
 
     async def update_balance(self):
         async with aiohttp.ClientSession() as session:
