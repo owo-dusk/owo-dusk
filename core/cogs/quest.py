@@ -451,7 +451,7 @@ class Quest(BaseCog):
                 timeout=30.0,
             )
         except asyncio.TimeoutError:
-            print("this is bad, check failed miserably!")
+            print("Block till send got timeout error, likely network issue.")
 
     async def handle_repeat_quest(
         self,

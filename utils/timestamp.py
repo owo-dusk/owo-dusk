@@ -57,4 +57,3 @@ def validate_snowflake(snowflake: str):
 
 def calc_time_till_timestamp(timestamp: datetime):
     return (timestamp - datetime.now(tz=timezone.utc)).total_seconds()
-

@@ -21,7 +21,6 @@ class captchaClient:
     def __init__(self, api):
         self.api = api
         self.balance = self.get_yescaptcha_balance_sync() or 0
-        self._site_key = "a6a1d5ce-612d-472d-8e37-7601408fbc09"
         self._payload = {
             "authorize": True,
             "integration_type": 0,
@@ -32,36 +31,73 @@ class captchaClient:
                 "channel_type": 10000,
             },
         }
+        # Will be populated with user id, and store cookies for `owobot.com`
+        self._cookie_cache = {}
         self._auth_url = r"https://discord.com/api/v9/oauth2/authorize?client_id=408785106942164992&response_type=code&redirect_uri=https://owobot.com/api/auth/discord/redirect&scope=identify guilds"
 
     # We aren't supposed to use sync copies for this.. There must be a better solution
     # Double check - for the time being it works!
     def get_yescaptcha_balance_sync(self):
+        # At startup its fine to use 0 as fall back.
+        # Even if an error causes it to be 0, code would immeidately stop
+        # preventing further issues.
         url = "https://api.yescaptcha.com/getBalance"
         try:
             response = requests.post(url, json={"clientKey": self.api}, timeout=10)
             data = response.json()
             return int(data.get("balance", 0)) if data.get("errorId") == 0 else 0
-        except Exception:
-            return 0
 
+        except requests.exceptions.Timeout:
+            print("[YesCaptcha Error] Request timed out after 10 seconds")
+            return 0
+        except requests.exceptions.RequestException as e:
+            print(f"[YesCaptcha Error] HTTP request failed: {e}")
+            return 0
+        except Exception as e:
+            print(f"[YesCaptcha Error] Unexpected error: {e}")
+            return 0
+            
     async def get_yescaptcha_balance(self, session: aiohttp.ClientSession) -> int:
         url = "https://api.yescaptcha.com/getBalance"
-        try:
-            # aiohttp uses total timeout instead of a simple integer
-            timeout = aiohttp.ClientTimeout(total=10)
+        timeout = aiohttp.ClientTimeout(total=10)
 
+        try:
             async with session.post(
                 url, json={"clientKey": self.api}, timeout=timeout
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return (
-                        int(data.get("balance", 0)) if data.get("errorId") == 0 else 0
+                    error_id = data.get("errorId")
+
+                    if error_id == 0:
+                        balance = int(data.get("balance", 0))
+                        self.balance = balance
+                        return balance
+
+                    # Otherwise error_id would be 0 (error)
+                    error_code = data.get(
+                        "errorCode", "Error field (errorCode) missing"
                     )
-                return 0
-        except Exception:
-            return 0
+                    error_desc = data.get(
+                        "errorDescription", "Error field (errorDescription) missing"
+                    )
+                    print(
+                        f"[YesCaptcha Error] API returned error (Code: {error_code}): {error_desc}"
+                    )
+                else:
+                    print(
+                        f"[YesCaptcha Error] HTTP request failed with status {response.status}"
+                    )
+
+        except (asyncio.TimeoutError, TimeoutError):
+            print("[YesCaptcha Error] Request timed out after 10 seconds")
+        except aiohttp.ClientError as e:
+            print(f"[YesCaptcha Error] Network connection issue: {e}")
+        except Exception as e:
+            print(f"[YesCaptcha Error] Unexpected error occurred: {e}")
+
+        # fallback
+        return self.balance
 
     async def update_balance(self):
         async with aiohttp.ClientSession() as session:
@@ -79,7 +115,7 @@ class captchaClient:
             "clientKey": self.api,
             "task": {
                 "type": "HCaptchaTaskProxyless",
-                "websiteKey": self._site_key,
+                "websiteKey": "a6a1d5ce-612d-472d-8e37-7601408fbc09",
                 "websiteURL": "https://owobot.com",
             },
             "softID": 94493,
@@ -139,60 +175,91 @@ class captchaClient:
 
             return None
 
-    async def solve_owo_bot_captcha(self, discord_headers, tries):
+    async def solve_owo_bot_captcha(self, discord_headers, user_id, tries):
         discord_headers["Referer"] = self._auth_url
-        await self.update_balance()
+
+        # 30 points is required by Yescaptcha for Hcaptcha solving.
         if self.balance < 30:
-            print("Not enough balance")
+            print("Not enough balance!")
             return False
 
-        async with aiohttp.ClientSession() as session:
-            # Authorize via Discord
-            async with session.post(
-                self._auth_url,
-                json=self._payload,
-                headers=discord_headers,
-                allow_redirects=True,
-            ) as oauth_resp:
-                if oauth_resp.status != 200:
-                    print(f"OAuth failed with HTTP {oauth_resp.status}")
+        # Check if user has already authenticated
+        cookie = self._cookie_cache.get(user_id)
+        async with aiohttp.ClientSession(cookies=cookie) as session:
+            is_authenticated = False
+
+            # Check if cookie is saved
+            if cookie:
+                try:
+                    async with session.get("https://owobot.com/api/auth") as auth_resp:
+                        if auth_resp.status == 200 and await auth_resp.json():
+                            print("Using cached OAuth session!")
+                            is_authenticated = True
+                        else:
+                            # Cookie expired or invalid
+                            self._cookie_cache.pop(user_id, None)
+                except Exception:
+                    self._cookie_cache.pop(user_id, None)
+
+            # Perform Discord Authentication
+            if not is_authenticated:
+                # https://docs.aiohttp.org/en/stable/abc.html#aiohttp.abc.AbstractCookieJar.clear
+                session.cookie_jar.clear()
+
+                # Authorize via Discord
+                async with session.post(
+                    self._auth_url,
+                    json=self._payload,
+                    headers=discord_headers,
+                    allow_redirects=True,
+                ) as oauth_resp:
+                    if oauth_resp.status != 200:
+                        print(f"OAuth failed with HTTP {oauth_resp.status}")
+                        return False
+
+                    oauth_text = await oauth_resp.text()
+
+                # Follow redirect if present
+                try:
+                    oauth_json = json.loads(oauth_text)
+                    redirect_url = oauth_json.get("location")
+
+                    if redirect_url:
+                        async with session.get(redirect_url) as redirect_resp:
+                            if redirect_resp.status != 200:
+                                print(
+                                    f"Redirect failed with HTTP {redirect_resp.status}"
+                                )
+                                return False
+                except Exception as e:
+                    print(f"OAuth parsing failed: {e}\nRaw response: {oauth_text}")
                     return False
 
-                oauth_text = await oauth_resp.text()
+                # Hit captcha page to ensure session cookies are set
+                async with session.get("https://owobot.com/captcha") as captcha_resp:
+                    if captcha_resp.status != 200:
+                        print(f"Captcha page failed with HTTP {captcha_resp.status}")
+                        return False
 
-            # 2. Follow redirect if present
-            try:
-                oauth_json = json.loads(oauth_text)
-                redirect_url = oauth_json.get("location")
+                # Verify session is active
+                async with session.get("https://owobot.com/api/auth") as auth_resp:
+                    if auth_resp.status != 200:
+                        print(f"Auth check failed with HTTP {auth_resp.status}")
+                        return False
 
-                if redirect_url:
-                    async with session.get(redirect_url) as redirect_resp:
-                        if redirect_resp.status != 200:
-                            print(f"Redirect failed with HTTP {redirect_resp.status}")
-                            return False
-            except Exception as e:
-                print(f"OAuth parsing failed: {e}")
-                print(f"Raw response: {oauth_text}")
-                return False
+                    auth_data = await auth_resp.json()
 
-            # 3. Hit captcha page to ensure session cookies are set
-            async with session.get("https://owobot.com/captcha") as captcha_resp:
-                if captcha_resp.status != 200:
-                    print(f"Captcha page failed with HTTP {captcha_resp.status}")
+                if not auth_data:
+                    print("Auth data None")
                     return False
 
-            # 4. Verify session is active
-            async with session.get("https://owobot.com/api/auth") as auth_resp:
-                if auth_resp.status != 200:
-                    print(f"Auth check failed with HTTP {auth_resp.status}")
-                    return False
+                # Save fresh cookies
+                # https://docs.aiohttp.org/en/stable/abc.html#aiohttp.abc.AbstractCookieJar.filter_cookies
+                self._cookie_cache[user_id] = session.cookie_jar.filter_cookies(
+                    "https://owobot.com"
+                )
 
-                auth_data = await auth_resp.json()
-
-            if not auth_data:
-                print("Auth data None")
-                return False
-
+            # Solve Captcha
             try:
                 solution = await self.solve_hcaptcha_logic(tries)
                 if not solution:
@@ -202,6 +269,7 @@ class captchaClient:
                 print(f"Solver Error: {e}")
                 return False
 
+            # Verify Solution
             async with session.post(
                 "https://owobot.com/api/captcha/verify",
                 json={"token": solution},
@@ -213,6 +281,11 @@ class captchaClient:
                 },
             ) as verify_resp:
                 if verify_resp.status == 200:
+                    # Update balance may sometimes return `self.balance` as fallback if request fails
+                    # Hence we deduct 30 in advance here to take in consideration the points used for the solve.
+                    self.balance -= 30
+                    # We still attempt to fetch balance since some times if multiple tries was made,
+                    # Failed attempts may temporarily consume points, which will take some time to be refunded.
                     await self.update_balance()
                     return True
                 else:
