@@ -389,6 +389,7 @@ class Captcha(BaseCog):
                         await self.bot.log("Attempting to solve hcaptcha", "#656b66")
                         solved = await self.bot.captcha_handler.solve_owo_bot_captcha(
                             self.bot.local_headers,
+                            self.bot.user.id,
                             cap_dict["hcaptcha_solver"]["retries"],
                         )
                         if not solved:
