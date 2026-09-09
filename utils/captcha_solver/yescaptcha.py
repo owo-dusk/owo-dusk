@@ -81,6 +81,8 @@ class captchaClient:
                         f"[YesCaptcha Error] HTTP request failed with status {response.status}"
                     )
 
+        except (asyncio.TimeoutError, TimeoutError):
+            print("[YesCaptcha Error] Request timed out after 10 seconds")
         except aiohttp.ClientError as e:
             print(f"[YesCaptcha Error] Network connection issue: {e}")
         except Exception as e:
