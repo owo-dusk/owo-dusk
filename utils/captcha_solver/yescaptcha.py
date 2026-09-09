@@ -46,9 +46,17 @@ class captchaClient:
             response = requests.post(url, json={"clientKey": self.api}, timeout=10)
             data = response.json()
             return int(data.get("balance", 0)) if data.get("errorId") == 0 else 0
-        except Exception:
-            return 0
 
+        except requests.exceptions.Timeout:
+            print("[YesCaptcha Error] Request timed out after 10 seconds")
+            return 0
+        except requests.exceptions.RequestException as e:
+            print(f"[YesCaptcha Error] HTTP request failed: {e}")
+            return 0
+        except Exception as e:
+            print(f"[YesCaptcha Error] Unexpected error: {e}")
+            return 0
+            
     async def get_yescaptcha_balance(self, session: aiohttp.ClientSession) -> int:
         url = "https://api.yescaptcha.com/getBalance"
         timeout = aiohttp.ClientTimeout(total=10)

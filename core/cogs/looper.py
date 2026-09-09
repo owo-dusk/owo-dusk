@@ -187,7 +187,7 @@ class Looper(BaseCog):
                 timeout=30.0,
             )
         except asyncio.TimeoutError:
-            print(f"this is bad, check failed miserably! {content}")
+            print(f"Block till send got timeout error, likely network issue! (looper) - {content}")
 
     async def send_owo(self):
         cmd = {
