@@ -60,7 +60,7 @@ def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
         else:
             weekly_runtime_dict[weekday][1] = time.time()
 
-        try: # bcz widnows can refuse the replace if another process holds the file open
+        try: # bcz windows can refuse the replace if another process holds the file open
             _write_weekly_runtime(weekly_runtime_dict, path)
         except OSError:
             print(
@@ -83,7 +83,7 @@ def start_runtime_loop(path="utils/data/weekly_runtime.json"):
 
     weekly_runtime_dict["last_checked"] = now
 
-    try: # bcz widnows can refuse the replace if another process holds the file open
+    try: # bcz windows can refuse the replace if another process holds the file open
         _write_weekly_runtime(weekly_runtime_dict, path)
     except OSError:
         print(
