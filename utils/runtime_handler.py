@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 import threading
 import time
 
@@ -20,14 +21,29 @@ DEFAULT_WEEKLY_RUNTIME = {
     "last_checked": 0,
 }
 
-
 def _write_weekly_runtime(weekly_runtime_dict, path):
-    # write to a temp file then swap it in so a crash/kill mid-write
-    # can't leave the real file empty/half-written
-    tmp_path = f"{path}.tmp"
-    with open(tmp_path, "w", encoding="utf-8") as f:
-        json.dump(weekly_runtime_dict, f, indent=4)
-    os.replace(tmp_path, path)
+    target_dir = os.path.dirname(path)
+    
+    # This temporary file is uniquely named, preventing race conditions making the file be unavailable.
+    tmp_file = tempfile.NamedTemporaryFile(
+        mode="w", 
+        encoding="utf-8", 
+        dir=target_dir, 
+        delete=False
+    )
+    tmp_path = tmp_file.name
+    
+    try:
+        # Write dummy to temporary file
+        json.dump(weekly_runtime_dict, tmp_file, indent=4)
+        # Windows requires the file to be closed before replace
+        tmp_file.close()
+        
+        os.replace(tmp_path, path)
+    finally:
+        # Deletion of temporary file
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 def load_weekly_runtime(path="utils/data/weekly_runtime.json") -> dict:
@@ -36,7 +52,7 @@ def load_weekly_runtime(path="utils/data/weekly_runtime.json") -> dict:
             return json.load(config_file)
     except (json.JSONDecodeError, FileNotFoundError, OSError):
         print(
-        f"{COLORS.BOLD_YELLOW}Weekly runtime data file is missing or corrupted — recreating with default values.{COLORS.RESET}"
+        f"{COLORS.BOLD_YELLOW}Weekly runtime data file is missing or corrupted, recreating with default values.{COLORS.RESET}"
         )
         weekly_runtime_dict = {
             k: (v.copy() if isinstance(v, list) else v)
