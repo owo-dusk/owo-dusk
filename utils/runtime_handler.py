@@ -22,28 +22,36 @@ DEFAULT_WEEKLY_RUNTIME = {
 }
 
 def _write_weekly_runtime(weekly_runtime_dict, path):
-    target_dir = os.path.dirname(path)
-    
-    # This temporary file is uniquely named, preventing race conditions making the file be unavailable.
-    tmp_file = tempfile.NamedTemporaryFile(
-        mode="w", 
-        encoding="utf-8", 
-        dir=target_dir, 
-        delete=False
-    )
-    tmp_path = tmp_file.name
-    
     try:
-        # Write dummy to temporary file
-        json.dump(weekly_runtime_dict, tmp_file, indent=4)
-        # Windows requires the file to be closed before replace
-        tmp_file.close()
+        target_dir = os.path.dirname(path)
         
-        os.replace(tmp_path, path)
-    finally:
-        # Deletion of temporary file
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+        # This temporary file is uniquely named, preventing race conditions making the file be unavailable.
+        tmp_file = tempfile.NamedTemporaryFile(
+            mode="w", 
+            encoding="utf-8", 
+            dir=target_dir, 
+            delete=False
+        )
+        tmp_path = tmp_file.name
+        
+        try:
+            # Write dummy to temporary file
+            json.dump(weekly_runtime_dict, tmp_file, indent=4)
+            # Windows requires the file to be closed before replace
+            tmp_file.close()
+            
+            os.replace(tmp_path, path)
+        finally:
+            # Deletion of temporary file
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+    except OSError:
+        # Incase windows locks the file (another process using it), we can silently ignore it.
+        pass
+    except Exception as e:
+        print(
+            f"{COLORS.BOLD_YELLOW}Weekly runtime error: {e} {COLORS.RESET}"
+        )
 
 
 def load_weekly_runtime(path="utils/data/weekly_runtime.json") -> dict:
@@ -51,6 +59,8 @@ def load_weekly_runtime(path="utils/data/weekly_runtime.json") -> dict:
         with open(path, "r", encoding="utf-8") as config_file:
             return json.load(config_file)
     except (json.JSONDecodeError, FileNotFoundError, OSError):
+        # OSError is also considered since weekly runtime statistics isn't that important,
+        # not ideal but works.
         print(
         f"{COLORS.BOLD_YELLOW}Weekly runtime data file is missing or corrupted, recreating with default values.{COLORS.RESET}"
         )
@@ -76,12 +86,8 @@ def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
         else:
             weekly_runtime_dict[weekday][1] = time.time()
 
-        try: # bcz windows can refuse the replace if another process holds the file open
-            _write_weekly_runtime(weekly_runtime_dict, path)
-        except OSError:
-            print(
-                f"{COLORS.BOLD_YELLOW}Weekly runtime file is locked — retrying on next tick.{COLORS.RESET}"
-            )
+        _write_weekly_runtime(weekly_runtime_dict, path)
+
         # update every 15 seconds
         time.sleep(15)
 
@@ -99,12 +105,7 @@ def start_runtime_loop(path="utils/data/weekly_runtime.json"):
 
     weekly_runtime_dict["last_checked"] = now
 
-    try: # bcz windows can refuse the replace if another process holds the file open
-        _write_weekly_runtime(weekly_runtime_dict, path)
-    except OSError:
-        print(
-            f"{COLORS.BOLD_YELLOW}Weekly runtime file is locked — retrying on next tick.{COLORS.RESET}"
-        )
+    _write_weekly_runtime(weekly_runtime_dict, path)
 
     loop_thread = threading.Thread(target=handle_weekly_runtime, daemon=True)
     loop_thread.start()
