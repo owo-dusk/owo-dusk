@@ -1,18 +1,81 @@
 import json
+import os
+import tempfile
 import threading
 import time
 
 import utils.timestamp as utils
+from utils.colors import COLORS
 from utils.errors import suppress_and_log
 
 path = "utils/data/weekly_runtime.json"
+
+DEFAULT_WEEKLY_RUNTIME = {
+    "0": [0, 0],
+    "1": [0, 0],
+    "2": [0, 0],
+    "3": [0, 0],
+    "4": [0, 0],
+    "5": [0, 0],
+    "6": [0, 0],
+    "last_checked": 0,
+}
+
+def _write_weekly_runtime(weekly_runtime_dict, path):
+    try:
+        target_dir = os.path.dirname(path)
+        
+        # This temporary file is uniquely named, preventing race conditions making the file be unavailable.
+        tmp_file = tempfile.NamedTemporaryFile(
+            mode="w", 
+            encoding="utf-8", 
+            dir=target_dir, 
+            delete=False
+        )
+        tmp_path = tmp_file.name
+        
+        try:
+            # Write dummy to temporary file
+            json.dump(weekly_runtime_dict, tmp_file, indent=4)
+            # Windows requires the file to be closed before replace
+            tmp_file.close()
+            
+            os.replace(tmp_path, path)
+        finally:
+            # Deletion of temporary file
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+    except OSError:
+        # Incase windows locks the file (another process using it), we can silently ignore it.
+        pass
+    except Exception as e:
+        print(
+            f"{COLORS.BOLD_YELLOW}Weekly runtime error: {e} {COLORS.RESET}"
+        )
+
+
+def load_weekly_runtime(path="utils/data/weekly_runtime.json") -> dict:
+    try:
+        with open(path, "r", encoding="utf-8") as config_file:
+            return json.load(config_file)
+    except (json.JSONDecodeError, FileNotFoundError, OSError):
+        # OSError is also considered since weekly runtime statistics isn't that important,
+        # not ideal but works.
+        print(
+        f"{COLORS.BOLD_YELLOW}Weekly runtime data file is missing or corrupted, recreating with default values.{COLORS.RESET}"
+        )
+        weekly_runtime_dict = {
+            k: (v.copy() if isinstance(v, list) else v)
+            for k, v in DEFAULT_WEEKLY_RUNTIME.items()
+        }
+        _write_weekly_runtime(weekly_runtime_dict, path)
+        return weekly_runtime_dict
 
 
 @suppress_and_log("Weekly Runtime Updater")
 def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
     while True:
-        with open(path, "r", encoding="utf-8") as config_file:
-            weekly_runtime_dict = json.load(config_file)
+        weekly_runtime_dict = load_weekly_runtime(path)
         weekday = utils.get_weekday()
 
         if weekly_runtime_dict[weekday][0] == 0:
@@ -23,16 +86,15 @@ def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
         else:
             weekly_runtime_dict[weekday][1] = time.time()
 
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(weekly_runtime_dict, f, indent=4)
+        _write_weekly_runtime(weekly_runtime_dict, path)
+
         # update every 15 seconds
         time.sleep(15)
 
 
 @suppress_and_log("Weekly Runtime Update Starter")
 def start_runtime_loop(path="utils/data/weekly_runtime.json"):
-    with open(path, "r", encoding="utf-8") as config_file:
-        weekly_runtime_dict = json.load(config_file)
+    weekly_runtime_dict = load_weekly_runtime(path)
 
     now = time.time()
     last_checked = weekly_runtime_dict.get("last_checked", 0)
@@ -43,8 +105,7 @@ def start_runtime_loop(path="utils/data/weekly_runtime.json"):
 
     weekly_runtime_dict["last_checked"] = now
 
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(weekly_runtime_dict, f, indent=4)
+    _write_weekly_runtime(weekly_runtime_dict, path)
 
     loop_thread = threading.Thread(target=handle_weekly_runtime, daemon=True)
     loop_thread.start()

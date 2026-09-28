@@ -10,7 +10,6 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import json
 import logging
 import random
 import sqlite3
@@ -18,6 +17,7 @@ import sys
 
 from flask import Flask, jsonify, render_template, request
 
+from utils.runtime_handler import load_weekly_runtime
 from utils.timestamp import get_weekday
 
 app = Flask(__name__)
@@ -204,11 +204,8 @@ def fetch_weekly_runtime():
     if not password or password != password:
         return "Invalid Password", 401
     try:
-        # Fetch json data
-        with open(
-            "utils/data/weekly_runtime.json", "r", encoding="utf-8"
-        ) as config_file:
-            data_dict = json.load(config_file)
+        # Fetch json data (self heals if the file is missing/corrupted)
+        data_dict = load_weekly_runtime("utils/data/weekly_runtime.json")
 
         runtime_data = [
             (val[1] - val[0]) / 60
@@ -246,7 +243,7 @@ def web_start(port, should_host, ver, paswd):
     flask_log = logging.getLogger("werkzeug")
     flask_log.disabled = True
     cli = sys.modules["flask.cli"]
-    cli.show_server_banner = lambda *x: None
+    setattr(cli, "show_server_banner", lambda *x: None)
     app.run(
         debug=False,
         use_reloader=False,
