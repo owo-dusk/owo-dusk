@@ -56,7 +56,7 @@ class captchaClient:
         except Exception as e:
             print(f"[YesCaptcha Error] Unexpected error: {e}")
             return 0
-            
+
     async def get_yescaptcha_balance(self, session: aiohttp.ClientSession) -> int:
         url = "https://api.yescaptcha.com/getBalance"
         timeout = aiohttp.ClientTimeout(total=10)
