@@ -202,25 +202,26 @@ class Huntbot(BaseCog):
                 if embed.author and f"{nick}'s HuntBot" in embed.author.name:
                     # Upgrade huntbot
                     await self.bot.ch.remove_queue(id="huntbot")
-                    await self.bot.ch.set_stat(False)
-                    if embed.fields:
-                        self.get_experience(embed)
-                        data = allocate_essence(
-                            self.upgrade_details,
-                            self.settings.upgrader.weights,
-                        )
-                        await self.bot.sleep(self.settings.upgrader.get_cd())
-                        for trait, essence_alloc in data.items():
-                            self.upgrade_cmd["cmd_arguments"] = (
-                                f"{trait} {essence_alloc}"
+                    if self.bot.settings_dict.commands.huntbot.upgrader.enabled:
+                        await self.bot.ch.set_stat(False)
+                        if embed.fields:
+                            self.get_experience(embed)
+                            data = allocate_essence(
+                                self.upgrade_details,
+                                self.settings.upgrader.weights,
                             )
-                            if essence_alloc > 0:
-                                # print(self.upgrade_cmd["cmd_arguments"])
-                                await self.bot.ch.put_queue(
-                                    self.upgrade_cmd, priority=True
+                            await self.bot.sleep(self.settings.upgrader.get_cd())
+                            for trait, essence_alloc in data.items():
+                                self.upgrade_cmd["cmd_arguments"] = (
+                                    f"{trait} {essence_alloc}"
                                 )
-                                await self.upgrade_confirmation()
-                                # print(self.upgrade_details)
+                                if essence_alloc > 0:
+                                    # print(self.upgrade_cmd["cmd_arguments"])
+                                    await self.bot.ch.put_queue(
+                                        self.upgrade_cmd, priority=True
+                                    )
+                                    await self.upgrade_confirmation()
+                                    # print(self.upgrade_details)
                         await self.bot.ch.set_stat(True)
 
                         # Running/handling huntbot
