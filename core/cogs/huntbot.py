@@ -202,56 +202,57 @@ class Huntbot(BaseCog):
                 if embed.author and f"{nick}'s HuntBot" in embed.author.name:
                     # Upgrade huntbot
                     await self.bot.ch.remove_queue(id="huntbot")
-                    await self.bot.ch.set_stat(False)
-                    if embed.fields:
-                        self.get_experience(embed)
-                        data = allocate_essence(
-                            self.upgrade_details,
-                            self.settings.upgrader.weights,
-                        )
-                        await self.bot.sleep(self.settings.upgrader.get_cd())
-                        for trait, essence_alloc in data.items():
-                            self.upgrade_cmd["cmd_arguments"] = (
-                                f"{trait} {essence_alloc}"
+                    if self.bot.settings_dict.commands.huntbot.upgrader.enabled:
+                        await self.bot.ch.set_stat(False)
+                        if embed.fields:
+                            self.get_experience(embed)
+                            data = allocate_essence(
+                                self.upgrade_details,
+                                self.settings.upgrader.weights,
                             )
-                            if essence_alloc > 0:
-                                # print(self.upgrade_cmd["cmd_arguments"])
-                                await self.bot.ch.put_queue(
-                                    self.upgrade_cmd, priority=True
+                            await self.bot.sleep(self.settings.upgrader.get_cd())
+                            for trait, essence_alloc in data.items():
+                                self.upgrade_cmd["cmd_arguments"] = (
+                                    f"{trait} {essence_alloc}"
                                 )
-                                await self.upgrade_confirmation()
-                                # print(self.upgrade_details)
+                                if essence_alloc > 0:
+                                    # print(self.upgrade_cmd["cmd_arguments"])
+                                    await self.bot.ch.put_queue(
+                                        self.upgrade_cmd, priority=True
+                                    )
+                                    await self.upgrade_confirmation()
+                                    # print(self.upgrade_details)
                         await self.bot.ch.set_stat(True)
 
-                        # Running/handling huntbot
-                        if len(embed.fields) > 8:
-                            field = embed.fields[8]
-                            if "HUNTBOT is currently hunting!" in field.name:
-                                total_seconds_hb = 0
-                                for amount, unit in re.findall(
-                                    huntbot_time_regex, field.value
-                                ):
-                                    if unit == "M":
-                                        total_seconds_hb += int(amount) * 60
-                                    elif unit == "H":
-                                        total_seconds_hb += int(amount) * 3600
-                                    elif unit == "D":
-                                        total_seconds_hb += int(amount) * 86400
-                                await self.bot.log(
-                                    f"huntbot will be back in {total_seconds_hb}s",
-                                    "#afaf87",
-                                )
-                                await self.send_ah(timeToSleep=total_seconds_hb)
-
-                        else:
-                            # Can proceed with running huntbot, no current hunting ongoing
-                            await self.send_ah(
-                                timeToSleep=self.bot.settings_dict.cooldowns.briefCooldown,
-                                no_cash_arg=False,
-                            )
+                    # Running/handling huntbot
+                    if embed.fields and len(embed.fields) > 8:
+                        field = embed.fields[8]
+                        if "HUNTBOT is currently hunting!" in field.name:
+                            total_seconds_hb = 0
+                            for amount, unit in re.findall(
+                                huntbot_time_regex, field.value
+                            ):
+                                if unit == "M":
+                                    total_seconds_hb += int(amount) * 60
+                                elif unit == "H":
+                                    total_seconds_hb += int(amount) * 3600
+                                elif unit == "D":
+                                    total_seconds_hb += int(amount) * 86400
                             await self.bot.log(
-                                "huntbot back! sending next huntbot command.", "#afaf87"
+                                f"huntbot will be back in {total_seconds_hb}s",
+                                "#afaf87",
                             )
+                            await self.send_ah(timeToSleep=total_seconds_hb)
+
+                    else:
+                        # Can proceed with running huntbot, no current hunting ongoing
+                        await self.send_ah(
+                            timeToSleep=self.bot.settings_dict.cooldowns.briefCooldown,
+                            no_cash_arg=False,
+                        )
+                        await self.bot.log(
+                            "huntbot back! sending next huntbot command.", "#afaf87"
+                        )
 
 
 async def setup(bot):
