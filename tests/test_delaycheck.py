@@ -37,7 +37,8 @@ class DelaycheckTests(unittest.TestCase):
         self.assertEqual(get_max_shards([{}, {"shards": []}]), 0)
 
     def test_shard_id_matches_the_status_api(self):
-        # The live status API returned shard 1176 for this guild with 2560 shards.
+        # Regression value for the shard math: 123456789012345678 maps to
+        # shard 1176 when the status API reports 2560 shards.
         self.assertEqual(get_shard_id(123456789012345678, 2560), 1176)
 
 

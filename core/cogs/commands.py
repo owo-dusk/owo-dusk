@@ -52,7 +52,7 @@ class Commands(BaseCog):
             self.owo_watchdog.note_response()
 
     async def send_owo_ping(self):
-        if not self.bot.cm or self.bot.ch.command_handler_status.captcha:
+        if not self.bot.cm or self.bot.ch.should_not_send:
             return
         prefix = self.bot.settings_dict.prefix
         await self.bot.cm.send(
@@ -120,6 +120,8 @@ class Commands(BaseCog):
         asyncio.create_task(self.start_commands())
 
     async def cog_unload(self):
+        self.send_commands.cancel()
+        self.monitor_checks.cancel()
         await self.owo_watchdog.cancel()
 
     """send commands"""

@@ -141,7 +141,10 @@ class OwoWatchdog:
 
                 if await self._wait_for_response(wait_seq, self.status_poll_interval):
                     break
-                if await self._check_status() and await self._confirm_status_ready():
+                if await self._check_status():
+                    if await self._confirm_status_ready():
+                        break
+                if self._response_seq != wait_seq:
                     break
 
             await self.log("OwO is back, resuming commands", "#87af87")
