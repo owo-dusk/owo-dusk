@@ -126,10 +126,10 @@ class OwoWatchdog:
                 return
 
             self.state = "standby"
+            wait_seq = self._response_seq
             await self.log("OwO did not answer the ping, entering standby", "#c25560")
             first_check = True
             while True:
-                wait_seq = self._response_seq
                 if first_check:
                     first_check = False
                     if await self._check_status():

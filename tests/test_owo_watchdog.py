@@ -128,6 +128,26 @@ class OwoWatchdogTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.paused, [True, False])
         self.assertEqual(watchdog.state, "idle")
 
+    async def test_response_during_standby_log_resumes(self):
+        watchdog = self.make_watchdog()
+        original_log = self.log
+
+        async def log(text, color):
+            await original_log(text, color)
+            if "entering standby" in text:
+                watchdog.note_response()
+
+        watchdog.log = log
+
+        watchdog.note_sent()
+        watchdog.note_sent()
+        watchdog.note_sent()
+        await watchdog.join()
+
+        self.assertEqual(self.pings, 1)
+        self.assertEqual(self.paused, [True, False])
+        self.assertEqual(watchdog.state, "idle")
+
     async def test_cancel_clears_pause(self):
         watchdog = self.make_watchdog()
 

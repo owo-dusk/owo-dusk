@@ -588,6 +588,8 @@ class MyClient(commands.Bot):
                 else:
                     await channel.send(message, silent=silent)
                 await self.ch.set_stat(True)
+            return True
+        return False
 
     @suppress_and_log("Sending Slash Command")
     async def slashCommandSender(self, msg, color, channel, **kwargs):
@@ -601,6 +603,8 @@ class MyClient(commands.Bot):
                 await self.wait_until_ready()
                 await command(**kwargs)
                 await self.log(f"Ran: /{msg}", color if color else "#5432a8")
+                return True
+        return False
 
     def calc_time(self):
         pst_timezone = pytz.timezone("US/Pacific")  # gets timezone

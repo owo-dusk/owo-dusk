@@ -172,16 +172,17 @@ class Commands(BaseCog):
                     async with self.bot.ch._hold_or_create_lock():
                         self.bot.ch.checks.append(cmd)
 
+            sent = False
             if self.bot.settings_dict.useSlashCommands and cmd.get(
                 "slash_cmd_name", False
             ):
-                await self.bot.slashCommandSender(
+                sent = await self.bot.slashCommandSender(
                     cmd["slash_cmd_name"],
                     self.bot.misc["command_info"][cmd_id]["log_color"],
                     channel=channel,
                 )
             else:
-                await self.bot.send(
+                sent = await self.bot.send(
                     self.construct_command(
                         cmd, guild_id=channel.guild.id if channel else None
                     ),
@@ -190,7 +191,8 @@ class Commands(BaseCog):
                 )
 
             if (
-                cmd_id not in NO_RESPONSE_COMMAND_IDS
+                sent
+                and cmd_id not in NO_RESPONSE_COMMAND_IDS
                 and not self.bot.ch.command_handler_status.captcha
             ):
                 self.owo_watchdog.note_sent()
