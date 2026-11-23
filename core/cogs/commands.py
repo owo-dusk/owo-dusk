@@ -15,9 +15,15 @@ import time
 from collections import deque
 from datetime import datetime, timedelta, timezone
 
-from discord.ext import tasks
+from discord.ext import commands, tasks
 
 from core.cogs._BASE import BaseCog
+from core.owo_watchdog import OwoWatchdog
+from utils.delaycheck import is_shard_ready
+
+# These commands do not get a reply from OwO, so they must not count as
+# unanswered messages.
+NO_RESPONSE_COMMAND_IDS = {"level"}
 
 
 class Commands(BaseCog):
@@ -28,10 +34,53 @@ class Commands(BaseCog):
         self.command_times = deque(maxlen=3)
         self.updated_between_cd = False
         self.last_msg = 0
+        self.owo_paused = False
+        self.owo_watchdog = OwoWatchdog(
+            send_ping=self.send_owo_ping,
+            check_status=self.check_owo_status,
+            set_paused=self.set_owo_paused,
+            log=self.log_owo_watchdog,
+        )
 
     @property
     def command_handler_settings(self):
         return self.bot.settings_dict.cooldowns.commandHandler
+
+    def is_owo_response(self, message):
+        return (
+            message.author.id == self.bot.owo_bot_id
+            and message.channel.id in self.bot.active_channel_ids
+        )
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if self.is_owo_response(message):
+            self.owo_watchdog.note_response()
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        if self.is_owo_response(after):
+            self.owo_watchdog.note_response()
+
+    async def send_owo_ping(self):
+        if not self.bot.cm or self.bot.ch.command_handler_status.captcha:
+            return
+        prefix = self.bot.settings_dict.prefix
+        await self.bot.cm.send(
+            f"{prefix}ping", silent=self.bot.global_settings_dict.silentMessage
+        )
+        await self.bot.log("Sent a ping to OwO", "#e6e65a")
+
+    async def check_owo_status(self):
+        if not self.bot.session or not self.bot.cm or not self.bot.cm.guild:
+            return False
+        return await is_shard_ready(self.bot.session, self.bot.cm.guild.id)
+
+    def set_owo_paused(self, paused):
+        self.owo_paused = paused
+
+    async def log_owo_watchdog(self, text, color):
+        await self.bot.log(text, color)
 
     def sleep_required(self):
         """makes sure three commands are within 5 second limit"""
@@ -81,11 +130,17 @@ class Commands(BaseCog):
         """Run join_previous_giveaways when bot is ready"""
         asyncio.create_task(self.start_commands())
 
+    async def cog_unload(self):
+        await self.owo_watchdog.cancel()
+
     """send commands"""
 
     @tasks.loop()
     async def send_commands(self):
         try:
+            while self.owo_paused:
+                await asyncio.sleep(1)
+
             cnf = self.command_handler_settings
             priority, _, cmd = await self.bot.ch.queue.get()
             cmd_id = cmd.get("id")
@@ -142,6 +197,12 @@ class Commands(BaseCog):
                     self.bot.misc["command_info"][cmd_id]["log_color"],
                     channel=channel,
                 )
+
+            if (
+                cmd_id not in NO_RESPONSE_COMMAND_IDS
+                and not self.bot.ch.command_handler_status.captcha
+            ):
+                self.owo_watchdog.note_sent()
 
             """add command to the deque"""
             self.command_times.append(time.time())

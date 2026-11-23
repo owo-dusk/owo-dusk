@@ -10,16 +10,18 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+import asyncio
+
 import aiohttp
 
 url = "https://owobot.com/api/status"
 
 
 def get_max_shards(json_data):
-    max_shard = 0
+    max_shard = -1
     for item in json_data:
-        if "shards" in item:
-            shard_data = item["shards"]
+        shard_data = item.get("shards")
+        if shard_data:
             max_shard_in_item = max(shard["shard"] for shard in shard_data)
             if max_shard_in_item > max_shard:
                 max_shard = max_shard_in_item
@@ -58,21 +60,36 @@ def get_shard_id(server_id, total_shards):
 
 async def delaycheck(session, server_id):
     try:
-        async with session.get(url) as response:
+        async with session.get(
+            url, timeout=aiohttp.ClientTimeout(total=10)
+        ) as response:
             response.raise_for_status()  # raises an HTTPError for bad responses (4xx, 5xx)
             json_data = await response.json()
-    except aiohttp.ClientError as e:
+    except (aiohttp.ClientError, asyncio.TimeoutError, ValueError) as e:
         print(f"An error occurred: {e}")
+        return None
 
-    shard_id = get_shard_id(server_id, get_max_shards(json_data))
+    if not json_data:
+        return None
+
+    total_shards = get_max_shards(json_data)
+    if not total_shards:
+        return None
+
+    shard_id = get_shard_id(server_id, total_shards)
 
     for item in json_data:
-        if "shards" in item:
-            shard_data = item["shards"]
+        shard_data = item.get("shards")
+        if shard_data:
             for i in shard_data:
                 if i["shard"] == shard_id:
                     return i
     return None
+
+
+async def is_shard_ready(session, server_id):
+    shard = await delaycheck(session, server_id)
+    return bool(shard and shard.get("status") == "ready")
 
 
 # delaycheck(None, server_id)
