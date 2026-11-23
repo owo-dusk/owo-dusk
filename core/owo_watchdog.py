@@ -112,6 +112,7 @@ class OwoWatchdog:
             await self.log(f"Failed to ping OwO: {e}", "#c25560")
 
     async def _run(self, start_seq):
+        task = asyncio.current_task()
         try:
             if await self._wait_for_response(start_seq, self.response_timeout):
                 await self.log("OwO responded, resuming commands", "#87af87")
@@ -126,21 +127,22 @@ class OwoWatchdog:
 
             self.state = "standby"
             await self.log("OwO did not answer the ping, entering standby", "#c25560")
+            first_check = True
             while True:
                 wait_seq = self._response_seq
+                if first_check:
+                    first_check = False
+                    if await self._check_status():
+                        if await self._confirm_status_ready():
+                            break
+                    if self._response_seq != wait_seq:
+                        break
+                    continue
+
                 if await self._wait_for_response(wait_seq, self.status_poll_interval):
                     break
-                if await self._check_status():
-                    await self.log(
-                        "The OwO status API reports ready, confirming with a ping",
-                        "#e6e65a",
-                    )
-                    confirm_seq = self._response_seq
-                    await self._send_ping()
-                    if await self._wait_for_response(
-                        confirm_seq, self.response_timeout
-                    ):
-                        break
+                if await self._check_status() and await self._confirm_status_ready():
+                    break
 
             await self.log("OwO is back, resuming commands", "#87af87")
         except asyncio.CancelledError:
@@ -148,7 +150,19 @@ class OwoWatchdog:
         except Exception as e:
             await self.log(f"OwO watchdog error: {e}", "#c25560")
         finally:
-            self.state = "idle"
-            self._unanswered = 0
-            self._task = None
-            self.set_paused(False)
+            if self._task is task:
+                self.state = "idle"
+                self._unanswered = 0
+                self._task = None
+                self.set_paused(False)
+
+    async def _confirm_status_ready(self):
+        await self.log(
+            "The OwO status API reports ready, confirming with a ping",
+            "#e6e65a",
+        )
+        confirm_seq = self._response_seq
+        await self._send_ping()
+        if await self._wait_for_response(confirm_seq, self.response_timeout):
+            return True
+        return False

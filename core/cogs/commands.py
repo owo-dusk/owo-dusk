@@ -23,7 +23,7 @@ from utils.delaycheck import is_shard_ready
 
 # These commands do not get a reply from OwO, so they must not count as
 # unanswered messages.
-NO_RESPONSE_COMMAND_IDS = {"level"}
+NO_RESPONSE_COMMAND_IDS = {"level", "customcommand"}
 
 
 class Commands(BaseCog):
@@ -46,20 +46,9 @@ class Commands(BaseCog):
     def command_handler_settings(self):
         return self.bot.settings_dict.cooldowns.commandHandler
 
-    def is_owo_response(self, message):
-        return (
-            message.author.id == self.bot.owo_bot_id
-            and message.channel.id in self.bot.active_channel_ids
-        )
-
     @commands.Cog.listener()
     async def on_message(self, message):
-        if self.is_owo_response(message):
-            self.owo_watchdog.note_response()
-
-    @commands.Cog.listener()
-    async def on_message_edit(self, before, after):
-        if self.is_owo_response(after):
+        if message.author.id == self.bot.owo_bot_id:
             self.owo_watchdog.note_response()
 
     async def send_owo_ping(self):

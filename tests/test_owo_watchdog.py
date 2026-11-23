@@ -20,6 +20,7 @@ class OwoWatchdogTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.watchdog = None
         self.pings = 0
+        self.answer_ping_at = None
         self.status_calls = 0
         self.status_results = []
         self.paused = []
@@ -27,7 +28,7 @@ class OwoWatchdogTests(unittest.IsolatedAsyncioTestCase):
 
     async def send_ping(self):
         self.pings += 1
-        if self.pings == 2 and self.watchdog is not None:
+        if self.pings == self.answer_ping_at and self.watchdog is not None:
             self.watchdog.note_response()
 
     async def check_status(self):
@@ -84,23 +85,24 @@ class OwoWatchdogTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.paused, [True, False])
         self.assertEqual(watchdog.state, "idle")
 
-    async def test_ping_then_response_resumes(self):
+    async def test_ping_response_resumes_without_standby(self):
         watchdog = self.make_watchdog()
+        self.answer_ping_at = 1
 
         watchdog.note_sent()
         watchdog.note_sent()
         watchdog.note_sent()
-        await self.wait_for_state("standby")
-        watchdog.note_response()
         await watchdog.join()
 
         self.assertEqual(self.pings, 1)
         self.assertEqual(self.paused, [True, False])
         self.assertEqual(watchdog.state, "idle")
+        self.assertFalse(any("entering standby" in log for log in self.logs))
 
     async def test_standby_waits_for_status_ready_and_confirms_with_ping(self):
         watchdog = self.make_watchdog()
         self.status_results = [True]
+        self.answer_ping_at = 2
 
         watchdog.note_sent()
         watchdog.note_sent()
