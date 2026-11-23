@@ -172,6 +172,7 @@ class Commands(BaseCog):
                     async with self.bot.ch._hold_or_create_lock():
                         self.bot.ch.checks.append(cmd)
 
+            response_seq = self.owo_watchdog.response_seq
             sent = False
             if self.bot.settings_dict.useSlashCommands and cmd.get(
                 "slash_cmd_name", False
@@ -195,7 +196,7 @@ class Commands(BaseCog):
                 and cmd_id not in NO_RESPONSE_COMMAND_IDS
                 and not self.bot.ch.command_handler_status.captcha
             ):
-                self.owo_watchdog.note_sent()
+                self.owo_watchdog.note_sent_since(response_seq)
 
             """add command to the deque"""
             self.command_times.append(time.time())

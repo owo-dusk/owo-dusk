@@ -70,6 +70,29 @@ class OwoWatchdogTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(watchdog.running)
         self.assertEqual(self.paused, [])
 
+    async def test_note_sent_since_ignores_command_answered_during_send(self):
+        watchdog = self.make_watchdog()
+
+        seq = watchdog.response_seq
+        watchdog.note_sent_since(seq)
+        watchdog.note_sent_since(seq)
+
+        seq = watchdog.response_seq
+        watchdog.note_response()
+        watchdog.note_sent_since(seq)
+        self.assertFalse(watchdog.running)
+
+    async def test_note_sent_since_counts_command_without_response(self):
+        watchdog = self.make_watchdog()
+        seq = watchdog.response_seq
+
+        watchdog.note_sent_since(seq)
+        watchdog.note_sent_since(seq)
+        self.assertFalse(watchdog.running)
+
+        watchdog.note_sent_since(seq)
+        self.assertTrue(watchdog.running)
+
     async def test_response_before_timeout_resumes_without_ping(self):
         watchdog = self.make_watchdog()
 
@@ -142,7 +165,7 @@ class OwoWatchdogTests(unittest.IsolatedAsyncioTestCase):
         watchdog.note_sent()
         watchdog.note_sent()
         watchdog.note_sent()
-        await watchdog.join()
+        await asyncio.wait_for(watchdog.join(), timeout=1.0)
 
         self.assertEqual(self.pings, 1)
         self.assertEqual(self.paused, [True, False])

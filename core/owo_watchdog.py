@@ -61,6 +61,15 @@ class OwoWatchdog:
         self.set_paused(True)
         self._task = asyncio.create_task(self._run(self._response_seq))
 
+    @property
+    def response_seq(self):
+        return self._response_seq
+
+    def note_sent_since(self, response_seq):
+        """Record a sent command only if no response arrived since response_seq."""
+        if self._response_seq == response_seq:
+            self.note_sent()
+
     def note_response(self):
         """Record a message from OwO. This also wakes a waiting watchdog."""
         self._unanswered = 0
