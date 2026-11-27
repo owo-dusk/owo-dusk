@@ -158,6 +158,18 @@ class Others(BaseCog):
                 or "You found a **weapon crate**!" in message.content
             ):
                 if self.auto_use.crate:
+                    if (
+                        self.auto_use.crateAll
+                        and self.bot.settings_dict.useSlashCommands
+                    ):
+                        await self.bot.log(
+                            "autoCrateAll has no effect when useSlashCommands is on; "
+                            "slash commands do not accept `all`.",
+                            "#8f6b09",
+                        )
+                    self.crate_cmd["cmd_arguments"] = (
+                        "all" if self.auto_use.crateAll else None
+                    )
                     await self.bot.ch.put_queue(self.crate_cmd)
 
                 if self.webhook_settings.enabled and self.webhook_settings.others.crate:
@@ -174,6 +186,18 @@ class Others(BaseCog):
                     await self.bot.send_webhook("lootbox")
 
                 if self.auto_use.lootbox:
+                    if (
+                        self.auto_use.lootboxAll
+                        and self.bot.settings_dict.useSlashCommands
+                    ):
+                        await self.bot.log(
+                            "autoLootboxAll has no effect when useSlashCommands is on; "
+                            "slash commands do not accept `all`.",
+                            "#8f6b09",
+                        )
+                    self.lootbox_cmd["cmd_arguments"] = (
+                        "all" if self.auto_use.lootboxAll else None
+                    )
                     await self.bot.ch.put_queue(self.lootbox_cmd)
                     # give time for command to run
                     await asyncio.sleep(2.5)
