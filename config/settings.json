@@ -342,7 +342,9 @@
             "disableHuntIfNoGems": false
         },
         "autoLootbox": true,
-        "autoCrate": true
+        "autoLootboxAll": false,
+        "autoCrate": true,
+        "autoCrateAll": false
     },
     "customCommands": {
         "enabled": false,

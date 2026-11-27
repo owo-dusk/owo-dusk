@@ -160,7 +160,9 @@ class CustomCommand:
 class AutoUse:
     def __init__(self, d: dict):
         self.lootbox = expected_fetch(d, "autoLootbox", bool)
+        self.lootboxAll = expected_fetch(d, "autoLootboxAll", bool)
         self.crate = expected_fetch(d, "autoCrate", bool)
+        self.crateAll = expected_fetch(d, "autoCrateAll", bool)
         self.gems = Gems(expected_fetch(d, "gems", dict))
 
 
